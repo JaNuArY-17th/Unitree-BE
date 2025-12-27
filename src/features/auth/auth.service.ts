@@ -4,22 +4,25 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ConfigService } from '@nestjs/config';
 import { User } from '../../database/entities/user.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { LoginWithDeviceDto } from './dto/login-with-device.dto';
+import { VerifyDeviceDto } from './dto/verify-device.dto';
 import { CryptoUtil } from '../../shared/utils/crypto.util';
+import { TokensService } from '../tokens/tokens.service';
+import { DevicesService } from '../devices/devices.service';
+import { DeviceInfo } from '../devices/interfaces';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
+    private readonly tokensService: TokensService,
+    private readonly devicesService: DevicesService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -48,7 +51,7 @@ export class AuthService {
 
     await this.userRepository.save(user);
 
-    const tokens = await this.generateTokens(user);
+    const tokens = await this.tokensService.generateTokens(user);
 
     return {
       user: this.sanitizeUser(user),
@@ -81,7 +84,7 @@ export class AuthService {
     user.lastLogin = new Date();
     await this.userRepository.save(user);
 
-    const tokens = await this.generateTokens(user);
+    const tokens = await this.tokensService.generateTokens(user);
 
     return {
       user: this.sanitizeUser(user),
@@ -91,9 +94,7 @@ export class AuthService {
 
   async refreshToken(refreshToken: string) {
     try {
-      const payload = this.jwtService.verify(refreshToken, {
-        secret: this.configService.get('jwt.secret'),
-      });
+      const payload = await this.tokensService.verifyRefreshToken(refreshToken);
 
       const user = await this.userRepository.findOne({
         where: { id: payload.sub },
@@ -103,7 +104,7 @@ export class AuthService {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
-      return this.generateTokens(user);
+      return this.tokensService.generateTokens(user);
     } catch (error) {
       throw new UnauthorizedException('Invalid refresh token');
     }
@@ -122,33 +123,167 @@ export class AuthService {
   }
 
   async logout(userId: string) {
-    // Implement token blacklist logic if needed
+    await this.tokensService.revokeAllTokens(userId);
     return { message: 'Logged out successfully' };
   }
 
-  private async generateTokens(user: User) {
-    const payload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
+  /**
+   * Login with device tracking
+   */
+  async loginWithDevice(
+    loginDto: LoginWithDeviceDto,
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
+    // Validate user credentials
+    const user = await this.userRepository.findOne({
+      where: { email: loginDto.email },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const isPasswordValid = await CryptoUtil.comparePassword(
+      loginDto.password,
+      user.hashedPassword,
+    );
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException('Account is deactivated');
+    }
+
+    // Prepare device info
+    const deviceInfo: DeviceInfo = {
+      deviceId: loginDto.deviceId,
+      deviceName: loginDto.deviceName,
+      deviceType: loginDto.deviceType,
+      deviceOs: loginDto.deviceOs,
+      deviceModel: loginDto.deviceModel,
+      browser: loginDto.browser,
+      ipAddress,
+      userAgent,
     };
 
-    const accessToken = this.jwtService.sign(payload, {
-      expiresIn: this.configService.get('jwt.accessTokenExpiry'),
-    });
+    // Handle device login flow
+    const deviceCheck = await this.devicesService.handleDeviceLogin(
+      user.id,
+      user.email,
+      deviceInfo,
+    );
 
-    const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: this.configService.get('jwt.refreshTokenExpiry'),
-    });
+    if (deviceCheck.requireOtp) {
+      // OTP required for new device
+      return {
+        requireOtp: true,
+        message: deviceCheck.message,
+        userId: user.id,
+        deviceId: loginDto.deviceId,
+      };
+    }
+
+    // Device is recognized, proceed with login
+    return this.completeDeviceLogin(user, deviceInfo, loginDto.fcmToken);
+  }
+
+  /**
+   * Complete device login after OTP verification
+   */
+  async completeDeviceLogin(
+    user: User,
+    deviceInfo: DeviceInfo,
+    fcmToken?: string,
+  ) {
+    // Register/update device
+    await this.devicesService.registerDevice(user.id, deviceInfo);
+
+    // Generate tokens
+    const tokens = await this.tokensService.generateTokens(user);
+
+    // Session is managed via TokenService (tokens stored in Redis)
+
+    // Update last login
+    user.lastLogin = new Date();
+    await this.userRepository.save(user);
 
     return {
-      accessToken,
-      refreshToken,
+      user: this.sanitizeUser(user),
+      ...tokens,
+      deviceId: deviceInfo.deviceId,
     };
   }
 
+  /**
+   * Verify device with OTP and complete login
+   */
+  async verifyDeviceAndLogin(
+    userId: string,
+    verifyDto: VerifyDeviceDto,
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
+    // Get user email for OTP verification
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Verify OTP and register device
+    const baseDeviceInfo: DeviceInfo = {
+      deviceId: verifyDto.deviceId,
+      deviceType: 'unknown',
+    };
+
+    await this.devicesService.verifyAndRegisterDevice(
+      userId,
+      user.email,
+      baseDeviceInfo,
+      verifyDto.otpCode,
+    );
+
+    // Complete login with full device info
+    const deviceInfo: DeviceInfo = {
+      deviceId: verifyDto.deviceId,
+      deviceType: 'unknown',
+      ipAddress,
+      userAgent,
+    };
+
+    return this.completeDeviceLogin(user, deviceInfo);
+  }
+
+  /**
+   * Logout from specific device
+   */
+  async logoutDevice(userId: string, deviceId: string) {
+    await this.devicesService.logoutDevice(deviceId);
+    return { message: 'Device logged out successfully' };
+  }
+
+  /**
+   * Get user's devices
+   */
+  async getUserDevices(userId: string) {
+    return this.devicesService.getUserDevices(userId);
+  }
+
+  /**
+   * Get active sessions
+   */
+  async getActiveSessions(userId: string) {
+    return this.devicesService.getActiveSessions(userId);
+  }
+
   private sanitizeUser(user: User) {
-    const { hashedPassword, verificationToken, resetPasswordToken, ...sanitized } = user;
+    // Note: verificationToken and resetPasswordToken removed (now in Redis)
+    const { hashedPassword, ...sanitized } = user;
     return sanitized;
   }
 

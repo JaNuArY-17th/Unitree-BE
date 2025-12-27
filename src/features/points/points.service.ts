@@ -28,7 +28,9 @@ export class PointsService {
     return { data, total };
   }
 
-  async getBalance(userId: string): Promise<{ totalPoints: number; availablePoints: number }> {
+  async getBalance(
+    userId: string,
+  ): Promise<{ totalPoints: number; availablePoints: number }> {
     const points = await this.pointRepository.find({
       where: { userId },
       order: { createdAt: 'DESC' },

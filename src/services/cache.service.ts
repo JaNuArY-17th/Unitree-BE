@@ -61,4 +61,70 @@ export class CacheService {
   async expire(key: string, seconds: number): Promise<void> {
     await this.redis.expire(key, seconds);
   }
+
+  // ===== SET OPERATIONS (for WiFi SSIDs, online users, etc.) =====
+
+  async sadd(key: string, member: string): Promise<number> {
+    return await this.redis.sadd(key, member);
+  }
+
+  async sismember(key: string, member: string): Promise<number> {
+    return await this.redis.sismember(key, member);
+  }
+
+  async srem(key: string, member: string): Promise<number> {
+    return await this.redis.srem(key, member);
+  }
+
+  async smembers(key: string): Promise<string[]> {
+    return await this.redis.smembers(key);
+  }
+
+  async scard(key: string): Promise<number> {
+    return await this.redis.scard(key);
+  }
+
+  // ===== HASH OPERATIONS (for complex objects) =====
+
+  async hset(key: string, field: string, value: string): Promise<number> {
+    return await this.redis.hset(key, field, value);
+  }
+
+  async hget(key: string, field: string): Promise<string | null> {
+    return await this.redis.hget(key, field);
+  }
+
+  async hgetall(key: string): Promise<Record<string, string>> {
+    return await this.redis.hgetall(key);
+  }
+
+  async hdel(key: string, field: string): Promise<number> {
+    return await this.redis.hdel(key, field);
+  }
+
+  // ===== SORTED SET OPERATIONS (for leaderboards) =====
+
+  async zadd(key: string, score: number, member: string): Promise<number> {
+    return await this.redis.zadd(key, score, member);
+  }
+
+  async zrevrange(
+    key: string,
+    start: number,
+    stop: number,
+    withScores?: boolean,
+  ): Promise<string[]> {
+    if (withScores) {
+      return await this.redis.zrevrange(key, start, stop, 'WITHSCORES');
+    }
+    return await this.redis.zrevrange(key, start, stop);
+  }
+
+  async zrevrank(key: string, member: string): Promise<number | null> {
+    return await this.redis.zrevrank(key, member);
+  }
+
+  async zscore(key: string, member: string): Promise<string | null> {
+    return await this.redis.zscore(key, member);
+  }
 }

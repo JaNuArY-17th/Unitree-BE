@@ -11,7 +11,7 @@ export class EmailService {
 
   constructor(private configService: ConfigService) {
     const emailConfig = this.configService.get('email');
-    
+
     this.transporter = nodemailer.createTransport({
       host: emailConfig.host,
       port: emailConfig.port,
@@ -39,7 +39,11 @@ export class EmailService {
       });
       Logger.log(`Email sent to ${to}`, 'EmailService');
     } catch (error) {
-      Logger.error(`Failed to send email to ${to}`, error.stack, 'EmailService');
+      Logger.error(
+        `Failed to send email to ${to}`,
+        error.stack,
+        'EmailService',
+      );
       throw error;
     }
   }
@@ -77,5 +81,21 @@ export class EmailService {
     `;
 
     await this.sendEmail(email, 'Welcome to Unitree', html);
+  }
+
+  async sendDeviceVerificationEmail(
+    email: string,
+    otpCode: string,
+  ): Promise<void> {
+    const html = `
+      <h1>Device Verification</h1>
+      <p>Hi,</p>
+      <p>You're trying to log in from a new device. Please verify this device using the OTP code below:</p>
+      <h2 style="color: #2ecc71; font-size: 28px; letter-spacing: 5px;">${otpCode}</h2>
+      <p>This code will expire in 5 minutes.</p>
+      <p>If you didn't request this, please ignore this email.</p>
+    `;
+
+    await this.sendEmail(email, 'Device Verification - Unitree', html);
   }
 }

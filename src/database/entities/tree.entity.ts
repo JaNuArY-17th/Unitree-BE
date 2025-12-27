@@ -1,6 +1,7 @@
 import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { User } from './user.entity';
+import { TreeType } from './tree-type.entity';
 import { TreeStatus } from '../../shared/constants/enums.constant';
 
 @Entity('trees')
@@ -9,11 +10,12 @@ export class Tree extends BaseEntity {
   @Index()
   userId: string;
 
+  @Column({ name: 'tree_type_id' })
+  @Index()
+  treeTypeId: string;
+
   @Column()
   name: string;
-
-  @Column({ name: 'tree_type' })
-  treeType: string;
 
   @Column({ name: 'growth_stage', default: 0 })
   growthStage: number;
@@ -50,4 +52,8 @@ export class Tree extends BaseEntity {
   @ManyToOne(() => User, (user) => user.trees)
   @JoinColumn({ name: 'user_id' })
   user: User;
+
+  @ManyToOne(() => TreeType, (treeType) => treeType.trees)
+  @JoinColumn({ name: 'tree_type_id' })
+  treeType: TreeType;
 }

@@ -16,7 +16,10 @@ export class SocketService {
       this.userSockets.set(userId, new Set());
     }
     this.userSockets.get(userId)?.add(socketId);
-    Logger.log(`User ${userId} connected with socket ${socketId}`, 'SocketService');
+    Logger.log(
+      `User ${userId} connected with socket ${socketId}`,
+      'SocketService',
+    );
   }
 
   removeUserSocket(userId: string, socketId: string): void {
@@ -27,7 +30,10 @@ export class SocketService {
         this.userSockets.delete(userId);
       }
     }
-    Logger.log(`User ${userId} disconnected socket ${socketId}`, 'SocketService');
+    Logger.log(
+      `User ${userId} disconnected socket ${socketId}`,
+      'SocketService',
+    );
   }
 
   getUserSockets(userId: string): string[] {

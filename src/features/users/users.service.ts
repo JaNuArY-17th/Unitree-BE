@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
 import { User } from '../../database/entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { PaginationDto } from '../../shared/dto/pagination.dto';
+import { PaginationResult } from '../../shared/repositories/pagination.repository';
 
 @Injectable()
 export class UsersService {
@@ -39,11 +41,12 @@ export class UsersService {
   }
 
   async findAll(
-    page: number = 1,
-    limit: number = 10,
+    paginationDto: PaginationDto,
     search?: string,
-  ): Promise<{ data: User[]; total: number }> {
+  ): Promise<PaginationResult<User>> {
+    const { page = 1, limit = 10 } = paginationDto;
     const skip = (page - 1) * limit;
+
     const where = search
       ? [
           { fullName: ILike(`%${search}%`) },
@@ -72,7 +75,13 @@ export class UsersService {
       ],
     });
 
-    return { data, total };
+    return new PaginationResult<User>({
+      data,
+      total,
+      page,
+      limit,
+      total_pages: Math.ceil(total / limit),
+    });
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
@@ -85,10 +94,7 @@ export class UsersService {
     return this.findById(id);
   }
 
-  async updatePoints(
-    userId: string,
-    points: number,
-  ): Promise<User> {
+  async updatePoints(userId: string, points: number): Promise<User> {
     const user = await this.findById(userId);
 
     user.totalPoints += points;

@@ -33,6 +33,8 @@ import { SocketService } from './services/socket.service';
 
 // Feature Modules
 import { AuthModule } from './features/auth/auth.module';
+import { TokensModule } from './features/tokens/tokens.module';
+import { DevicesModule } from './features/devices/devices.module';
 import { UsersModule } from './features/users/users.module';
 import { WifiSessionsModule } from './features/wifi-sessions/wifi-sessions.module';
 import { PointsModule } from './features/points/points.module';
@@ -87,6 +89,8 @@ import { ChatModule } from './features/chat/chat.module';
 
     // Feature Modules
     AuthModule,
+    TokensModule,
+    DevicesModule,
     UsersModule,
     WifiSessionsModule,
     PointsModule,

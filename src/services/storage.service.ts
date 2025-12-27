@@ -7,7 +7,7 @@ import { Logger } from '../shared/utils/logger.util';
 export class StorageService {
   constructor(private configService: ConfigService) {
     const cloudinaryConfig = this.configService.get('cloudinary');
-    
+
     cloudinary.config({
       cloud_name: cloudinaryConfig.cloudName,
       api_key: cloudinaryConfig.apiKey,
@@ -20,8 +20,9 @@ export class StorageService {
     folder?: string,
   ): Promise<string> {
     try {
-      const cloudinaryFolder = folder || this.configService.get('cloudinary.folder');
-      
+      const cloudinaryFolder =
+        folder || this.configService.get('cloudinary.folder');
+
       return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           {

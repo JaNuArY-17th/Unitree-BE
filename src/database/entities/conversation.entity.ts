@@ -30,7 +30,10 @@ export class Conversation extends BaseEntity {
   isActive: boolean;
 
   // Relations
-  @OneToMany(() => ConversationParticipant, (participant) => participant.conversation)
+  @OneToMany(
+    () => ConversationParticipant,
+    (participant) => participant.conversation,
+  )
   participants: ConversationParticipant[];
 
   @OneToMany(() => Message, (message) => message.conversation)

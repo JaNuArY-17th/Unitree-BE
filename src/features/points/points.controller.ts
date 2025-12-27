@@ -13,7 +13,11 @@ export class PointsController {
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
   ) {
-    const result = await this.pointsService.getPointsHistory(userId, page, limit);
+    const result = await this.pointsService.getPointsHistory(
+      userId,
+      page,
+      limit,
+    );
     return ResponseUtil.paginated(result.data, page, limit, result.total);
   }
 

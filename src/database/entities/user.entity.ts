@@ -6,7 +6,17 @@ import { Point } from './point.entity';
 import { Tree } from './tree.entity';
 import { ConversationParticipant } from './conversation-participant.entity';
 import { Message } from './message.entity';
+import { UserDevice } from './user-device.entity';
 
+/**
+ * User Entity - Simplified & Clean
+ *
+ * Removed fields (moved to Redis):
+ * - verificationToken → Redis: token:email_verification:{token}
+ * - resetPasswordToken → Redis: token:password_reset:{token}
+ * - resetPasswordExpires → Redis TTL
+ * - fcmToken → Kept in user_devices table only
+ */
 @Entity('users')
 export class User extends BaseEntity {
   @Column({ unique: true })
@@ -33,29 +43,21 @@ export class User extends BaseEntity {
   })
   role: UserRole;
 
-  @Column({ name: 'total_points', default: 0 })
-  totalPoints: number;
-
-  @Column({ name: 'available_points', default: 0 })
-  availablePoints: number;
-
   @Column({ name: 'is_active', default: true })
   isActive: boolean;
 
   @Column({ name: 'is_verified', default: false })
   isVerified: boolean;
 
-  @Column({ name: 'verification_token', nullable: true })
-  verificationToken?: string;
-
-  @Column({ name: 'reset_password_token', nullable: true })
-  resetPasswordToken?: string;
-
-  @Column({ name: 'reset_password_expires', nullable: true })
-  resetPasswordExpires?: Date;
-
   @Column({ name: 'last_login', nullable: true })
   lastLogin?: Date;
+
+  // Business logic fields
+  @Column({ name: 'total_points', default: 0 })
+  totalPoints: number;
+
+  @Column({ name: 'available_points', default: 0 })
+  availablePoints: number;
 
   @Column({ name: 'referral_code', unique: true, nullable: true })
   @Index()
@@ -63,9 +65,6 @@ export class User extends BaseEntity {
 
   @Column({ name: 'referred_by', nullable: true })
   referredBy?: string;
-
-  @Column({ name: 'fcm_token', nullable: true })
-  fcmToken?: string;
 
   // Relations
   @OneToMany(() => WifiSession, (session) => session.user)
@@ -82,4 +81,7 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Message, (message) => message.sender)
   messages: Message[];
+
+  @OneToMany(() => UserDevice, (device) => device.user)
+  devices: UserDevice[];
 }

@@ -3,7 +3,19 @@ import { BaseEntity } from './base.entity';
 import { User } from './user.entity';
 import { WifiSessionStatus } from '../../shared/constants/enums.constant';
 
+/**
+ * WiFi Session Entity
+ *
+ * Simplified design:
+ * - FE validates WiFi connection (BSSID check)
+ * - BE only manages session and calculates points
+ * - Point calculation: 1 point per minute (no maximum)
+ */
 @Entity('wifi_sessions')
+@Index('idx_wifi_user_status', ['userId', 'status'])
+@Index('idx_wifi_last_heartbeat', ['lastHeartbeat'], {
+  where: "status = 'active'",
+})
 export class WifiSession extends BaseEntity {
   @Column({ name: 'user_id' })
   @Index()
@@ -28,17 +40,15 @@ export class WifiSession extends BaseEntity {
   })
   status: WifiSessionStatus;
 
+  @Column({ name: 'last_heartbeat', type: 'timestamp', nullable: true })
+  lastHeartbeat?: Date;
+
+  // Optional metadata for debugging/analytics
   @Column({ name: 'device_id', nullable: true })
   deviceId?: string;
 
   @Column({ name: 'ip_address', nullable: true })
   ipAddress?: string;
-
-  @Column({ name: 'mac_address', nullable: true })
-  macAddress?: string;
-
-  @Column({ name: 'location', nullable: true })
-  location?: string;
 
   // Relations
   @ManyToOne(() => User, (user) => user.wifiSessions)

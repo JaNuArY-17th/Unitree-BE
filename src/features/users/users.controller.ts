@@ -14,6 +14,7 @@ import { ResponseUtil } from '../../shared/utils/response.util';
 import { Roles } from '../../shared/decorators/roles.decorator';
 import { UserRole } from '../../shared/constants/roles.constant';
 import { RolesGuard } from '../../shared/guards/roles.guard';
+import { PaginationDto } from '../../shared/dto/pagination.dto';
 
 @Controller('users')
 export class UsersController {
@@ -38,18 +39,11 @@ export class UsersController {
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   async findAll(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
+    @Query() paginationDto: PaginationDto,
     @Query('search') search?: string,
   ) {
-    const result = await this.usersService.findAll(page, limit, search);
-    return ResponseUtil.paginated(
-      result.data,
-      page,
-      limit,
-      result.total,
-      'Users retrieved successfully',
-    );
+    const result = await this.usersService.findAll(paginationDto, search);
+    return ResponseUtil.success(result, 'Users retrieved successfully');
   }
 
   @Get(':id')
