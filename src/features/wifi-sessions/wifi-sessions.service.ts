@@ -13,7 +13,6 @@ import { HeartbeatDto } from './dto/heartbeat.dto';
 import { EndSessionDto } from './dto/end-session.dto';
 import {
   WifiSessionStatus,
-  PointTransactionType,
 } from '../../shared/constants/enums.constant';
 import { CacheService } from '../../services/cache.service';
 import { PointsService } from '../points/points.service';
@@ -155,19 +154,14 @@ export class WifiSessionsService {
       session.status = WifiSessionStatus.COMPLETED;
       await manager.save(session);
 
-      // Award points if any
-      const previousBalance = session.user.availablePoints;
-      let newBalance = previousBalance;
-
+      // Log economy transaction if points earned
       if (pointsEarned > 0) {
-        const point = await this.pointsService.addPoints(
+        await this.pointsService.addEconomyLog(
           userId,
+          'point',
           pointsEarned,
-          PointTransactionType.WIFI,
-          sessionId,
-          `WiFi session: ${durationMinutes} minutes`,
+          `wifi_session:${sessionId}`,
         );
-        newBalance = point.balanceAfter;
       }
 
       // Clear cache
@@ -180,8 +174,8 @@ export class WifiSessionsService {
       return {
         session,
         pointsEarned,
-        previousBalance,
-        newBalance,
+        previousBalance: 0,
+        newBalance: pointsEarned,
       };
     });
   }
@@ -227,14 +221,13 @@ export class WifiSessionsService {
 
       await this.wifiSessionRepository.save(session);
 
-      // Award points if any
+      // Log economy transaction if points earned
       if (pointsEarned > 0) {
-        await this.pointsService.addPoints(
+        await this.pointsService.addEconomyLog(
           session.userId,
+          'point',
           pointsEarned,
-          PointTransactionType.WIFI,
-          session.id,
-          `WiFi session (auto-ended): ${durationMinutes} minutes`,
+          `wifi_session_timeout:${session.id}`,
         );
       }
 

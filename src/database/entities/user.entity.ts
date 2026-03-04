@@ -1,87 +1,109 @@
-import { Entity, Column, OneToMany, Index } from 'typeorm';
+import {
+  Entity,
+  Column,
+  OneToMany,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { BaseEntity } from './base.entity';
-import { UserRole } from '../../shared/constants/roles.constant';
-import { WifiSession } from './wifi-session.entity';
-import { Point } from './point.entity';
-import { Tree } from './tree.entity';
-import { ConversationParticipant } from './conversation-participant.entity';
-import { Message } from './message.entity';
-import { UserDevice } from './user-device.entity';
 
-/**
- * User Entity - Simplified & Clean
- *
- * Removed fields (moved to Redis):
- * - verificationToken → Redis: token:email_verification:{token}
- * - resetPasswordToken → Redis: token:password_reset:{token}
- * - resetPasswordExpires → Redis TTL
- * - fcmToken → Kept in user_devices table only
- */
 @Entity('users')
 export class User extends BaseEntity {
-  @Column({ unique: true })
-  @Index()
+  @Column({ type: 'varchar' })
+  username: string;
+
+  @Column({ type: 'varchar', unique: true })
   email: string;
 
-  @Column({ name: 'phone_number', unique: true, nullable: true })
-  @Index()
-  phoneNumber?: string;
+  @Column({ type: 'varchar' })
+  fullname: string;
 
-  @Column({ name: 'hashed_password' })
-  hashedPassword: string;
+  @Column({ type: 'varchar' })
+  nickname: string;
 
-  @Column({ name: 'full_name' })
-  fullName: string;
+  @Column({ name: 'student_id', type: 'varchar', unique: true })
+  studentId: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   avatar?: string;
 
+  @Column({ type: 'varchar' })
+  role: string;
+
   @Column({
-    type: 'enum',
-    enum: UserRole,
-    default: UserRole.USER,
+    name: 'spin_count',
+    type: 'smallint',
+    default: 5,
   })
-  role: UserRole;
+  spinCount: number;
 
-  @Column({ name: 'is_active', default: true })
-  isActive: boolean;
+  @Column({
+    name: 'glove_count',
+    type: 'smallint',
+    default: 0,
+  })
+  gloveCount: number;
 
-  @Column({ name: 'is_verified', default: false })
-  isVerified: boolean;
+  @Column({
+    name: 'watering_can_count',
+    type: 'smallint',
+    default: 0,
+  })
+  wateringCanCount: number;
 
-  @Column({ name: 'last_login', nullable: true })
-  lastLogin?: Date;
+  @Column({
+    name: 'shield_count',
+    type: 'smallint',
+    default: 0,
+  })
+  shieldCount: number;
 
-  // Business logic fields
-  @Column({ name: 'total_points', default: 0 })
-  totalPoints: number;
-
-  @Column({ name: 'available_points', default: 0 })
-  availablePoints: number;
-
-  @Column({ name: 'referral_code', unique: true, nullable: true })
-  @Index()
-  referralCode?: string;
-
-  @Column({ name: 'referred_by', nullable: true })
-  referredBy?: string;
+  @Column({
+    name: 'last_spin_regen',
+    type: 'timestamp',
+    nullable: true,
+  })
+  lastSpinRegen?: Date;
 
   // Relations
-  @OneToMany(() => WifiSession, (session) => session.user)
-  wifiSessions: WifiSession[];
+  @ManyToOne('Student', 'users')
+  @JoinColumn({ name: 'student_id', referencedColumnName: 'studentId' })
+  student: any;
 
-  @OneToMany(() => Point, (point) => point.user)
-  points: Point[];
+  @OneToMany('EconomyLog', 'user')
+  economyLogs: any[];
 
-  @OneToMany(() => Tree, (tree) => tree.user)
-  trees: Tree[];
+  @OneToMany('Friendship', 'user1')
+  friendshipsAsUser1: any[];
 
-  @OneToMany(() => ConversationParticipant, (participant) => participant.user)
-  conversationParticipants: ConversationParticipant[];
+  @OneToMany('Friendship', 'user2')
+  friendshipsAsUser2: any[];
 
-  @OneToMany(() => Message, (message) => message.sender)
-  messages: Message[];
+  @OneToMany('Notification', 'user')
+  notifications: any[];
 
-  @OneToMany(() => UserDevice, (device) => device.user)
-  devices: UserDevice[];
+  @OneToMany('PvpActionLog', 'attacker')
+  pvpAttackLogs: any[];
+
+  @OneToMany('PvpActionLog', 'defender')
+  pvpDefendLogs: any[];
+
+  @OneToMany('UserResource', 'user')
+  userResources: any[];
+
+  @OneToMany('UserTask', 'user')
+  userTasks: any[];
+
+  @OneToMany('UserTree', 'user')
+  userTrees: any[];
+
+  // Relations from kept features (wifi-sessions, chat)
+  @OneToMany('WifiSession', 'user')
+  wifiSessions: any[];
+
+  @OneToMany('ConversationParticipant', 'user')
+  conversationParticipants: any[];
+
+  @OneToMany('Message', 'sender')
+  messages: any[];
 }

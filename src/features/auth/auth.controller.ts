@@ -12,7 +12,6 @@ import {
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { AuthService } from './auth.service';
-import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { LoginWithDeviceDto } from './dto/login-with-device.dto';
 import { VerifyDeviceDto } from './dto/verify-device.dto';
@@ -24,13 +23,6 @@ import { ResponseUtil } from '../../shared/utils/response.util';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-
-  @Public()
-  @Post('register')
-  async register(@Body() registerDto: RegisterDto) {
-    const result = await this.authService.register(registerDto);
-    return ResponseUtil.success(result, 'Registration successful');
-  }
 
   @Public()
   @Post('login')

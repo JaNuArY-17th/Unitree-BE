@@ -1,0 +1,184 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model airdrop_codes {
+  id              String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  code            String    @unique @db.VarChar
+  resource_id     String    @db.Uuid
+  amount          Int
+  expiration_date DateTime? @db.Timestamp(6)
+  created_at      DateTime  @default(now()) @db.Timestamp(6)
+  resources       resources @relation(fields: [resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_resources_id_airdrop_codes")
+}
+
+model economy_logs {
+  id            String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  user_id       String   @db.Uuid
+  resource_type String   @db.VarChar
+  amount        Int
+  source        String   @db.VarChar
+  created_at    DateTime @default(now()) @db.Timestamp(6)
+  users         users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_id_economy_logs")
+}
+
+model friendships {
+  user_id_1                          String   @db.Uuid
+  user_id_2                          String   @db.Uuid
+  status                             String   @default("ACCEPTED") @db.VarChar
+  created_at                         DateTime @default(now()) @db.Timestamp(6)
+  users_friendships_user_id_1Tousers users    @relation("friendships_user_id_1Tousers", fields: [user_id_1], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_1_friendships")
+  users_friendships_user_id_2Tousers users    @relation("friendships_user_id_2Tousers", fields: [user_id_2], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_2_friendships")
+
+  @@id([user_id_1, user_id_2])
+}
+
+model notifications {
+  id         String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  user_id    String   @db.Uuid
+  type       String   @db.VarChar
+  message    String
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_id_notifications")
+}
+
+model pvp_action_logs {
+  id                                       String      @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  attacker_id                              String      @db.Uuid
+  defender_id                              String      @db.Uuid
+  action_type                              String      @db.VarChar
+  stolen_amount                            Int?
+  target_tree_id                           String?     @db.Uuid
+  was_blocked                              Boolean     @default(false)
+  created_at                               DateTime    @default(now()) @db.Timestamp(6)
+  users_pvp_action_logs_attacker_idTousers users       @relation("pvp_action_logs_attacker_idTousers", fields: [attacker_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_attacker_id_pvp_logs")
+  users_pvp_action_logs_defender_idTousers users       @relation("pvp_action_logs_defender_idTousers", fields: [defender_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_defender_id_pvp_logs")
+  user_trees                               user_trees? @relation(fields: [target_tree_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_target_tree_pvp_logs")
+}
+
+model resources {
+  id             String           @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  name           String           @unique @db.VarChar
+  description    String?
+  airdrop_codes  airdrop_codes[]
+  user_resources user_resources[]
+}
+
+model spin_rewards {
+  id            Int     @id
+  reward_type   String  @db.VarChar
+  reward_amount Int
+  drop_weight   Decimal @db.Decimal
+}
+
+model students {
+  id         String @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  student_id String @unique @db.VarChar
+  full_name  String @db.VarChar
+  email      String @unique @db.VarChar
+  users      users?
+}
+
+model tasks {
+  id            String       @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  title         String       @db.VarChar
+  description   String?
+  reward_type   String       @db.VarChar
+  reward_amount Int
+  is_daily      Boolean      @default(true)
+  user_tasks    user_tasks[]
+}
+
+model trees {
+  id          String       @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  name        String       @unique @db.VarChar
+  tree_type   String       @db.VarChar
+  max_level   Int          @db.SmallInt
+  cost_base   Int
+  cost_rate   Decimal      @db.Decimal
+  oxy_base    Int?
+  oxy_rate    Decimal?     @db.Decimal
+  time_base   Int
+  time_rate   Decimal      @db.Decimal
+  perk_base   Decimal?     @db.Decimal
+  perk_step   Decimal?     @db.Decimal
+  slot_index  Int          @db.SmallInt
+  description String
+  assets_path String
+  user_trees  user_trees[]
+}
+
+model user_resources {
+  id          String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  user_id     String    @db.Uuid
+  resource_id String    @db.Uuid
+  balance     BigInt    @default(0)
+  updated_at  DateTime  @default(now()) @db.Timestamp(6)
+  resources   resources @relation(fields: [resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_resources_id_user_resources")
+  users       users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_id_user_resources")
+
+  @@unique([user_id, resource_id], map: "unique_user_resource")
+}
+
+model user_tasks {
+  id         String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  user_id    String   @db.Uuid
+  task_id    String   @db.Uuid
+  status     String   @default("PENDING") @db.VarChar
+  updated_at DateTime @default(now()) @db.Timestamp(6)
+  tasks      tasks    @relation(fields: [task_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tasks_id_user_tasks")
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_id_user_tasks")
+}
+
+model user_trees {
+  id                String            @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  user_id           String            @db.Uuid
+  tree_id           String            @db.Uuid
+  level             Int               @default(1) @db.SmallInt
+  is_damaged        Boolean           @default(false)
+  upgrade_end_time  DateTime?         @db.Timestamp(6)
+  last_harvest_time DateTime          @default(now()) @db.Timestamp(6)
+  created_at        DateTime          @default(now()) @db.Timestamp(6)
+  updated_at        DateTime          @default(now()) @db.Timestamp(6)
+  version           Int               @default(1)
+  checksum          String
+  pvp_action_logs   pvp_action_logs[]
+  trees             trees             @relation(fields: [tree_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_trees_id_user_trees")
+  users             users             @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_id_user_trees")
+
+  @@unique([user_id, tree_id], map: "unique_user_tree")
+}
+
+model users {
+  id                                                 String            @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  username                                           String            @db.VarChar
+  spin_count                                         Int               @default(5) @db.SmallInt
+  glove_count                                        Int               @default(0) @db.SmallInt
+  watering_can_count                                 Int               @default(0) @db.SmallInt
+  shield_count                                       Int               @default(0) @db.SmallInt
+  last_spin_regen                                    DateTime?         @db.Timestamp(6)
+  created_at                                         DateTime          @default(now()) @db.Timestamp(6)
+  updated_at                                         DateTime          @default(now()) @db.Timestamp(6)
+  email                                              String            @unique @db.VarChar
+  fullname                                           String            @db.VarChar
+  nickname                                           String            @db.VarChar
+  student_id                                         String            @unique @db.VarChar
+  avatar                                             String?
+  role                                               String            @db.VarChar
+  economy_logs                                       economy_logs[]
+  friendships_friendships_user_id_1Tousers           friendships[]     @relation("friendships_user_id_1Tousers")
+  friendships_friendships_user_id_2Tousers           friendships[]     @relation("friendships_user_id_2Tousers")
+  notifications                                      notifications[]
+  pvp_action_logs_pvp_action_logs_attacker_idTousers pvp_action_logs[] @relation("pvp_action_logs_attacker_idTousers")
+  pvp_action_logs_pvp_action_logs_defender_idTousers pvp_action_logs[] @relation("pvp_action_logs_defender_idTousers")
+  user_resources                                     user_resources[]
+  user_tasks                                         user_tasks[]
+  user_trees                                         user_trees[]
+  students                                           students          @relation(fields: [student_id], references: [student_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_users_student_id_students")
+}

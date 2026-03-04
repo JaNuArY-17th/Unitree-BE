@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PointsController } from './points.controller';
 import { PointsService } from './points.service';
-import { Point } from '../../database/entities/point.entity';
+import { EconomyLog } from '../../database/entities/economy-log.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Point])],
+  imports: [TypeOrmModule.forFeature([EconomyLog])],
   controllers: [PointsController],
   providers: [PointsService],
   exports: [PointsService],
