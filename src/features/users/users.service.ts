@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
 import { User } from '../../database/entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PaginationDto } from '../../shared/dto/pagination.dto';
 import { PaginationResult } from '../../shared/repositories/pagination.repository';
+import { NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class UsersService {
@@ -19,15 +20,16 @@ export class UsersService {
       select: [
         'id',
         'email',
-        'phoneNumber',
-        'fullName',
+        'username',
+        'fullname',
+        'nickname',
+        'studentId',
         'avatar',
         'role',
-        'totalPoints',
-        'availablePoints',
-        'isActive',
-        'isVerified',
-        'referralCode',
+        'spinCount',
+        'gloveCount',
+        'wateringCanCount',
+        'shieldCount',
         'createdAt',
         'updatedAt',
       ],
@@ -49,9 +51,10 @@ export class UsersService {
 
     const where = search
       ? [
-          { fullName: ILike(`%${search}%`) },
+          { fullname: ILike(`%${search}%`) },
           { email: ILike(`%${search}%`) },
-          { phoneNumber: ILike(`%${search}%`) },
+          { username: ILike(`%${search}%`) },
+          { nickname: ILike(`%${search}%`) },
         ]
       : {};
 
@@ -63,14 +66,12 @@ export class UsersService {
       select: [
         'id',
         'email',
-        'phoneNumber',
-        'fullName',
+        'username',
+        'fullname',
+        'nickname',
+        'studentId',
         'avatar',
         'role',
-        'totalPoints',
-        'availablePoints',
-        'isActive',
-        'isVerified',
         'createdAt',
       ],
     });
@@ -92,16 +93,5 @@ export class UsersService {
     await this.userRepository.save(user);
 
     return this.findById(id);
-  }
-
-  async updatePoints(userId: string, points: number): Promise<User> {
-    const user = await this.findById(userId);
-
-    user.totalPoints += points;
-    user.availablePoints += points;
-
-    await this.userRepository.save(user);
-
-    return user;
   }
 }

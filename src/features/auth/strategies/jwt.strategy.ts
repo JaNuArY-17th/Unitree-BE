@@ -40,8 +40,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         id: userInfo.id,
         email: userInfo.email,
         role: userInfo.role,
-        fullName: userInfo.fullName,
-        isActive: userInfo.isActive,
+        fullname: userInfo.fullname,
       };
     }
 
@@ -53,8 +52,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       where: { id: payload.sub },
     });
 
-    if (!user || !user.isActive) {
-      throw new UnauthorizedException('User not found or inactive');
+    if (!user) {
+      throw new UnauthorizedException('User not found');
     }
 
     // Store user info in Redis for future requests
@@ -64,8 +63,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       id: user.id,
       email: user.email,
       role: user.role,
-      fullName: user.fullName,
-      isActive: user.isActive,
+      fullname: user.fullname,
     };
   }
 }

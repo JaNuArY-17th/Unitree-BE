@@ -1,3 +1,39 @@
+// ──────────────────────────────────
+// Enums từ schema mới (schema.prisma)
+// ──────────────────────────────────
+
+/** Trạng thái nhiệm vụ của user */
+export enum UserTaskStatus {
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+  CLAIMED = 'CLAIMED',
+}
+
+/** Trạng thái quan hệ bạn bè */
+export enum FriendshipStatus {
+  ACCEPTED = 'ACCEPTED',
+  PENDING = 'PENDING',
+  BLOCKED = 'BLOCKED',
+}
+
+/** Role của user */
+export enum UserRole {
+  USER = 'USER',
+  ADMIN = 'ADMIN',
+}
+
+// ──────────────────────────────────
+// Enums giữ lại cho các feature cũ vẫn còn dùng
+// ──────────────────────────────────
+
+/** Trạng thái phiên wifi */
+export enum WifiSessionStatus {
+  ACTIVE = 'active',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
+}
+
+/** Loại giao dịch điểm (legacy points feature) */
 export enum PointTransactionType {
   WIFI = 'wifi',
   REFERRAL = 'referral',
@@ -7,41 +43,16 @@ export enum PointTransactionType {
   REDEEM = 'redeem',
 }
 
-export enum TreeStatus {
-  GROWING = 'growing',
-  MATURE = 'mature',
-  DEAD = 'dead',
-}
-
-export enum WifiSessionStatus {
-  ACTIVE = 'active',
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled',
-}
-
-export enum NotificationType {
-  POINTS_EARNED = 'points_earned',
-  TREE_MILESTONE = 'tree_milestone',
-  NEW_MESSAGE = 'new_message',
-  SYSTEM = 'system',
-  ACHIEVEMENT = 'achievement',
-}
-
-export enum MessageType {
-  TEXT = 'text',
-  IMAGE = 'image',
-  FILE = 'file',
-  SYSTEM = 'system',
-}
-
+/** Loại conversation trong chat */
 export enum ConversationType {
   DIRECT = 'direct',
   GROUP = 'group',
 }
 
-export enum RealTreeStatus {
-  PENDING = 'pending',
-  PLANTED = 'planted',
-  GROWING = 'growing',
-  VERIFIED = 'verified',
+/** Loại message trong chat */
+export enum MessageType {
+  TEXT = 'text',
+  IMAGE = 'image',
+  FILE = 'file',
+  SYSTEM = 'system',
 }

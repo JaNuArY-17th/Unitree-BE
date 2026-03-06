@@ -8,22 +8,16 @@ export class PointsController {
   constructor(private readonly pointsService: PointsService) {}
 
   @Get('history')
-  async getPointsHistory(
+  async getEconomyHistory(
     @CurrentUser('id') userId: string,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
   ) {
-    const result = await this.pointsService.getPointsHistory(
+    const result = await this.pointsService.getEconomyHistory(
       userId,
       page,
       limit,
     );
     return ResponseUtil.paginated(result.data, page, limit, result.total);
-  }
-
-  @Get('balance')
-  async getBalance(@CurrentUser('id') userId: string) {
-    const balance = await this.pointsService.getBalance(userId);
-    return ResponseUtil.success(balance);
   }
 }

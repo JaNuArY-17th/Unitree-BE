@@ -10,15 +10,12 @@ export interface TokenPayload {
 export interface UserInfo {
   id: string;
   email: string;
-  phoneNumber?: string;
-  fullName: string;
+  username: string;
+  fullname: string;
+  nickname: string;
   avatar?: string;
-  role: UserRole;
-  totalPoints: number;
-  availablePoints: number;
-  isActive: boolean;
-  isVerified: boolean;
-  referralCode?: string;
+  role: string;
+  studentId: string;
   createdAt: Date;
   updatedAt: Date;
 }

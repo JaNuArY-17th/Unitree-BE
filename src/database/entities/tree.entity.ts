@@ -1,59 +1,58 @@
-import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
+import { Entity, Column, OneToMany } from 'typeorm';
 import { BaseEntity } from './base.entity';
-import { User } from './user.entity';
-import { TreeType } from './tree-type.entity';
-import { TreeStatus } from '../../shared/constants/enums.constant';
 
+/**
+ * Tree Entity (Catalog)
+ *
+ * Định nghĩa các loại cây trong game (template/catalog).
+ * Đây là bảng master data, không phải cây của từng user.
+ * Cây của user nằm ở UserTree.
+ */
 @Entity('trees')
 export class Tree extends BaseEntity {
-  @Column({ name: 'user_id' })
-  @Index()
-  userId: string;
-
-  @Column({ name: 'tree_type_id' })
-  @Index()
-  treeTypeId: string;
-
-  @Column()
+  @Column({ type: 'varchar', unique: true })
   name: string;
 
-  @Column({ name: 'growth_stage', default: 0 })
-  growthStage: number;
+  @Column({ name: 'tree_type', type: 'varchar' })
+  treeType: string;
 
-  @Column({ name: 'growth_points', default: 0 })
-  growthPoints: number;
+  @Column({ name: 'max_level', type: 'smallint' })
+  maxLevel: number;
 
-  @Column({ name: 'water_level', default: 100 })
-  waterLevel: number;
+  @Column({ name: 'cost_base' })
+  costBase: number;
 
-  @Column({ name: 'health', default: 100 })
-  health: number;
+  @Column({ name: 'cost_rate', type: 'decimal' })
+  costRate: number;
 
-  @Column({
-    type: 'enum',
-    enum: TreeStatus,
-    default: TreeStatus.GROWING,
-  })
-  status: TreeStatus;
+  @Column({ name: 'oxy_base', nullable: true })
+  oxyBase?: number;
 
-  @Column({ name: 'last_watered', nullable: true })
-  lastWatered?: Date;
+  @Column({ name: 'oxy_rate', type: 'decimal', nullable: true })
+  oxyRate?: number;
 
-  @Column({ name: 'planted_date' })
-  plantedDate: Date;
+  @Column({ name: 'time_base' })
+  timeBase: number;
 
-  @Column({ name: 'matured_date', nullable: true })
-  maturedDate?: Date;
+  @Column({ name: 'time_rate', type: 'decimal' })
+  timeRate: number;
 
-  @Column({ type: 'text', nullable: true })
-  notes?: string;
+  @Column({ name: 'perk_base', type: 'decimal', nullable: true })
+  perkBase?: number;
+
+  @Column({ name: 'perk_step', type: 'decimal', nullable: true })
+  perkStep?: number;
+
+  @Column({ name: 'slot_index', type: 'smallint' })
+  slotIndex: number;
+
+  @Column({ type: 'text' })
+  description: string;
+
+  @Column({ name: 'assets_path', type: 'varchar' })
+  assetsPath: string;
 
   // Relations
-  @ManyToOne(() => User, (user) => user.trees)
-  @JoinColumn({ name: 'user_id' })
-  user: User;
-
-  @ManyToOne(() => TreeType, (treeType) => treeType.trees)
-  @JoinColumn({ name: 'tree_type_id' })
-  treeType: TreeType;
+  @OneToMany('UserTree', 'tree')
+  userTrees: any[];
 }
