@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider        = "prisma-client"
+  output          = "../generated/prisma"
+  previewFeatures = ["partialIndexes"]
 }
 
 datasource db {
@@ -14,7 +15,11 @@ model airdrop_codes {
   amount          Int
   expiration_date DateTime? @db.Timestamp(6)
   created_at      DateTime  @default(now()) @db.Timestamp(6)
+  updated_at      DateTime  @default(now()) @db.Timestamp(6)
+  deleted_at      DateTime? @db.Timestamp(6)
   resources       resources @relation(fields: [resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_resources_id_airdrop_codes")
+
+  @@index([resource_id], map: "IDX_7c7062e5026da6d4b144340b21")
 }
 
 model economy_logs {
@@ -25,15 +30,17 @@ model economy_logs {
   source        String   @db.VarChar
   created_at    DateTime @default(now()) @db.Timestamp(6)
   users         users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_id_economy_logs")
+
+  @@index([user_id], map: "IDX_3eac21abf6a30a5f662d1448b6")
 }
 
 model friendships {
-  user_id_1                          String   @db.Uuid
-  user_id_2                          String   @db.Uuid
-  status                             String   @default("ACCEPTED") @db.VarChar
-  created_at                         DateTime @default(now()) @db.Timestamp(6)
-  users_friendships_user_id_1Tousers users    @relation("friendships_user_id_1Tousers", fields: [user_id_1], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_1_friendships")
-  users_friendships_user_id_2Tousers users    @relation("friendships_user_id_2Tousers", fields: [user_id_2], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_2_friendships")
+  user_id_1                          String                  @db.Uuid
+  user_id_2                          String                  @db.Uuid
+  created_at                         DateTime                @default(now()) @db.Timestamp(6)
+  status                             friendships_status_enum @default(PENDING)
+  users_friendships_user_id_2Tousers users                   @relation("friendships_user_id_2Tousers", fields: [user_id_2], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_2_friendships")
+  users_friendships_user_id_1Tousers users                   @relation("friendships_user_id_1Tousers", fields: [user_id_1], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_1_friendships")
 
   @@id([user_id_1, user_id_2])
 }
@@ -46,6 +53,8 @@ model notifications {
   is_read    Boolean  @default(false)
   created_at DateTime @default(now()) @db.Timestamp(6)
   users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_id_notifications")
+
+  @@index([user_id], map: "IDX_9a8a82462cab47c73d25f49261")
 }
 
 model pvp_action_logs {
@@ -57,15 +66,22 @@ model pvp_action_logs {
   target_tree_id                           String?     @db.Uuid
   was_blocked                              Boolean     @default(false)
   created_at                               DateTime    @default(now()) @db.Timestamp(6)
-  users_pvp_action_logs_attacker_idTousers users       @relation("pvp_action_logs_attacker_idTousers", fields: [attacker_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_attacker_id_pvp_logs")
   users_pvp_action_logs_defender_idTousers users       @relation("pvp_action_logs_defender_idTousers", fields: [defender_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_defender_id_pvp_logs")
+  users_pvp_action_logs_attacker_idTousers users       @relation("pvp_action_logs_attacker_idTousers", fields: [attacker_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_attacker_id_pvp_logs")
   user_trees                               user_trees? @relation(fields: [target_tree_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_target_tree_pvp_logs")
+
+  @@index([defender_id], map: "IDX_579f644637832b65dd551923e0")
+  @@index([attacker_id], map: "IDX_81b0ad581390e3fc2e321995ab")
+  @@index([target_tree_id], map: "IDX_c768916f4092aef64cc7f8b27f")
 }
 
 model resources {
   id             String           @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   name           String           @unique @db.VarChar
   description    String?
+  created_at     DateTime         @default(now()) @db.Timestamp(6)
+  updated_at     DateTime         @default(now()) @db.Timestamp(6)
+  deleted_at     DateTime?        @db.Timestamp(6)
   airdrop_codes  airdrop_codes[]
   user_resources user_resources[]
 }
@@ -78,10 +94,13 @@ model spin_rewards {
 }
 
 model students {
-  id         String @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  student_id String @unique @db.VarChar
-  full_name  String @db.VarChar
-  email      String @unique @db.VarChar
+  id         String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  student_id String    @unique(map: "UQ_ba36f3e3743f80d1cdc51020103") @db.VarChar
+  full_name  String    @db.VarChar
+  email      String    @unique(map: "UQ_25985d58c714a4a427ced57507b") @db.VarChar
+  created_at DateTime  @default(now()) @db.Timestamp(6)
+  updated_at DateTime  @default(now()) @db.Timestamp(6)
+  deleted_at DateTime? @db.Timestamp(6)
   users      users?
 }
 
@@ -92,6 +111,9 @@ model tasks {
   reward_type   String       @db.VarChar
   reward_amount Int
   is_daily      Boolean      @default(true)
+  created_at    DateTime     @default(now()) @db.Timestamp(6)
+  updated_at    DateTime     @default(now()) @db.Timestamp(6)
+  deleted_at    DateTime?    @db.Timestamp(6)
   user_tasks    user_tasks[]
 }
 
@@ -110,7 +132,10 @@ model trees {
   perk_step   Decimal?     @db.Decimal
   slot_index  Int          @db.SmallInt
   description String
-  assets_path String
+  created_at  DateTime     @default(now()) @db.Timestamp(6)
+  updated_at  DateTime     @default(now()) @db.Timestamp(6)
+  deleted_at  DateTime?    @db.Timestamp(6)
+  assets_path String       @db.VarChar
   user_trees  user_trees[]
 }
 
@@ -120,20 +145,29 @@ model user_resources {
   resource_id String    @db.Uuid
   balance     BigInt    @default(0)
   updated_at  DateTime  @default(now()) @db.Timestamp(6)
-  resources   resources @relation(fields: [resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_resources_id_user_resources")
+  created_at  DateTime  @default(now()) @db.Timestamp(6)
+  deleted_at  DateTime? @db.Timestamp(6)
   users       users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_id_user_resources")
+  resources   resources @relation(fields: [resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_resources_id_user_resources")
 
   @@unique([user_id, resource_id], map: "unique_user_resource")
+  @@index([user_id], map: "IDX_a6aff0f62d0af51f18d6660bd1")
+  @@index([resource_id], map: "IDX_d9aa67bf8ee1cd217f73bd1518")
 }
 
 model user_tasks {
-  id         String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  user_id    String   @db.Uuid
-  task_id    String   @db.Uuid
-  status     String   @default("PENDING") @db.VarChar
-  updated_at DateTime @default(now()) @db.Timestamp(6)
-  tasks      tasks    @relation(fields: [task_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tasks_id_user_tasks")
-  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_id_user_tasks")
+  id         String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  user_id    String    @db.Uuid
+  task_id    String    @db.Uuid
+  status     String    @default("PENDING") @db.VarChar
+  updated_at DateTime  @default(now()) @db.Timestamp(6)
+  created_at DateTime  @default(now()) @db.Timestamp(6)
+  deleted_at DateTime? @db.Timestamp(6)
+  tasks      tasks     @relation(fields: [task_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tasks_id_user_tasks")
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_id_user_tasks")
+
+  @@index([task_id], map: "IDX_67a8a20c2e44bfb84ca1a33e6d")
+  @@index([user_id], map: "IDX_da349034af45568bdc0ab49314")
 }
 
 model user_trees {
@@ -147,38 +181,236 @@ model user_trees {
   created_at        DateTime          @default(now()) @db.Timestamp(6)
   updated_at        DateTime          @default(now()) @db.Timestamp(6)
   version           Int               @default(1)
-  checksum          String
+  deleted_at        DateTime?         @db.Timestamp(6)
+  checksum          String            @db.VarChar
   pvp_action_logs   pvp_action_logs[]
   trees             trees             @relation(fields: [tree_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_trees_id_user_trees")
   users             users             @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_id_user_trees")
 
   @@unique([user_id, tree_id], map: "unique_user_tree")
+  @@index([tree_id], map: "IDX_682bd3ce09aaf8bb11f22b4956")
+  @@index([user_id], map: "IDX_7e44d5d963fd277a8a4528b0c3")
 }
 
 model users {
-  id                                                 String            @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  username                                           String            @db.VarChar
-  spin_count                                         Int               @default(5) @db.SmallInt
-  glove_count                                        Int               @default(0) @db.SmallInt
-  watering_can_count                                 Int               @default(0) @db.SmallInt
-  shield_count                                       Int               @default(0) @db.SmallInt
-  last_spin_regen                                    DateTime?         @db.Timestamp(6)
-  created_at                                         DateTime          @default(now()) @db.Timestamp(6)
-  updated_at                                         DateTime          @default(now()) @db.Timestamp(6)
-  email                                              String            @unique @db.VarChar
-  fullname                                           String            @db.VarChar
-  nickname                                           String            @db.VarChar
-  student_id                                         String            @unique @db.VarChar
-  avatar                                             String?
-  role                                               String            @db.VarChar
+  id                                                 String                      @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  username                                           String                      @db.VarChar
+  spin_count                                         Int                         @default(5) @db.SmallInt
+  glove_count                                        Int                         @default(0) @db.SmallInt
+  watering_can_count                                 Int                         @default(0) @db.SmallInt
+  shield_count                                       Int                         @default(0) @db.SmallInt
+  last_spin_regen                                    DateTime?                   @db.Timestamp(6)
+  created_at                                         DateTime                    @default(now()) @db.Timestamp(6)
+  updated_at                                         DateTime                    @default(now()) @db.Timestamp(6)
+  email                                              String                      @unique @db.VarChar
+  fullname                                           String                      @db.VarChar
+  nickname                                           String                      @db.VarChar
+  student_id                                         String                      @unique @db.VarChar
+  role                                               String                      @db.VarChar
+  deleted_at                                         DateTime?                   @db.Timestamp(6)
+  avatar                                             String?                     @db.VarChar
+  conversation_participants                          conversation_participants[]
   economy_logs                                       economy_logs[]
-  friendships_friendships_user_id_1Tousers           friendships[]     @relation("friendships_user_id_1Tousers")
-  friendships_friendships_user_id_2Tousers           friendships[]     @relation("friendships_user_id_2Tousers")
+  friendships_friendships_user_id_2Tousers           friendships[]               @relation("friendships_user_id_2Tousers")
+  friendships_friendships_user_id_1Tousers           friendships[]               @relation("friendships_user_id_1Tousers")
+  messages                                           messages[]
   notifications                                      notifications[]
-  pvp_action_logs_pvp_action_logs_attacker_idTousers pvp_action_logs[] @relation("pvp_action_logs_attacker_idTousers")
-  pvp_action_logs_pvp_action_logs_defender_idTousers pvp_action_logs[] @relation("pvp_action_logs_defender_idTousers")
+  pvp_action_logs_pvp_action_logs_defender_idTousers pvp_action_logs[]           @relation("pvp_action_logs_defender_idTousers")
+  pvp_action_logs_pvp_action_logs_attacker_idTousers pvp_action_logs[]           @relation("pvp_action_logs_attacker_idTousers")
+  user_devices                                       user_devices[]
   user_resources                                     user_resources[]
+  user_sessions                                      user_sessions[]
   user_tasks                                         user_tasks[]
   user_trees                                         user_trees[]
-  students                                           students          @relation(fields: [student_id], references: [student_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_users_student_id_students")
+  students                                           students                    @relation(fields: [student_id], references: [student_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_users_student_id_students")
+  wifi_sessions                                      wifi_sessions[]
+}
+
+model conversation_participants {
+  id              String        @id(map: "PK_61b51428ad9453f5921369fbe94") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  created_at      DateTime      @default(now()) @db.Timestamp(6)
+  updated_at      DateTime      @default(now()) @db.Timestamp(6)
+  deleted_at      DateTime?     @db.Timestamp(6)
+  conversation_id String        @db.Uuid
+  user_id         String        @db.Uuid
+  joined_at       DateTime      @db.Timestamp(6)
+  last_read_at    DateTime?     @db.Timestamp(6)
+  is_admin        Boolean       @default(false)
+  is_muted        Boolean       @default(false)
+  left_at         DateTime?     @db.Timestamp(6)
+  conversations   conversations @relation(fields: [conversation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_1559e8a16b828f2e836a2312800")
+  users           users         @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_377d4041a495b81ee1a85ae026f")
+
+  @@unique([conversation_id, user_id], map: "IDX_fdcd6405d74e797f10fa836033")
+  @@index([conversation_id], map: "IDX_1559e8a16b828f2e836a231280")
+  @@index([user_id], map: "IDX_377d4041a495b81ee1a85ae026")
+}
+
+model conversations {
+  id                        String                      @id(map: "PK_ee34f4f7ced4ec8681f26bf04ef") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  created_at                DateTime                    @default(now()) @db.Timestamp(6)
+  updated_at                DateTime                    @default(now()) @db.Timestamp(6)
+  deleted_at                DateTime?                   @db.Timestamp(6)
+  type                      conversations_type_enum     @default(direct)
+  name                      String?                     @db.VarChar
+  avatar                    String?                     @db.VarChar
+  created_by                String                      @db.VarChar
+  last_message_at           DateTime?                   @db.Timestamp(6)
+  is_active                 Boolean                     @default(true)
+  conversation_participants conversation_participants[]
+  messages                  messages[]
+
+  @@index([created_by], map: "IDX_81d92d15c62b3fff79c617c904")
+}
+
+model messages {
+  id              String             @id(map: "PK_18325f38ae6de43878487eff986") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  created_at      DateTime           @default(now()) @db.Timestamp(6)
+  updated_at      DateTime           @default(now()) @db.Timestamp(6)
+  deleted_at      DateTime?          @db.Timestamp(6)
+  conversation_id String             @db.Uuid
+  sender_id       String             @db.Uuid
+  type            messages_type_enum @default(text)
+  content         String
+  metadata        Json?
+  reply_to_id     String?            @db.VarChar
+  is_edited       Boolean            @default(false)
+  edited_at       DateTime?          @db.Timestamp(6)
+  is_deleted      Boolean            @default(false)
+  users           users              @relation(fields: [sender_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_22133395bd13b970ccd0c34ab22")
+  conversations   conversations      @relation(fields: [conversation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_3bc55a7c3f9ed54b520bb5cfe23")
+
+  @@index([sender_id], map: "IDX_22133395bd13b970ccd0c34ab2")
+  @@index([conversation_id], map: "IDX_3bc55a7c3f9ed54b520bb5cfe2")
+}
+
+model migrations {
+  id        Int    @id(map: "PK_8c82d7f526340ab734260ea46be") @default(autoincrement())
+  timestamp BigInt
+  name      String @db.VarChar
+}
+
+model otps {
+  id           String         @id(map: "PK_91fef5ed60605b854a2115d2410") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  created_at   DateTime       @default(now()) @db.Timestamp(6)
+  updated_at   DateTime       @default(now()) @db.Timestamp(6)
+  deleted_at   DateTime?      @db.Timestamp(6)
+  user_id      String         @db.VarChar
+  otp_code     String         @db.VarChar
+  type         otps_type_enum
+  email        String?        @db.VarChar
+  phone_number String?        @db.VarChar
+  device_id    String?        @db.VarChar
+  expires_at   DateTime       @db.Timestamp(6)
+  verified_at  DateTime?      @db.Timestamp(6)
+  attempts     Int            @default(0)
+  max_attempts Int            @default(5)
+  is_used      Boolean        @default(false)
+  metadata     Json?
+
+  @@index([user_id], map: "IDX_3938bb24b38ad395af30230bde")
+  @@index([device_id], map: "IDX_583339e7ff23d9c9e16ddaa4c5")
+  @@index([expires_at], map: "IDX_bd65700a251465579f9a84d76c")
+}
+
+model user_devices {
+  id            String          @id(map: "PK_c9e7e648903a9e537347aba4371") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  created_at    DateTime        @default(now()) @db.Timestamp(6)
+  updated_at    DateTime        @default(now()) @db.Timestamp(6)
+  deleted_at    DateTime?       @db.Timestamp(6)
+  user_id       String          @db.Uuid
+  device_id     String          @db.VarChar
+  device_name   String?         @db.VarChar
+  device_type   String          @db.VarChar
+  device_os     String?         @db.VarChar
+  device_model  String?         @db.VarChar
+  browser       String?         @db.VarChar
+  ip_address    String?         @db.VarChar
+  fcm_token     String?         @db.VarChar
+  is_active     Boolean         @default(true)
+  last_active   DateTime        @db.Timestamp(6)
+  logged_out_at DateTime?       @db.Timestamp(6)
+  users         users           @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_28bd79e1b3f7c1168f0904ce241")
+  user_sessions user_sessions[]
+
+  @@unique([user_id, device_id], map: "IDX_69b11f34c0f681c815fb697101")
+  @@index([user_id], map: "IDX_28bd79e1b3f7c1168f0904ce24")
+  @@index([device_id], map: "IDX_7c0755b2e06094d9dfb353a377")
+}
+
+model user_sessions {
+  id               String       @id(map: "PK_e93e031a5fed190d4789b6bfd83") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  created_at       DateTime     @default(now()) @db.Timestamp(6)
+  updated_at       DateTime     @default(now()) @db.Timestamp(6)
+  deleted_at       DateTime?    @db.Timestamp(6)
+  user_id          String       @db.Uuid
+  device_id        String       @db.Uuid
+  access_token_id  String       @db.VarChar
+  refresh_token_id String       @db.VarChar
+  ip_address       String?      @db.VarChar
+  user_agent       String?      @db.VarChar
+  is_active        Boolean      @default(true)
+  expires_at       DateTime     @db.Timestamp(6)
+  last_active      DateTime     @db.Timestamp(6)
+  logged_out_at    DateTime?    @db.Timestamp(6)
+  user_devices     user_devices @relation(fields: [device_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_94ac98b31718fa59ce7b6201a58")
+  users            users        @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_e9658e959c490b0a634dfc54783")
+
+  @@index([refresh_token_id], map: "IDX_09b1908896dc0ec01e22be4fe1")
+  @@index([device_id], map: "IDX_94ac98b31718fa59ce7b6201a5")
+  @@index([user_id], map: "IDX_e9658e959c490b0a634dfc5478")
+  @@index([access_token_id], map: "IDX_ef1bcb03c1fd6d659eecfce69f")
+}
+
+model wifi_sessions {
+  id               String                    @id(map: "PK_43aa9921cb7024fcfa55723dc41") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  created_at       DateTime                  @default(now()) @db.Timestamp(6)
+  updated_at       DateTime                  @default(now()) @db.Timestamp(6)
+  deleted_at       DateTime?                 @db.Timestamp(6)
+  user_id          String                    @db.Uuid
+  start_time       DateTime                  @db.Timestamp(6)
+  end_time         DateTime?                 @db.Timestamp(6)
+  duration_minutes Int                       @default(0)
+  points_earned    Int                       @default(0)
+  status           wifi_sessions_status_enum @default(active)
+  last_heartbeat   DateTime?                 @db.Timestamp(6)
+  device_id        String?                   @db.VarChar
+  ip_address       String?                   @db.VarChar
+  users            users                     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_4a422ae72f7e3e44dc3944a4bfd")
+
+  @@index([user_id], map: "IDX_4a422ae72f7e3e44dc3944a4bf")
+  @@index([last_heartbeat], map: "idx_wifi_last_heartbeat", where: raw("(status = 'active'::wifi_sessions_status_enum)"))
+  @@index([user_id, status], map: "idx_wifi_user_status")
+}
+
+enum conversations_type_enum {
+  direct
+  group
+}
+
+enum friendships_status_enum {
+  ACCEPTED
+  PENDING
+  BLOCKED
+}
+
+enum messages_type_enum {
+  text
+  image
+  file
+  system
+}
+
+enum otps_type_enum {
+  email_verification
+  phone_verification
+  password_reset
+  device_verification
+  two_factor_auth
+}
+
+enum wifi_sessions_status_enum {
+  active
+  completed
+  cancelled
 }

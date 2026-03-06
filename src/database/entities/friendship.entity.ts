@@ -1,4 +1,12 @@
-import { Entity, Column, ManyToOne, JoinColumn, CreateDateColumn, PrimaryColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  PrimaryColumn,
+} from 'typeorm';
+import { FriendshipStatus } from '../../shared/constants/enums.constant';
 
 /**
  * Friendship Entity
@@ -18,8 +26,12 @@ export class Friendship {
   /**
    * Trạng thái quan hệ: ACCEPTED | PENDING | BLOCKED
    */
-  @Column({ type: 'varchar', default: 'ACCEPTED' })
-  status: string;
+  @Column({
+    type: 'enum',
+    enum: FriendshipStatus,
+    default: FriendshipStatus.PENDING,
+  })
+  status: FriendshipStatus;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;
