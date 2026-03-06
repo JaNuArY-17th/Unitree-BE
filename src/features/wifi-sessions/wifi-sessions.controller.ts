@@ -12,6 +12,9 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
+  ApiBody,
+  ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { WifiSessionsService } from './wifi-sessions.service';
 import { StartSessionDto } from './dto/start-session.dto';
@@ -39,12 +42,14 @@ export class WifiSessionsController {
 
   @Post('start')
   @ApiOperation({
-    summary: 'Start a new WiFi session',
+    summary: 'Bắt đầu một phiên WiFi mới',
     description:
-      'Note: WiFi validation (BSSID check) should be done on frontend before calling this endpoint',
+      'Lưu ý: Việc kiểm tra WiFi hợp lệ (BSSID check) phải được thực hiện ở phía client trước khi gọi endpoint này',
   })
-  @ApiResponse({ status: 201, description: 'Session started successfully' })
-  @ApiResponse({ status: 400, description: 'Already have an active session' })
+  @ApiBody({ type: StartSessionDto })
+  @ApiResponse({ status: 201, description: 'Phiên WiFi được tạo thành công' })
+  @ApiResponse({ status: 400, description: 'Đã có phiên đang hoạt động' })
+  @ApiResponse({ status: 401, description: 'Chưa xác thực' })
   async startSession(
     @CurrentUser('id') userId: string,
     @Body() dto: StartSessionDto,
@@ -55,12 +60,14 @@ export class WifiSessionsController {
 
   @Post('heartbeat')
   @ApiOperation({
-    summary: 'Send heartbeat to keep session alive',
+    summary: 'Gửi heartbeat để duy trì phiên WiFi',
     description:
-      'Should be called every 5 minutes (Android) or 15 minutes (iOS)',
+      'Android: Gửi mỗi 5 phút (Foreground Service). iOS: Gửi mỗi 15 phút (Silent Push)',
   })
-  @ApiResponse({ status: 200, description: 'Heartbeat acknowledged' })
-  @ApiResponse({ status: 404, description: 'Session not found' })
+  @ApiBody({ type: HeartbeatDto })
+  @ApiResponse({ status: 200, description: 'Heartbeat đã được ghi nhận' })
+  @ApiResponse({ status: 401, description: 'Chưa xác thực' })
+  @ApiResponse({ status: 404, description: 'Phiên không tồn tại' })
   async heartbeat(
     @CurrentUser('id') userId: string,
     @Body() dto: HeartbeatDto,
@@ -71,12 +78,22 @@ export class WifiSessionsController {
 
   @Post(':id/end')
   @ApiOperation({
-    summary: 'End an active WiFi session',
+    summary: 'Kết thúc phiên WiFi và nhận điểm',
     description:
-      'Calculates final duration and awards points (1 point per minute)',
+      'Tính toán thời gian phiên và trao điểm thưởng (1 điểm / phút)',
   })
-  @ApiResponse({ status: 200, description: 'Session ended and points awarded' })
-  @ApiResponse({ status: 400, description: 'Session is not active' })
+  @ApiParam({
+    name: 'id',
+    description: 'UUID của phiên WiFi',
+    example: 'session-uuid-abc123',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Phiên đã kết thúc và điểm được trao',
+  })
+  @ApiResponse({ status: 400, description: 'Phiên không ở trạng thái active' })
+  @ApiResponse({ status: 401, description: 'Chưa xác thực' })
+  @ApiResponse({ status: 404, description: 'Phiên không tồn tại' })
   async endSession(
     @CurrentUser('id') userId: string,
     @Param('id') sessionId: string,
@@ -94,19 +111,36 @@ export class WifiSessionsController {
   }
 
   @Get('active')
-  @ApiOperation({ summary: 'Get current active session' })
-  @ApiResponse({ status: 200, description: 'Returns active session or null' })
+  @ApiOperation({ summary: 'Lấy phiên WiFi đang hoạt động của user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Phiên hiện tại hoặc null nếu không có phiên nào',
+  })
+  @ApiResponse({ status: 401, description: 'Chưa xác thực' })
   async getActiveSession(@CurrentUser('id') userId: string) {
     const session = await this.wifiSessionsService.getActiveSession(userId);
     return ResponseUtil.success(session);
   }
 
   @Get('history')
-  @ApiOperation({ summary: 'Get user WiFi session history with pagination' })
+  @ApiOperation({ summary: 'Lấy lịch sử các phiên WiFi có phân trang' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Trang hiện tại (mặc định: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Số bản ghi mỗi trang (mặc định: 10, tối đa: 100)',
+  })
   @ApiResponse({
     status: 200,
-    description: 'Returns paginated session history',
+    description: 'Trả về lịch sử phiên WiFi có phân trang',
   })
+  @ApiResponse({ status: 401, description: 'Chưa xác thực' })
   async getUserSessions(
     @CurrentUser('id') userId: string,
     @Query() pagination: PaginationDto,
@@ -125,9 +159,18 @@ export class WifiSessionsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get WiFi session by ID' })
-  @ApiResponse({ status: 200, description: 'Returns session details' })
-  @ApiResponse({ status: 404, description: 'Session not found' })
+  @ApiOperation({ summary: 'Lấy thông tin chi tiết một phiên WiFi theo ID' })
+  @ApiParam({
+    name: 'id',
+    description: 'UUID của phiên WiFi',
+    example: 'session-uuid-abc123',
+  })
+  @ApiResponse({ status: 200, description: 'Trả về thông tin phiên WiFi' })
+  @ApiResponse({ status: 401, description: 'Chưa xác thực' })
+  @ApiResponse({
+    status: 404,
+    description: 'Phiên không tồn tại hoặc không thuộc về user này',
+  })
   async getSession(
     @CurrentUser('id') userId: string,
     @Param('id') sessionId: string,
