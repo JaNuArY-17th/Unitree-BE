@@ -1,13 +1,44 @@
 import { Controller, Get, Query } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { PointsService } from './points.service';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { ResponseUtil } from '../../shared/utils/response.util';
 
+@ApiTags('Points')
+@ApiBearerAuth()
 @Controller('points')
 export class PointsController {
   constructor(private readonly pointsService: PointsService) {}
 
   @Get('history')
+  @ApiOperation({
+    summary: 'Lấy lịch sử điểm của user',
+    description:
+      'Trả về danh sách giao dịch điểm (kiếm được / sử dụng) với phân trang',
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Trang hiện tại (mặc định: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Số bản ghi mỗi trang (mặc định: 10)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Trả về lịch sử điểm có phân trang',
+  })
+  @ApiResponse({ status: 401, description: 'Chưa xác thực' })
   async getEconomyHistory(
     @CurrentUser('id') userId: string,
     @Query('page') page: number = 1,

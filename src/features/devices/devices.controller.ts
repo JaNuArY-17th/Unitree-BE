@@ -7,7 +7,13 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+  ApiParam,
+} from '@nestjs/swagger';
 import { DevicesService } from './devices.service';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
@@ -21,14 +27,20 @@ export class DevicesController {
   constructor(private readonly devicesService: DevicesService) {}
 
   @Get('sessions')
-  @ApiOperation({ summary: 'Get active sessions for current user' })
+  @ApiOperation({
+    summary: 'Lấy danh sách phiên đăng nhập đang hoạt động của user',
+  })
+  @ApiResponse({ status: 200, description: 'Danh sách active sessions' })
+  @ApiResponse({ status: 401, description: 'Chưa xác thực' })
   async getActiveSessions(@CurrentUser() user: any) {
     const sessions = await this.devicesService.getActiveSessions(user.id);
     return ResponseUtil.success(sessions, 'Active sessions retrieved');
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all devices for current user' })
+  @ApiOperation({ summary: 'Lấy danh sách tất cả thiết bị của user' })
+  @ApiResponse({ status: 200, description: 'Danh sách thiết bị của user' })
+  @ApiResponse({ status: 401, description: 'Chưa xác thực' })
   async getUserDevices(@CurrentUser() user: any) {
     const devices = await this.devicesService.getUserDevices(user.id);
     return ResponseUtil.success(devices, 'Devices retrieved');
@@ -36,7 +48,12 @@ export class DevicesController {
 
   @Delete('logout-all')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Logout from all devices' })
+  @ApiOperation({ summary: 'Đăng xuất khỏi tất cả thiết bị' })
+  @ApiResponse({
+    status: 200,
+    description: 'Đã đăng xuất khỏi tất cả thiết bị thành công',
+  })
+  @ApiResponse({ status: 401, description: 'Chưa xác thực' })
   async logoutAllDevices(@CurrentUser() user: any) {
     await this.devicesService.logoutAllDevices(user.id);
     return ResponseUtil.success(null, 'Logged out from all devices');
@@ -44,7 +61,15 @@ export class DevicesController {
 
   @Delete(':deviceId')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Remove a specific device' })
+  @ApiOperation({ summary: 'Xoá một thiết bị cụ thể' })
+  @ApiParam({
+    name: 'deviceId',
+    description: 'UUID của thiết bị cần xoá',
+    example: 'device-uuid-abc123',
+  })
+  @ApiResponse({ status: 200, description: 'Thiết bị đã được xoá thành công' })
+  @ApiResponse({ status: 401, description: 'Chưa xác thực' })
+  @ApiResponse({ status: 404, description: 'Thiết bị không tồn tại' })
   async removeDevice(
     @CurrentUser() user: any,
     @Param('deviceId') deviceId: string,
