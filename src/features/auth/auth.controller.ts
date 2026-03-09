@@ -19,6 +19,7 @@ import {
 import type { Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { GoogleLoginDto } from './dto/google-login.dto';
 import { LoginWithDeviceDto } from './dto/login-with-device.dto';
 import { VerifyDeviceDto } from './dto/verify-device.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -47,6 +48,24 @@ export class AuthController {
   async login(@Body() loginDto: LoginDto) {
     const result = await this.authService.login(loginDto);
     return ResponseUtil.success(result, 'Login successful');
+  }
+
+  @Public()
+  @Post('google/login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Đăng nhập bằng Google (Firebase ID Token)' })
+  @ApiBody({ type: GoogleLoginDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Đăng nhập thành công, trả về access token và refresh token',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'ID Token không hợp lệ',
+  })
+  async googleLogin(@Body() googleLoginDto: GoogleLoginDto) {
+    const result = await this.authService.googleLogin(googleLoginDto.idToken);
+    return ResponseUtil.success(result, 'Google login successful');
   }
 
   @Public()

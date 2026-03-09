@@ -32,7 +32,7 @@ export class DevicesController {
   })
   @ApiResponse({ status: 200, description: 'Danh sách active sessions' })
   @ApiResponse({ status: 401, description: 'Chưa xác thực' })
-  async getActiveSessions(@CurrentUser() user: any) {
+  async getActiveSessions(@CurrentUser() user: { id: string }) {
     const sessions = await this.devicesService.getActiveSessions(user.id);
     return ResponseUtil.success(sessions, 'Active sessions retrieved');
   }
@@ -41,7 +41,7 @@ export class DevicesController {
   @ApiOperation({ summary: 'Lấy danh sách tất cả thiết bị của user' })
   @ApiResponse({ status: 200, description: 'Danh sách thiết bị của user' })
   @ApiResponse({ status: 401, description: 'Chưa xác thực' })
-  async getUserDevices(@CurrentUser() user: any) {
+  async getUserDevices(@CurrentUser() user: { id: string }) {
     const devices = await this.devicesService.getUserDevices(user.id);
     return ResponseUtil.success(devices, 'Devices retrieved');
   }
@@ -54,7 +54,7 @@ export class DevicesController {
     description: 'Đã đăng xuất khỏi tất cả thiết bị thành công',
   })
   @ApiResponse({ status: 401, description: 'Chưa xác thực' })
-  async logoutAllDevices(@CurrentUser() user: any) {
+  async logoutAllDevices(@CurrentUser() user: { id: string }) {
     await this.devicesService.logoutAllDevices(user.id);
     return ResponseUtil.success(null, 'Logged out from all devices');
   }
@@ -71,7 +71,7 @@ export class DevicesController {
   @ApiResponse({ status: 401, description: 'Chưa xác thực' })
   @ApiResponse({ status: 404, description: 'Thiết bị không tồn tại' })
   async removeDevice(
-    @CurrentUser() user: any,
+    @CurrentUser() user: { id: string },
     @Param('deviceId') deviceId: string,
   ) {
     await this.devicesService.removeDevice(user.id, deviceId);

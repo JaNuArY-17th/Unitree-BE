@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import { Logger } from '../shared/utils/logger.util';
 
 @Injectable()
@@ -45,20 +45,20 @@ export class SocketService {
     return this.userSockets.has(userId) && !!sockets && sockets.size > 0;
   }
 
-  emitToUser(userId: string, event: string, data: any): void {
+  emitToUser(userId: string, event: string, data: unknown): void {
     const sockets = this.getUserSockets(userId);
     sockets.forEach((socketId) => {
       this.server.to(socketId).emit(event, data);
     });
   }
 
-  emitToUsers(userIds: string[], event: string, data: any): void {
+  emitToUsers(userIds: string[], event: string, data: unknown): void {
     userIds.forEach((userId) => {
       this.emitToUser(userId, event, data);
     });
   }
 
-  emitToRoom(room: string, event: string, data: any): void {
+  emitToRoom(room: string, event: string, data: unknown): void {
     this.server.to(room).emit(event, data);
   }
 

@@ -9,21 +9,21 @@ datasource db {
 }
 
 model airdrop_codes {
-  id              String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  code            String    @unique @db.VarChar
-  resource_id     String    @db.Uuid
-  amount          Int
-  expiration_date DateTime? @db.Timestamp(6)
+  id              String    @id(map: "PK_74632faf61a52d7ea5c47c5408f") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   created_at      DateTime  @default(now()) @db.Timestamp(6)
   updated_at      DateTime  @default(now()) @db.Timestamp(6)
   deleted_at      DateTime? @db.Timestamp(6)
+  code            String    @unique(map: "UQ_ce9360146dd5b6538d946b418b0") @db.VarChar
+  resource_id     String    @db.Uuid
+  amount          Int
+  expiration_date DateTime? @db.Timestamp(6)
   resources       resources @relation(fields: [resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_resources_id_airdrop_codes")
 
   @@index([resource_id], map: "IDX_7c7062e5026da6d4b144340b21")
 }
 
 model economy_logs {
-  id            String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  id            String   @id(map: "PK_76a48b02d3b45c9e2eff957f4e5") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   user_id       String   @db.Uuid
   resource_type String   @db.VarChar
   amount        Int
@@ -37,16 +37,16 @@ model economy_logs {
 model friendships {
   user_id_1                          String                  @db.Uuid
   user_id_2                          String                  @db.Uuid
-  created_at                         DateTime                @default(now()) @db.Timestamp(6)
   status                             friendships_status_enum @default(PENDING)
+  created_at                         DateTime                @default(now()) @db.Timestamp(6)
   users_friendships_user_id_2Tousers users                   @relation("friendships_user_id_2Tousers", fields: [user_id_2], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_2_friendships")
   users_friendships_user_id_1Tousers users                   @relation("friendships_user_id_1Tousers", fields: [user_id_1], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_1_friendships")
 
-  @@id([user_id_1, user_id_2])
+  @@id([user_id_1, user_id_2], map: "PK_d982028080801d1873edde50b78")
 }
 
 model notifications {
-  id         String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  id         String   @id(map: "PK_6a72c3c0f683f6462415e653c3a") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   user_id    String   @db.Uuid
   type       String   @db.VarChar
   message    String
@@ -58,7 +58,7 @@ model notifications {
 }
 
 model pvp_action_logs {
-  id                                       String      @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  id                                       String      @id(map: "PK_1eba3bbd73ca77e7042435dc9fd") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   attacker_id                              String      @db.Uuid
   defender_id                              String      @db.Uuid
   action_type                              String      @db.VarChar
@@ -76,50 +76,53 @@ model pvp_action_logs {
 }
 
 model resources {
-  id             String           @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  name           String           @unique @db.VarChar
-  description    String?
+  id             String           @id(map: "PK_632484ab9dff41bba94f9b7c85e") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   created_at     DateTime         @default(now()) @db.Timestamp(6)
   updated_at     DateTime         @default(now()) @db.Timestamp(6)
   deleted_at     DateTime?        @db.Timestamp(6)
+  name           String           @unique(map: "UQ_f276c867b5752b7cc2c6c797b2b") @db.VarChar
+  description    String?
   airdrop_codes  airdrop_codes[]
   user_resources user_resources[]
 }
 
 model spin_rewards {
-  id            Int     @id
+  id            Int     @id(map: "PK_cc705eb228b1a7bdfcc280b4254")
   reward_type   String  @db.VarChar
   reward_amount Int
   drop_weight   Decimal @db.Decimal
 }
 
 model students {
-  id         String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  student_id String    @unique(map: "UQ_ba36f3e3743f80d1cdc51020103") @db.VarChar
-  full_name  String    @db.VarChar
-  email      String    @unique(map: "UQ_25985d58c714a4a427ced57507b") @db.VarChar
+  id         String    @id(map: "PK_7d7f07271ad4ce999880713f05e") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   created_at DateTime  @default(now()) @db.Timestamp(6)
   updated_at DateTime  @default(now()) @db.Timestamp(6)
   deleted_at DateTime? @db.Timestamp(6)
+  student_id String    @unique(map: "UQ_ba36f3e3743f80d1cdc51020103") @db.VarChar
+  full_name  String    @db.VarChar
+  email      String    @unique(map: "UQ_25985d58c714a4a427ced57507b") @db.VarChar
   users      users?
 }
 
 model tasks {
-  id            String       @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  id            String       @id(map: "PK_8d12ff38fcc62aaba2cab748772") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  created_at    DateTime     @default(now()) @db.Timestamp(6)
+  updated_at    DateTime     @default(now()) @db.Timestamp(6)
+  deleted_at    DateTime?    @db.Timestamp(6)
   title         String       @db.VarChar
   description   String?
   reward_type   String       @db.VarChar
   reward_amount Int
   is_daily      Boolean      @default(true)
-  created_at    DateTime     @default(now()) @db.Timestamp(6)
-  updated_at    DateTime     @default(now()) @db.Timestamp(6)
-  deleted_at    DateTime?    @db.Timestamp(6)
   user_tasks    user_tasks[]
 }
 
 model trees {
-  id          String       @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  name        String       @unique @db.VarChar
+  id          String       @id(map: "PK_916905d3ddf29a431776817cd8d") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  created_at  DateTime     @default(now()) @db.Timestamp(6)
+  updated_at  DateTime     @default(now()) @db.Timestamp(6)
+  deleted_at  DateTime?    @db.Timestamp(6)
+  name        String       @unique(map: "UQ_243b6538aaa70540db7bb1f789b") @db.VarChar
   tree_type   String       @db.VarChar
   max_level   Int          @db.SmallInt
   cost_base   Int
@@ -132,21 +135,18 @@ model trees {
   perk_step   Decimal?     @db.Decimal
   slot_index  Int          @db.SmallInt
   description String
-  created_at  DateTime     @default(now()) @db.Timestamp(6)
-  updated_at  DateTime     @default(now()) @db.Timestamp(6)
-  deleted_at  DateTime?    @db.Timestamp(6)
   assets_path String       @db.VarChar
   user_trees  user_trees[]
 }
 
 model user_resources {
-  id          String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  id          String    @id(map: "PK_9b4f73db8997f9d7210ea511237") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  created_at  DateTime  @default(now()) @db.Timestamp(6)
+  updated_at  DateTime  @default(now()) @db.Timestamp(6)
+  deleted_at  DateTime? @db.Timestamp(6)
   user_id     String    @db.Uuid
   resource_id String    @db.Uuid
   balance     BigInt    @default(0)
-  updated_at  DateTime  @default(now()) @db.Timestamp(6)
-  created_at  DateTime  @default(now()) @db.Timestamp(6)
-  deleted_at  DateTime? @db.Timestamp(6)
   users       users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_id_user_resources")
   resources   resources @relation(fields: [resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_resources_id_user_resources")
 
@@ -156,13 +156,13 @@ model user_resources {
 }
 
 model user_tasks {
-  id         String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  id         String    @id(map: "PK_dd5ebb5c408af74cba775bd2326") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  created_at DateTime  @default(now()) @db.Timestamp(6)
+  updated_at DateTime  @default(now()) @db.Timestamp(6)
+  deleted_at DateTime? @db.Timestamp(6)
   user_id    String    @db.Uuid
   task_id    String    @db.Uuid
   status     String    @default("PENDING") @db.VarChar
-  updated_at DateTime  @default(now()) @db.Timestamp(6)
-  created_at DateTime  @default(now()) @db.Timestamp(6)
-  deleted_at DateTime? @db.Timestamp(6)
   tasks      tasks     @relation(fields: [task_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tasks_id_user_tasks")
   users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_id_user_tasks")
 
@@ -171,17 +171,17 @@ model user_tasks {
 }
 
 model user_trees {
-  id                String            @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  id                String            @id(map: "PK_29a7ad5fc0ac834cc704379d627") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  created_at        DateTime          @default(now()) @db.Timestamp(6)
+  updated_at        DateTime          @default(now()) @db.Timestamp(6)
+  deleted_at        DateTime?         @db.Timestamp(6)
   user_id           String            @db.Uuid
   tree_id           String            @db.Uuid
   level             Int               @default(1) @db.SmallInt
   is_damaged        Boolean           @default(false)
   upgrade_end_time  DateTime?         @db.Timestamp(6)
   last_harvest_time DateTime          @default(now()) @db.Timestamp(6)
-  created_at        DateTime          @default(now()) @db.Timestamp(6)
-  updated_at        DateTime          @default(now()) @db.Timestamp(6)
   version           Int               @default(1)
-  deleted_at        DateTime?         @db.Timestamp(6)
   checksum          String            @db.VarChar
   pvp_action_logs   pvp_action_logs[]
   trees             trees             @relation(fields: [tree_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_trees_id_user_trees")
@@ -193,22 +193,22 @@ model user_trees {
 }
 
 model users {
-  id                                                 String                      @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  id                                                 String                      @id(map: "PK_a3ffb1c0c8416b9fc6f907b7433") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  created_at                                         DateTime                    @default(now()) @db.Timestamp(6)
+  updated_at                                         DateTime                    @default(now()) @db.Timestamp(6)
+  deleted_at                                         DateTime?                   @db.Timestamp(6)
   username                                           String                      @db.VarChar
+  email                                              String                      @unique(map: "UQ_97672ac88f789774dd47f7c8be3") @db.VarChar
+  fullname                                           String                      @db.VarChar
+  nickname                                           String                      @db.VarChar
+  student_id                                         String                      @unique(map: "UQ_4bcc4fd204f448ad671c0747ab4") @db.VarChar
+  avatar                                             String?                     @db.VarChar
+  role                                               String                      @db.VarChar
   spin_count                                         Int                         @default(5) @db.SmallInt
   glove_count                                        Int                         @default(0) @db.SmallInt
   watering_can_count                                 Int                         @default(0) @db.SmallInt
   shield_count                                       Int                         @default(0) @db.SmallInt
   last_spin_regen                                    DateTime?                   @db.Timestamp(6)
-  created_at                                         DateTime                    @default(now()) @db.Timestamp(6)
-  updated_at                                         DateTime                    @default(now()) @db.Timestamp(6)
-  email                                              String                      @unique @db.VarChar
-  fullname                                           String                      @db.VarChar
-  nickname                                           String                      @db.VarChar
-  student_id                                         String                      @unique @db.VarChar
-  role                                               String                      @db.VarChar
-  deleted_at                                         DateTime?                   @db.Timestamp(6)
-  avatar                                             String?                     @db.VarChar
   conversation_participants                          conversation_participants[]
   economy_logs                                       economy_logs[]
   friendships_friendships_user_id_2Tousers           friendships[]               @relation("friendships_user_id_2Tousers")

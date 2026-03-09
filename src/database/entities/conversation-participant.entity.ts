@@ -30,11 +30,14 @@ export class ConversationParticipant extends BaseEntity {
   leftAt?: Date;
 
   // Relations
-  @ManyToOne(() => Conversation, (conversation) => conversation.participants)
+  @ManyToOne(
+    () => Conversation,
+    (conversation: Conversation) => conversation.participants,
+  )
   @JoinColumn({ name: 'conversation_id' })
   conversation: Conversation;
 
-  @ManyToOne(() => User, (user) => user.conversationParticipants)
+  @ManyToOne(() => User, (user: User) => user.conversationParticipants)
   @JoinColumn({ name: 'user_id' })
   user: User;
 }

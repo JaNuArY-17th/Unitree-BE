@@ -26,10 +26,13 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     return super.canActivate(context);
   }
 
-  handleRequest(err: any, user: any, info: any) {
+  handleRequest<TUser = unknown>(err: unknown, user: unknown) {
     if (err || !user) {
-      throw err || new UnauthorizedException('Invalid token or user not found');
+      if (err instanceof Error) {
+        throw err;
+      }
+      throw new UnauthorizedException('Invalid token or user not found');
     }
-    return user;
+    return user as TUser;
   }
 }

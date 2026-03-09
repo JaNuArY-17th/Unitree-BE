@@ -40,11 +40,14 @@ export class Message extends BaseEntity {
   isDeleted: boolean;
 
   // Relations
-  @ManyToOne(() => Conversation, (conversation) => conversation.messages)
+  @ManyToOne(
+    () => Conversation,
+    (conversation: Conversation) => conversation.messages,
+  )
   @JoinColumn({ name: 'conversation_id' })
   conversation: Conversation;
 
-  @ManyToOne(() => User, (user) => user.messages)
+  @ManyToOne(() => User, (user: User) => user.messages)
   @JoinColumn({ name: 'sender_id' })
   sender: User;
 }

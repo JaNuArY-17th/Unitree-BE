@@ -11,9 +11,7 @@ import { WifiSession } from '../../database/entities/wifi-session.entity';
 import { StartSessionDto } from './dto/start-session.dto';
 import { HeartbeatDto } from './dto/heartbeat.dto';
 import { EndSessionDto } from './dto/end-session.dto';
-import {
-  WifiSessionStatus,
-} from '../../shared/constants/enums.constant';
+import { WifiSessionStatus } from '../../shared/constants/enums.constant';
 import { CacheService } from '../../services/cache.service';
 import { PointsService } from '../points/points.service';
 

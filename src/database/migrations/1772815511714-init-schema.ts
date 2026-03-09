@@ -1,172 +1,435 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class InitSchema1772815511714 implements MigrationInterface {
-    name = 'InitSchema1772815511714'
+  name = 'InitSchema1772815511714';
 
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`CREATE TABLE "users" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "username" character varying NOT NULL, "email" character varying NOT NULL, "fullname" character varying NOT NULL, "nickname" character varying NOT NULL, "student_id" character varying NOT NULL, "avatar" character varying, "role" character varying NOT NULL, "spin_count" smallint NOT NULL DEFAULT '5', "glove_count" smallint NOT NULL DEFAULT '0', "watering_can_count" smallint NOT NULL DEFAULT '0', "shield_count" smallint NOT NULL DEFAULT '0', "last_spin_regen" TIMESTAMP, CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email"), CONSTRAINT "UQ_4bcc4fd204f448ad671c0747ab4" UNIQUE ("student_id"), CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TYPE "public"."wifi_sessions_status_enum" AS ENUM('active', 'completed', 'cancelled')`);
-        await queryRunner.query(`CREATE TABLE "wifi_sessions" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "user_id" uuid NOT NULL, "start_time" TIMESTAMP NOT NULL, "end_time" TIMESTAMP, "duration_minutes" integer NOT NULL DEFAULT '0', "points_earned" integer NOT NULL DEFAULT '0', "status" "public"."wifi_sessions_status_enum" NOT NULL DEFAULT 'active', "last_heartbeat" TIMESTAMP, "device_id" character varying, "ip_address" character varying, CONSTRAINT "PK_43aa9921cb7024fcfa55723dc41" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "IDX_4a422ae72f7e3e44dc3944a4bf" ON "wifi_sessions" ("user_id") `);
-        await queryRunner.query(`CREATE INDEX "idx_wifi_last_heartbeat" ON "wifi_sessions" ("last_heartbeat") WHERE status = 'active'`);
-        await queryRunner.query(`CREATE INDEX "idx_wifi_user_status" ON "wifi_sessions" ("user_id", "status") `);
-        await queryRunner.query(`CREATE TABLE "user_trees" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "user_id" uuid NOT NULL, "tree_id" uuid NOT NULL, "level" smallint NOT NULL DEFAULT '1', "is_damaged" boolean NOT NULL DEFAULT false, "upgrade_end_time" TIMESTAMP, "last_harvest_time" TIMESTAMP NOT NULL DEFAULT now(), "version" integer NOT NULL DEFAULT '1', "checksum" character varying NOT NULL, CONSTRAINT "unique_user_tree" UNIQUE ("user_id", "tree_id"), CONSTRAINT "PK_29a7ad5fc0ac834cc704379d627" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "IDX_7e44d5d963fd277a8a4528b0c3" ON "user_trees" ("user_id") `);
-        await queryRunner.query(`CREATE INDEX "IDX_682bd3ce09aaf8bb11f22b4956" ON "user_trees" ("tree_id") `);
-        await queryRunner.query(`CREATE TABLE "user_tasks" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "user_id" uuid NOT NULL, "task_id" uuid NOT NULL, "status" character varying NOT NULL DEFAULT 'PENDING', CONSTRAINT "PK_dd5ebb5c408af74cba775bd2326" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "IDX_da349034af45568bdc0ab49314" ON "user_tasks" ("user_id") `);
-        await queryRunner.query(`CREATE INDEX "IDX_67a8a20c2e44bfb84ca1a33e6d" ON "user_tasks" ("task_id") `);
-        await queryRunner.query(`CREATE TABLE "user_devices" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "user_id" uuid NOT NULL, "device_id" character varying NOT NULL, "device_name" character varying, "device_type" character varying NOT NULL, "device_os" character varying, "device_model" character varying, "browser" character varying, "ip_address" character varying, "fcm_token" character varying, "is_active" boolean NOT NULL DEFAULT true, "last_active" TIMESTAMP NOT NULL, "logged_out_at" TIMESTAMP, CONSTRAINT "PK_c9e7e648903a9e537347aba4371" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "IDX_28bd79e1b3f7c1168f0904ce24" ON "user_devices" ("user_id") `);
-        await queryRunner.query(`CREATE INDEX "IDX_7c0755b2e06094d9dfb353a377" ON "user_devices" ("device_id") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "IDX_69b11f34c0f681c815fb697101" ON "user_devices" ("user_id", "device_id") `);
-        await queryRunner.query(`CREATE TABLE "user_sessions" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "user_id" uuid NOT NULL, "device_id" uuid NOT NULL, "access_token_id" character varying NOT NULL, "refresh_token_id" character varying NOT NULL, "ip_address" character varying, "user_agent" character varying, "is_active" boolean NOT NULL DEFAULT true, "expires_at" TIMESTAMP NOT NULL, "last_active" TIMESTAMP NOT NULL, "logged_out_at" TIMESTAMP, CONSTRAINT "PK_e93e031a5fed190d4789b6bfd83" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "IDX_e9658e959c490b0a634dfc5478" ON "user_sessions" ("user_id") `);
-        await queryRunner.query(`CREATE INDEX "IDX_94ac98b31718fa59ce7b6201a5" ON "user_sessions" ("device_id") `);
-        await queryRunner.query(`CREATE INDEX "IDX_ef1bcb03c1fd6d659eecfce69f" ON "user_sessions" ("access_token_id") `);
-        await queryRunner.query(`CREATE INDEX "IDX_09b1908896dc0ec01e22be4fe1" ON "user_sessions" ("refresh_token_id") `);
-        await queryRunner.query(`CREATE TABLE "user_resources" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "user_id" uuid NOT NULL, "resource_id" uuid NOT NULL, "balance" bigint NOT NULL DEFAULT '0', CONSTRAINT "unique_user_resource" UNIQUE ("user_id", "resource_id"), CONSTRAINT "PK_9b4f73db8997f9d7210ea511237" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "IDX_a6aff0f62d0af51f18d6660bd1" ON "user_resources" ("user_id") `);
-        await queryRunner.query(`CREATE INDEX "IDX_d9aa67bf8ee1cd217f73bd1518" ON "user_resources" ("resource_id") `);
-        await queryRunner.query(`CREATE TABLE "trees" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "name" character varying NOT NULL, "tree_type" character varying NOT NULL, "max_level" smallint NOT NULL, "cost_base" integer NOT NULL, "cost_rate" numeric NOT NULL, "oxy_base" integer, "oxy_rate" numeric, "time_base" integer NOT NULL, "time_rate" numeric NOT NULL, "perk_base" numeric, "perk_step" numeric, "slot_index" smallint NOT NULL, "description" text NOT NULL, "assets_path" character varying NOT NULL, CONSTRAINT "UQ_243b6538aaa70540db7bb1f789b" UNIQUE ("name"), CONSTRAINT "PK_916905d3ddf29a431776817cd8d" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TABLE "tasks" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "title" character varying NOT NULL, "description" text, "reward_type" character varying NOT NULL, "reward_amount" integer NOT NULL, "is_daily" boolean NOT NULL DEFAULT true, CONSTRAINT "PK_8d12ff38fcc62aaba2cab748772" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TABLE "students" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "student_id" character varying NOT NULL, "full_name" character varying NOT NULL, "email" character varying NOT NULL, CONSTRAINT "UQ_ba36f3e3743f80d1cdc51020103" UNIQUE ("student_id"), CONSTRAINT "UQ_25985d58c714a4a427ced57507b" UNIQUE ("email"), CONSTRAINT "PK_7d7f07271ad4ce999880713f05e" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TABLE "resources" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "name" character varying NOT NULL, "description" text, CONSTRAINT "UQ_f276c867b5752b7cc2c6c797b2b" UNIQUE ("name"), CONSTRAINT "PK_632484ab9dff41bba94f9b7c85e" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TABLE "spin_rewards" ("id" integer NOT NULL, "reward_type" character varying NOT NULL, "reward_amount" integer NOT NULL, "drop_weight" numeric NOT NULL, CONSTRAINT "PK_cc705eb228b1a7bdfcc280b4254" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TABLE "pvp_action_logs" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "attacker_id" uuid NOT NULL, "defender_id" uuid NOT NULL, "action_type" character varying NOT NULL, "stolen_amount" integer, "target_tree_id" uuid, "was_blocked" boolean NOT NULL DEFAULT false, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_1eba3bbd73ca77e7042435dc9fd" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "IDX_81b0ad581390e3fc2e321995ab" ON "pvp_action_logs" ("attacker_id") `);
-        await queryRunner.query(`CREATE INDEX "IDX_579f644637832b65dd551923e0" ON "pvp_action_logs" ("defender_id") `);
-        await queryRunner.query(`CREATE INDEX "IDX_c768916f4092aef64cc7f8b27f" ON "pvp_action_logs" ("target_tree_id") `);
-        await queryRunner.query(`CREATE TYPE "public"."otps_type_enum" AS ENUM('email_verification', 'phone_verification', 'password_reset', 'device_verification', 'two_factor_auth')`);
-        await queryRunner.query(`CREATE TABLE "otps" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "user_id" character varying NOT NULL, "otp_code" character varying NOT NULL, "type" "public"."otps_type_enum" NOT NULL, "email" character varying, "phone_number" character varying, "device_id" character varying, "expires_at" TIMESTAMP NOT NULL, "verified_at" TIMESTAMP, "attempts" integer NOT NULL DEFAULT '0', "max_attempts" integer NOT NULL DEFAULT '5', "is_used" boolean NOT NULL DEFAULT false, "metadata" jsonb, CONSTRAINT "PK_91fef5ed60605b854a2115d2410" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "IDX_3938bb24b38ad395af30230bde" ON "otps" ("user_id") `);
-        await queryRunner.query(`CREATE INDEX "IDX_583339e7ff23d9c9e16ddaa4c5" ON "otps" ("device_id") `);
-        await queryRunner.query(`CREATE INDEX "IDX_bd65700a251465579f9a84d76c" ON "otps" ("expires_at") `);
-        await queryRunner.query(`CREATE TABLE "notifications" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid NOT NULL, "type" character varying NOT NULL, "message" text NOT NULL, "is_read" boolean NOT NULL DEFAULT false, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_6a72c3c0f683f6462415e653c3a" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "IDX_9a8a82462cab47c73d25f49261" ON "notifications" ("user_id") `);
-        await queryRunner.query(`CREATE TABLE "conversation_participants" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "conversation_id" uuid NOT NULL, "user_id" uuid NOT NULL, "joined_at" TIMESTAMP NOT NULL, "last_read_at" TIMESTAMP, "is_admin" boolean NOT NULL DEFAULT false, "is_muted" boolean NOT NULL DEFAULT false, "left_at" TIMESTAMP, CONSTRAINT "PK_61b51428ad9453f5921369fbe94" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "IDX_1559e8a16b828f2e836a231280" ON "conversation_participants" ("conversation_id") `);
-        await queryRunner.query(`CREATE INDEX "IDX_377d4041a495b81ee1a85ae026" ON "conversation_participants" ("user_id") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "IDX_fdcd6405d74e797f10fa836033" ON "conversation_participants" ("conversation_id", "user_id") `);
-        await queryRunner.query(`CREATE TYPE "public"."conversations_type_enum" AS ENUM('direct', 'group')`);
-        await queryRunner.query(`CREATE TABLE "conversations" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "type" "public"."conversations_type_enum" NOT NULL DEFAULT 'direct', "name" character varying, "avatar" character varying, "created_by" character varying NOT NULL, "last_message_at" TIMESTAMP, "is_active" boolean NOT NULL DEFAULT true, CONSTRAINT "PK_ee34f4f7ced4ec8681f26bf04ef" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "IDX_81d92d15c62b3fff79c617c904" ON "conversations" ("created_by") `);
-        await queryRunner.query(`CREATE TYPE "public"."messages_type_enum" AS ENUM('text', 'image', 'file', 'system')`);
-        await queryRunner.query(`CREATE TABLE "messages" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "conversation_id" uuid NOT NULL, "sender_id" uuid NOT NULL, "type" "public"."messages_type_enum" NOT NULL DEFAULT 'text', "content" text NOT NULL, "metadata" jsonb, "reply_to_id" character varying, "is_edited" boolean NOT NULL DEFAULT false, "edited_at" TIMESTAMP, "is_deleted" boolean NOT NULL DEFAULT false, CONSTRAINT "PK_18325f38ae6de43878487eff986" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "IDX_3bc55a7c3f9ed54b520bb5cfe2" ON "messages" ("conversation_id") `);
-        await queryRunner.query(`CREATE INDEX "IDX_22133395bd13b970ccd0c34ab2" ON "messages" ("sender_id") `);
-        await queryRunner.query(`CREATE TYPE "public"."friendships_status_enum" AS ENUM('ACCEPTED', 'PENDING', 'BLOCKED')`);
-        await queryRunner.query(`CREATE TABLE "friendships" ("user_id_1" uuid NOT NULL, "user_id_2" uuid NOT NULL, "status" "public"."friendships_status_enum" NOT NULL DEFAULT 'PENDING', "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_d982028080801d1873edde50b78" PRIMARY KEY ("user_id_1", "user_id_2"))`);
-        await queryRunner.query(`CREATE TABLE "economy_logs" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid NOT NULL, "resource_type" character varying NOT NULL, "amount" integer NOT NULL, "source" character varying NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_76a48b02d3b45c9e2eff957f4e5" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "IDX_3eac21abf6a30a5f662d1448b6" ON "economy_logs" ("user_id") `);
-        await queryRunner.query(`CREATE TABLE "airdrop_codes" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "code" character varying NOT NULL, "resource_id" uuid NOT NULL, "amount" integer NOT NULL, "expiration_date" TIMESTAMP, CONSTRAINT "UQ_ce9360146dd5b6538d946b418b0" UNIQUE ("code"), CONSTRAINT "PK_74632faf61a52d7ea5c47c5408f" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "IDX_7c7062e5026da6d4b144340b21" ON "airdrop_codes" ("resource_id") `);
-        await queryRunner.query(`ALTER TABLE "users" ADD CONSTRAINT "FK_4bcc4fd204f448ad671c0747ab4" FOREIGN KEY ("student_id") REFERENCES "students"("student_id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "wifi_sessions" ADD CONSTRAINT "FK_4a422ae72f7e3e44dc3944a4bfd" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "user_trees" ADD CONSTRAINT "FK_7e44d5d963fd277a8a4528b0c32" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "user_trees" ADD CONSTRAINT "FK_682bd3ce09aaf8bb11f22b49565" FOREIGN KEY ("tree_id") REFERENCES "trees"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "user_tasks" ADD CONSTRAINT "FK_da349034af45568bdc0ab493140" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "user_tasks" ADD CONSTRAINT "FK_67a8a20c2e44bfb84ca1a33e6df" FOREIGN KEY ("task_id") REFERENCES "tasks"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "user_devices" ADD CONSTRAINT "FK_28bd79e1b3f7c1168f0904ce241" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "user_sessions" ADD CONSTRAINT "FK_e9658e959c490b0a634dfc54783" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "user_sessions" ADD CONSTRAINT "FK_94ac98b31718fa59ce7b6201a58" FOREIGN KEY ("device_id") REFERENCES "user_devices"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "user_resources" ADD CONSTRAINT "FK_a6aff0f62d0af51f18d6660bd13" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "user_resources" ADD CONSTRAINT "FK_d9aa67bf8ee1cd217f73bd15183" FOREIGN KEY ("resource_id") REFERENCES "resources"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "pvp_action_logs" ADD CONSTRAINT "FK_81b0ad581390e3fc2e321995aba" FOREIGN KEY ("attacker_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "pvp_action_logs" ADD CONSTRAINT "FK_579f644637832b65dd551923e07" FOREIGN KEY ("defender_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "pvp_action_logs" ADD CONSTRAINT "FK_c768916f4092aef64cc7f8b27f2" FOREIGN KEY ("target_tree_id") REFERENCES "user_trees"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "notifications" ADD CONSTRAINT "FK_9a8a82462cab47c73d25f49261f" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "conversation_participants" ADD CONSTRAINT "FK_1559e8a16b828f2e836a2312800" FOREIGN KEY ("conversation_id") REFERENCES "conversations"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "conversation_participants" ADD CONSTRAINT "FK_377d4041a495b81ee1a85ae026f" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "messages" ADD CONSTRAINT "FK_3bc55a7c3f9ed54b520bb5cfe23" FOREIGN KEY ("conversation_id") REFERENCES "conversations"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "messages" ADD CONSTRAINT "FK_22133395bd13b970ccd0c34ab22" FOREIGN KEY ("sender_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "friendships" ADD CONSTRAINT "FK_e2643bb5d2d6b3ef70a1c1cbef3" FOREIGN KEY ("user_id_1") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "friendships" ADD CONSTRAINT "FK_113a0d8673a825691ca495f1219" FOREIGN KEY ("user_id_2") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "economy_logs" ADD CONSTRAINT "FK_3eac21abf6a30a5f662d1448b64" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "airdrop_codes" ADD CONSTRAINT "FK_7c7062e5026da6d4b144340b214" FOREIGN KEY ("resource_id") REFERENCES "resources"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
-    }
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `CREATE TABLE "users" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "username" character varying NOT NULL, "email" character varying NOT NULL, "fullname" character varying NOT NULL, "nickname" character varying NOT NULL, "student_id" character varying NOT NULL, "avatar" character varying, "role" character varying NOT NULL, "spin_count" smallint NOT NULL DEFAULT '5', "glove_count" smallint NOT NULL DEFAULT '0', "watering_can_count" smallint NOT NULL DEFAULT '0', "shield_count" smallint NOT NULL DEFAULT '0', "last_spin_regen" TIMESTAMP, CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email"), CONSTRAINT "UQ_4bcc4fd204f448ad671c0747ab4" UNIQUE ("student_id"), CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."wifi_sessions_status_enum" AS ENUM('active', 'completed', 'cancelled')`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "wifi_sessions" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "user_id" uuid NOT NULL, "start_time" TIMESTAMP NOT NULL, "end_time" TIMESTAMP, "duration_minutes" integer NOT NULL DEFAULT '0', "points_earned" integer NOT NULL DEFAULT '0', "status" "public"."wifi_sessions_status_enum" NOT NULL DEFAULT 'active', "last_heartbeat" TIMESTAMP, "device_id" character varying, "ip_address" character varying, CONSTRAINT "PK_43aa9921cb7024fcfa55723dc41" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_4a422ae72f7e3e44dc3944a4bf" ON "wifi_sessions" ("user_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_wifi_last_heartbeat" ON "wifi_sessions" ("last_heartbeat") WHERE status = 'active'`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_wifi_user_status" ON "wifi_sessions" ("user_id", "status") `,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "user_trees" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "user_id" uuid NOT NULL, "tree_id" uuid NOT NULL, "level" smallint NOT NULL DEFAULT '1', "is_damaged" boolean NOT NULL DEFAULT false, "upgrade_end_time" TIMESTAMP, "last_harvest_time" TIMESTAMP NOT NULL DEFAULT now(), "version" integer NOT NULL DEFAULT '1', "checksum" character varying NOT NULL, CONSTRAINT "unique_user_tree" UNIQUE ("user_id", "tree_id"), CONSTRAINT "PK_29a7ad5fc0ac834cc704379d627" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_7e44d5d963fd277a8a4528b0c3" ON "user_trees" ("user_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_682bd3ce09aaf8bb11f22b4956" ON "user_trees" ("tree_id") `,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "user_tasks" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "user_id" uuid NOT NULL, "task_id" uuid NOT NULL, "status" character varying NOT NULL DEFAULT 'PENDING', CONSTRAINT "PK_dd5ebb5c408af74cba775bd2326" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_da349034af45568bdc0ab49314" ON "user_tasks" ("user_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_67a8a20c2e44bfb84ca1a33e6d" ON "user_tasks" ("task_id") `,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "user_devices" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "user_id" uuid NOT NULL, "device_id" character varying NOT NULL, "device_name" character varying, "device_type" character varying NOT NULL, "device_os" character varying, "device_model" character varying, "browser" character varying, "ip_address" character varying, "fcm_token" character varying, "is_active" boolean NOT NULL DEFAULT true, "last_active" TIMESTAMP NOT NULL, "logged_out_at" TIMESTAMP, CONSTRAINT "PK_c9e7e648903a9e537347aba4371" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_28bd79e1b3f7c1168f0904ce24" ON "user_devices" ("user_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_7c0755b2e06094d9dfb353a377" ON "user_devices" ("device_id") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "IDX_69b11f34c0f681c815fb697101" ON "user_devices" ("user_id", "device_id") `,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "user_sessions" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "user_id" uuid NOT NULL, "device_id" uuid NOT NULL, "access_token_id" character varying NOT NULL, "refresh_token_id" character varying NOT NULL, "ip_address" character varying, "user_agent" character varying, "is_active" boolean NOT NULL DEFAULT true, "expires_at" TIMESTAMP NOT NULL, "last_active" TIMESTAMP NOT NULL, "logged_out_at" TIMESTAMP, CONSTRAINT "PK_e93e031a5fed190d4789b6bfd83" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_e9658e959c490b0a634dfc5478" ON "user_sessions" ("user_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_94ac98b31718fa59ce7b6201a5" ON "user_sessions" ("device_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_ef1bcb03c1fd6d659eecfce69f" ON "user_sessions" ("access_token_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_09b1908896dc0ec01e22be4fe1" ON "user_sessions" ("refresh_token_id") `,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "user_resources" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "user_id" uuid NOT NULL, "resource_id" uuid NOT NULL, "balance" bigint NOT NULL DEFAULT '0', CONSTRAINT "unique_user_resource" UNIQUE ("user_id", "resource_id"), CONSTRAINT "PK_9b4f73db8997f9d7210ea511237" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_a6aff0f62d0af51f18d6660bd1" ON "user_resources" ("user_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_d9aa67bf8ee1cd217f73bd1518" ON "user_resources" ("resource_id") `,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "trees" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "name" character varying NOT NULL, "tree_type" character varying NOT NULL, "max_level" smallint NOT NULL, "cost_base" integer NOT NULL, "cost_rate" numeric NOT NULL, "oxy_base" integer, "oxy_rate" numeric, "time_base" integer NOT NULL, "time_rate" numeric NOT NULL, "perk_base" numeric, "perk_step" numeric, "slot_index" smallint NOT NULL, "description" text NOT NULL, "assets_path" character varying NOT NULL, CONSTRAINT "UQ_243b6538aaa70540db7bb1f789b" UNIQUE ("name"), CONSTRAINT "PK_916905d3ddf29a431776817cd8d" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "tasks" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "title" character varying NOT NULL, "description" text, "reward_type" character varying NOT NULL, "reward_amount" integer NOT NULL, "is_daily" boolean NOT NULL DEFAULT true, CONSTRAINT "PK_8d12ff38fcc62aaba2cab748772" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "students" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "student_id" character varying NOT NULL, "full_name" character varying NOT NULL, "email" character varying NOT NULL, CONSTRAINT "UQ_ba36f3e3743f80d1cdc51020103" UNIQUE ("student_id"), CONSTRAINT "UQ_25985d58c714a4a427ced57507b" UNIQUE ("email"), CONSTRAINT "PK_7d7f07271ad4ce999880713f05e" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "resources" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "name" character varying NOT NULL, "description" text, CONSTRAINT "UQ_f276c867b5752b7cc2c6c797b2b" UNIQUE ("name"), CONSTRAINT "PK_632484ab9dff41bba94f9b7c85e" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "spin_rewards" ("id" integer NOT NULL, "reward_type" character varying NOT NULL, "reward_amount" integer NOT NULL, "drop_weight" numeric NOT NULL, CONSTRAINT "PK_cc705eb228b1a7bdfcc280b4254" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "pvp_action_logs" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "attacker_id" uuid NOT NULL, "defender_id" uuid NOT NULL, "action_type" character varying NOT NULL, "stolen_amount" integer, "target_tree_id" uuid, "was_blocked" boolean NOT NULL DEFAULT false, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_1eba3bbd73ca77e7042435dc9fd" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_81b0ad581390e3fc2e321995ab" ON "pvp_action_logs" ("attacker_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_579f644637832b65dd551923e0" ON "pvp_action_logs" ("defender_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_c768916f4092aef64cc7f8b27f" ON "pvp_action_logs" ("target_tree_id") `,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."otps_type_enum" AS ENUM('email_verification', 'phone_verification', 'password_reset', 'device_verification', 'two_factor_auth')`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "otps" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "user_id" character varying NOT NULL, "otp_code" character varying NOT NULL, "type" "public"."otps_type_enum" NOT NULL, "email" character varying, "phone_number" character varying, "device_id" character varying, "expires_at" TIMESTAMP NOT NULL, "verified_at" TIMESTAMP, "attempts" integer NOT NULL DEFAULT '0', "max_attempts" integer NOT NULL DEFAULT '5', "is_used" boolean NOT NULL DEFAULT false, "metadata" jsonb, CONSTRAINT "PK_91fef5ed60605b854a2115d2410" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_3938bb24b38ad395af30230bde" ON "otps" ("user_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_583339e7ff23d9c9e16ddaa4c5" ON "otps" ("device_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_bd65700a251465579f9a84d76c" ON "otps" ("expires_at") `,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "notifications" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid NOT NULL, "type" character varying NOT NULL, "message" text NOT NULL, "is_read" boolean NOT NULL DEFAULT false, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_6a72c3c0f683f6462415e653c3a" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_9a8a82462cab47c73d25f49261" ON "notifications" ("user_id") `,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "conversation_participants" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "conversation_id" uuid NOT NULL, "user_id" uuid NOT NULL, "joined_at" TIMESTAMP NOT NULL, "last_read_at" TIMESTAMP, "is_admin" boolean NOT NULL DEFAULT false, "is_muted" boolean NOT NULL DEFAULT false, "left_at" TIMESTAMP, CONSTRAINT "PK_61b51428ad9453f5921369fbe94" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_1559e8a16b828f2e836a231280" ON "conversation_participants" ("conversation_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_377d4041a495b81ee1a85ae026" ON "conversation_participants" ("user_id") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "IDX_fdcd6405d74e797f10fa836033" ON "conversation_participants" ("conversation_id", "user_id") `,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."conversations_type_enum" AS ENUM('direct', 'group')`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "conversations" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "type" "public"."conversations_type_enum" NOT NULL DEFAULT 'direct', "name" character varying, "avatar" character varying, "created_by" character varying NOT NULL, "last_message_at" TIMESTAMP, "is_active" boolean NOT NULL DEFAULT true, CONSTRAINT "PK_ee34f4f7ced4ec8681f26bf04ef" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_81d92d15c62b3fff79c617c904" ON "conversations" ("created_by") `,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."messages_type_enum" AS ENUM('text', 'image', 'file', 'system')`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "messages" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "conversation_id" uuid NOT NULL, "sender_id" uuid NOT NULL, "type" "public"."messages_type_enum" NOT NULL DEFAULT 'text', "content" text NOT NULL, "metadata" jsonb, "reply_to_id" character varying, "is_edited" boolean NOT NULL DEFAULT false, "edited_at" TIMESTAMP, "is_deleted" boolean NOT NULL DEFAULT false, CONSTRAINT "PK_18325f38ae6de43878487eff986" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_3bc55a7c3f9ed54b520bb5cfe2" ON "messages" ("conversation_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_22133395bd13b970ccd0c34ab2" ON "messages" ("sender_id") `,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."friendships_status_enum" AS ENUM('ACCEPTED', 'PENDING', 'BLOCKED')`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "friendships" ("user_id_1" uuid NOT NULL, "user_id_2" uuid NOT NULL, "status" "public"."friendships_status_enum" NOT NULL DEFAULT 'PENDING', "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_d982028080801d1873edde50b78" PRIMARY KEY ("user_id_1", "user_id_2"))`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "economy_logs" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid NOT NULL, "resource_type" character varying NOT NULL, "amount" integer NOT NULL, "source" character varying NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_76a48b02d3b45c9e2eff957f4e5" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_3eac21abf6a30a5f662d1448b6" ON "economy_logs" ("user_id") `,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "airdrop_codes" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "code" character varying NOT NULL, "resource_id" uuid NOT NULL, "amount" integer NOT NULL, "expiration_date" TIMESTAMP, CONSTRAINT "UQ_ce9360146dd5b6538d946b418b0" UNIQUE ("code"), CONSTRAINT "PK_74632faf61a52d7ea5c47c5408f" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_7c7062e5026da6d4b144340b21" ON "airdrop_codes" ("resource_id") `,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ADD CONSTRAINT "FK_4bcc4fd204f448ad671c0747ab4" FOREIGN KEY ("student_id") REFERENCES "students"("student_id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "wifi_sessions" ADD CONSTRAINT "FK_4a422ae72f7e3e44dc3944a4bfd" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_trees" ADD CONSTRAINT "FK_7e44d5d963fd277a8a4528b0c32" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_trees" ADD CONSTRAINT "FK_682bd3ce09aaf8bb11f22b49565" FOREIGN KEY ("tree_id") REFERENCES "trees"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_tasks" ADD CONSTRAINT "FK_da349034af45568bdc0ab493140" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_tasks" ADD CONSTRAINT "FK_67a8a20c2e44bfb84ca1a33e6df" FOREIGN KEY ("task_id") REFERENCES "tasks"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_devices" ADD CONSTRAINT "FK_28bd79e1b3f7c1168f0904ce241" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_sessions" ADD CONSTRAINT "FK_e9658e959c490b0a634dfc54783" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_sessions" ADD CONSTRAINT "FK_94ac98b31718fa59ce7b6201a58" FOREIGN KEY ("device_id") REFERENCES "user_devices"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_resources" ADD CONSTRAINT "FK_a6aff0f62d0af51f18d6660bd13" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_resources" ADD CONSTRAINT "FK_d9aa67bf8ee1cd217f73bd15183" FOREIGN KEY ("resource_id") REFERENCES "resources"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pvp_action_logs" ADD CONSTRAINT "FK_81b0ad581390e3fc2e321995aba" FOREIGN KEY ("attacker_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pvp_action_logs" ADD CONSTRAINT "FK_579f644637832b65dd551923e07" FOREIGN KEY ("defender_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pvp_action_logs" ADD CONSTRAINT "FK_c768916f4092aef64cc7f8b27f2" FOREIGN KEY ("target_tree_id") REFERENCES "user_trees"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "notifications" ADD CONSTRAINT "FK_9a8a82462cab47c73d25f49261f" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "conversation_participants" ADD CONSTRAINT "FK_1559e8a16b828f2e836a2312800" FOREIGN KEY ("conversation_id") REFERENCES "conversations"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "conversation_participants" ADD CONSTRAINT "FK_377d4041a495b81ee1a85ae026f" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "messages" ADD CONSTRAINT "FK_3bc55a7c3f9ed54b520bb5cfe23" FOREIGN KEY ("conversation_id") REFERENCES "conversations"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "messages" ADD CONSTRAINT "FK_22133395bd13b970ccd0c34ab22" FOREIGN KEY ("sender_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "friendships" ADD CONSTRAINT "FK_e2643bb5d2d6b3ef70a1c1cbef3" FOREIGN KEY ("user_id_1") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "friendships" ADD CONSTRAINT "FK_113a0d8673a825691ca495f1219" FOREIGN KEY ("user_id_2") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "economy_logs" ADD CONSTRAINT "FK_3eac21abf6a30a5f662d1448b64" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "airdrop_codes" ADD CONSTRAINT "FK_7c7062e5026da6d4b144340b214" FOREIGN KEY ("resource_id") REFERENCES "resources"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TABLE "airdrop_codes" DROP CONSTRAINT "FK_7c7062e5026da6d4b144340b214"`);
-        await queryRunner.query(`ALTER TABLE "economy_logs" DROP CONSTRAINT "FK_3eac21abf6a30a5f662d1448b64"`);
-        await queryRunner.query(`ALTER TABLE "friendships" DROP CONSTRAINT "FK_113a0d8673a825691ca495f1219"`);
-        await queryRunner.query(`ALTER TABLE "friendships" DROP CONSTRAINT "FK_e2643bb5d2d6b3ef70a1c1cbef3"`);
-        await queryRunner.query(`ALTER TABLE "messages" DROP CONSTRAINT "FK_22133395bd13b970ccd0c34ab22"`);
-        await queryRunner.query(`ALTER TABLE "messages" DROP CONSTRAINT "FK_3bc55a7c3f9ed54b520bb5cfe23"`);
-        await queryRunner.query(`ALTER TABLE "conversation_participants" DROP CONSTRAINT "FK_377d4041a495b81ee1a85ae026f"`);
-        await queryRunner.query(`ALTER TABLE "conversation_participants" DROP CONSTRAINT "FK_1559e8a16b828f2e836a2312800"`);
-        await queryRunner.query(`ALTER TABLE "notifications" DROP CONSTRAINT "FK_9a8a82462cab47c73d25f49261f"`);
-        await queryRunner.query(`ALTER TABLE "pvp_action_logs" DROP CONSTRAINT "FK_c768916f4092aef64cc7f8b27f2"`);
-        await queryRunner.query(`ALTER TABLE "pvp_action_logs" DROP CONSTRAINT "FK_579f644637832b65dd551923e07"`);
-        await queryRunner.query(`ALTER TABLE "pvp_action_logs" DROP CONSTRAINT "FK_81b0ad581390e3fc2e321995aba"`);
-        await queryRunner.query(`ALTER TABLE "user_resources" DROP CONSTRAINT "FK_d9aa67bf8ee1cd217f73bd15183"`);
-        await queryRunner.query(`ALTER TABLE "user_resources" DROP CONSTRAINT "FK_a6aff0f62d0af51f18d6660bd13"`);
-        await queryRunner.query(`ALTER TABLE "user_sessions" DROP CONSTRAINT "FK_94ac98b31718fa59ce7b6201a58"`);
-        await queryRunner.query(`ALTER TABLE "user_sessions" DROP CONSTRAINT "FK_e9658e959c490b0a634dfc54783"`);
-        await queryRunner.query(`ALTER TABLE "user_devices" DROP CONSTRAINT "FK_28bd79e1b3f7c1168f0904ce241"`);
-        await queryRunner.query(`ALTER TABLE "user_tasks" DROP CONSTRAINT "FK_67a8a20c2e44bfb84ca1a33e6df"`);
-        await queryRunner.query(`ALTER TABLE "user_tasks" DROP CONSTRAINT "FK_da349034af45568bdc0ab493140"`);
-        await queryRunner.query(`ALTER TABLE "user_trees" DROP CONSTRAINT "FK_682bd3ce09aaf8bb11f22b49565"`);
-        await queryRunner.query(`ALTER TABLE "user_trees" DROP CONSTRAINT "FK_7e44d5d963fd277a8a4528b0c32"`);
-        await queryRunner.query(`ALTER TABLE "wifi_sessions" DROP CONSTRAINT "FK_4a422ae72f7e3e44dc3944a4bfd"`);
-        await queryRunner.query(`ALTER TABLE "users" DROP CONSTRAINT "FK_4bcc4fd204f448ad671c0747ab4"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_7c7062e5026da6d4b144340b21"`);
-        await queryRunner.query(`DROP TABLE "airdrop_codes"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_3eac21abf6a30a5f662d1448b6"`);
-        await queryRunner.query(`DROP TABLE "economy_logs"`);
-        await queryRunner.query(`DROP TABLE "friendships"`);
-        await queryRunner.query(`DROP TYPE "public"."friendships_status_enum"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_22133395bd13b970ccd0c34ab2"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_3bc55a7c3f9ed54b520bb5cfe2"`);
-        await queryRunner.query(`DROP TABLE "messages"`);
-        await queryRunner.query(`DROP TYPE "public"."messages_type_enum"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_81d92d15c62b3fff79c617c904"`);
-        await queryRunner.query(`DROP TABLE "conversations"`);
-        await queryRunner.query(`DROP TYPE "public"."conversations_type_enum"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_fdcd6405d74e797f10fa836033"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_377d4041a495b81ee1a85ae026"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_1559e8a16b828f2e836a231280"`);
-        await queryRunner.query(`DROP TABLE "conversation_participants"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_9a8a82462cab47c73d25f49261"`);
-        await queryRunner.query(`DROP TABLE "notifications"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_bd65700a251465579f9a84d76c"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_583339e7ff23d9c9e16ddaa4c5"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_3938bb24b38ad395af30230bde"`);
-        await queryRunner.query(`DROP TABLE "otps"`);
-        await queryRunner.query(`DROP TYPE "public"."otps_type_enum"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_c768916f4092aef64cc7f8b27f"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_579f644637832b65dd551923e0"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_81b0ad581390e3fc2e321995ab"`);
-        await queryRunner.query(`DROP TABLE "pvp_action_logs"`);
-        await queryRunner.query(`DROP TABLE "spin_rewards"`);
-        await queryRunner.query(`DROP TABLE "resources"`);
-        await queryRunner.query(`DROP TABLE "students"`);
-        await queryRunner.query(`DROP TABLE "tasks"`);
-        await queryRunner.query(`DROP TABLE "trees"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_d9aa67bf8ee1cd217f73bd1518"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_a6aff0f62d0af51f18d6660bd1"`);
-        await queryRunner.query(`DROP TABLE "user_resources"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_09b1908896dc0ec01e22be4fe1"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_ef1bcb03c1fd6d659eecfce69f"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_94ac98b31718fa59ce7b6201a5"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_e9658e959c490b0a634dfc5478"`);
-        await queryRunner.query(`DROP TABLE "user_sessions"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_69b11f34c0f681c815fb697101"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_7c0755b2e06094d9dfb353a377"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_28bd79e1b3f7c1168f0904ce24"`);
-        await queryRunner.query(`DROP TABLE "user_devices"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_67a8a20c2e44bfb84ca1a33e6d"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_da349034af45568bdc0ab49314"`);
-        await queryRunner.query(`DROP TABLE "user_tasks"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_682bd3ce09aaf8bb11f22b4956"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_7e44d5d963fd277a8a4528b0c3"`);
-        await queryRunner.query(`DROP TABLE "user_trees"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_wifi_user_status"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_wifi_last_heartbeat"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_4a422ae72f7e3e44dc3944a4bf"`);
-        await queryRunner.query(`DROP TABLE "wifi_sessions"`);
-        await queryRunner.query(`DROP TYPE "public"."wifi_sessions_status_enum"`);
-        await queryRunner.query(`DROP TABLE "users"`);
-    }
-
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `ALTER TABLE "airdrop_codes" DROP CONSTRAINT "FK_7c7062e5026da6d4b144340b214"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "economy_logs" DROP CONSTRAINT "FK_3eac21abf6a30a5f662d1448b64"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "friendships" DROP CONSTRAINT "FK_113a0d8673a825691ca495f1219"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "friendships" DROP CONSTRAINT "FK_e2643bb5d2d6b3ef70a1c1cbef3"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "messages" DROP CONSTRAINT "FK_22133395bd13b970ccd0c34ab22"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "messages" DROP CONSTRAINT "FK_3bc55a7c3f9ed54b520bb5cfe23"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "conversation_participants" DROP CONSTRAINT "FK_377d4041a495b81ee1a85ae026f"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "conversation_participants" DROP CONSTRAINT "FK_1559e8a16b828f2e836a2312800"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "notifications" DROP CONSTRAINT "FK_9a8a82462cab47c73d25f49261f"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pvp_action_logs" DROP CONSTRAINT "FK_c768916f4092aef64cc7f8b27f2"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pvp_action_logs" DROP CONSTRAINT "FK_579f644637832b65dd551923e07"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pvp_action_logs" DROP CONSTRAINT "FK_81b0ad581390e3fc2e321995aba"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_resources" DROP CONSTRAINT "FK_d9aa67bf8ee1cd217f73bd15183"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_resources" DROP CONSTRAINT "FK_a6aff0f62d0af51f18d6660bd13"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_sessions" DROP CONSTRAINT "FK_94ac98b31718fa59ce7b6201a58"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_sessions" DROP CONSTRAINT "FK_e9658e959c490b0a634dfc54783"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_devices" DROP CONSTRAINT "FK_28bd79e1b3f7c1168f0904ce241"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_tasks" DROP CONSTRAINT "FK_67a8a20c2e44bfb84ca1a33e6df"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_tasks" DROP CONSTRAINT "FK_da349034af45568bdc0ab493140"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_trees" DROP CONSTRAINT "FK_682bd3ce09aaf8bb11f22b49565"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_trees" DROP CONSTRAINT "FK_7e44d5d963fd277a8a4528b0c32"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "wifi_sessions" DROP CONSTRAINT "FK_4a422ae72f7e3e44dc3944a4bfd"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" DROP CONSTRAINT "FK_4bcc4fd204f448ad671c0747ab4"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_7c7062e5026da6d4b144340b21"`,
+    );
+    await queryRunner.query(`DROP TABLE "airdrop_codes"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_3eac21abf6a30a5f662d1448b6"`,
+    );
+    await queryRunner.query(`DROP TABLE "economy_logs"`);
+    await queryRunner.query(`DROP TABLE "friendships"`);
+    await queryRunner.query(`DROP TYPE "public"."friendships_status_enum"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_22133395bd13b970ccd0c34ab2"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_3bc55a7c3f9ed54b520bb5cfe2"`,
+    );
+    await queryRunner.query(`DROP TABLE "messages"`);
+    await queryRunner.query(`DROP TYPE "public"."messages_type_enum"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_81d92d15c62b3fff79c617c904"`,
+    );
+    await queryRunner.query(`DROP TABLE "conversations"`);
+    await queryRunner.query(`DROP TYPE "public"."conversations_type_enum"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_fdcd6405d74e797f10fa836033"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_377d4041a495b81ee1a85ae026"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_1559e8a16b828f2e836a231280"`,
+    );
+    await queryRunner.query(`DROP TABLE "conversation_participants"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_9a8a82462cab47c73d25f49261"`,
+    );
+    await queryRunner.query(`DROP TABLE "notifications"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_bd65700a251465579f9a84d76c"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_583339e7ff23d9c9e16ddaa4c5"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_3938bb24b38ad395af30230bde"`,
+    );
+    await queryRunner.query(`DROP TABLE "otps"`);
+    await queryRunner.query(`DROP TYPE "public"."otps_type_enum"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_c768916f4092aef64cc7f8b27f"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_579f644637832b65dd551923e0"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_81b0ad581390e3fc2e321995ab"`,
+    );
+    await queryRunner.query(`DROP TABLE "pvp_action_logs"`);
+    await queryRunner.query(`DROP TABLE "spin_rewards"`);
+    await queryRunner.query(`DROP TABLE "resources"`);
+    await queryRunner.query(`DROP TABLE "students"`);
+    await queryRunner.query(`DROP TABLE "tasks"`);
+    await queryRunner.query(`DROP TABLE "trees"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_d9aa67bf8ee1cd217f73bd1518"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_a6aff0f62d0af51f18d6660bd1"`,
+    );
+    await queryRunner.query(`DROP TABLE "user_resources"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_09b1908896dc0ec01e22be4fe1"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_ef1bcb03c1fd6d659eecfce69f"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_94ac98b31718fa59ce7b6201a5"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_e9658e959c490b0a634dfc5478"`,
+    );
+    await queryRunner.query(`DROP TABLE "user_sessions"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_69b11f34c0f681c815fb697101"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_7c0755b2e06094d9dfb353a377"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_28bd79e1b3f7c1168f0904ce24"`,
+    );
+    await queryRunner.query(`DROP TABLE "user_devices"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_67a8a20c2e44bfb84ca1a33e6d"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_da349034af45568bdc0ab49314"`,
+    );
+    await queryRunner.query(`DROP TABLE "user_tasks"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_682bd3ce09aaf8bb11f22b4956"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_7e44d5d963fd277a8a4528b0c3"`,
+    );
+    await queryRunner.query(`DROP TABLE "user_trees"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_wifi_user_status"`);
+    await queryRunner.query(`DROP INDEX "public"."idx_wifi_last_heartbeat"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_4a422ae72f7e3e44dc3944a4bf"`,
+    );
+    await queryRunner.query(`DROP TABLE "wifi_sessions"`);
+    await queryRunner.query(`DROP TYPE "public"."wifi_sessions_status_enum"`);
+    await queryRunner.query(`DROP TABLE "users"`);
+  }
 }

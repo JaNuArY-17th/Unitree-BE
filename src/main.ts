@@ -10,11 +10,11 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   // API Prefix
-  const apiPrefix = configService.get('app.apiPrefix');
+  const apiPrefix = configService.get<string>('app.apiPrefix') || 'api/v1';
   app.setGlobalPrefix(apiPrefix);
 
   // CORS
-  const corsOrigins = configService.get('app.corsOrigins');
+  const corsOrigins = configService.get<string | string[]>('app.corsOrigins');
   app.enableCors({
     origin: corsOrigins,
     credentials: true,
@@ -46,7 +46,7 @@ async function bootstrap() {
   }
 
   // Start Server
-  const port = configService.get('app.port');
+  const port = configService.get<number>('app.port') || 3000;
   await app.listen(port);
 
   Logger.log(
@@ -59,4 +59,10 @@ async function bootstrap() {
   );
 }
 
-bootstrap();
+bootstrap().catch((err) => {
+  Logger.error(
+    'Error starting server',
+    err instanceof Error ? err.stack : '',
+    'Bootstrap',
+  );
+});

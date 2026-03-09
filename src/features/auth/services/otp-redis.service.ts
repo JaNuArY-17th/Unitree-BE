@@ -80,7 +80,7 @@ export class OtpRedisService {
       attempts: 0,
       userId,
       createdAt: Date.now(),
-      metadata,
+      metadata: metadata || null,
     };
 
     const ttl = this.getTTL(type);
@@ -215,7 +215,7 @@ export class OtpRedisService {
         return `otp:two_factor_auth:${userId}`;
 
       default:
-        throw new Error(`Invalid OTP type: ${type}`);
+        throw new Error(`Invalid OTP type: ${String(type)}`);
     }
   }
 

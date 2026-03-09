@@ -1,7 +1,6 @@
 import {
   Injectable,
   UnauthorizedException,
-  ConflictException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -10,14 +9,20 @@ import { User } from '../../database/entities/user.entity';
 import { TokensService } from '../tokens/tokens.service';
 import { DevicesService } from '../devices/devices.service';
 import { DeviceInfo } from '../devices/interfaces';
+import { Student } from '../../database/entities/student.entity';
+import { FirebaseService } from '../../services/firebase.service';
+import * as admin from 'firebase-admin';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Student)
+    private readonly studentRepository: Repository<Student>,
     private readonly tokensService: TokensService,
     private readonly devicesService: DevicesService,
+    private readonly firebaseService: FirebaseService,
   ) {}
 
   async login(loginDto: { email: string; password?: string }) {
@@ -27,6 +32,54 @@ export class AuthService {
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const tokens = await this.tokensService.generateTokens(user);
+
+    return {
+      user: this.sanitizeUser(user),
+      ...tokens,
+    };
+  }
+
+  async googleLogin(idToken: string) {
+    let decodedToken: admin.auth.DecodedIdToken;
+    try {
+      decodedToken = await this.firebaseService.verifyIdToken(idToken);
+    } catch {
+      throw new UnauthorizedException('Invalid Google ID token');
+    }
+
+    const { email, name, picture, uid } = decodedToken;
+    if (!email) {
+      throw new UnauthorizedException('Google account does not have an email');
+    }
+
+    let user = await this.userRepository.findOne({
+      where: { email },
+    });
+
+    if (!user) {
+      // Attempt to link to the student table by email to get a student_id
+      const student = await this.studentRepository.findOne({
+        where: { email },
+      });
+      const fallBackStudentId = student ? student.studentId : `google-${uid}`;
+      const defaultAvatar = picture || undefined;
+      const defaultUsername =
+        String(email.split('@')[0]) || `user_${uid.slice(0, 6)}`;
+
+      user = this.userRepository.create({
+        email,
+        fullname: name || 'Google User',
+        username: defaultUsername,
+        nickname: name || 'Google User',
+        studentId: fallBackStudentId,
+        avatar: defaultAvatar,
+        role: 'user', // Default role
+      });
+
+      user = await this.userRepository.save(user);
     }
 
     const tokens = await this.tokensService.generateTokens(user);
@@ -50,7 +103,7 @@ export class AuthService {
       }
 
       return this.tokensService.generateTokens(user);
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
@@ -76,7 +129,16 @@ export class AuthService {
    * Login with device tracking
    */
   async loginWithDevice(
-    loginDto: { email: string; deviceId: string; deviceName?: string; deviceType: string; deviceOs?: string; deviceModel?: string; browser?: string; fcmToken?: string },
+    loginDto: {
+      email: string;
+      deviceId: string;
+      deviceName?: string;
+      deviceType: string;
+      deviceOs?: string;
+      deviceModel?: string;
+      browser?: string;
+      fcmToken?: string;
+    },
     ipAddress?: string,
     userAgent?: string,
   ) {
@@ -114,17 +176,13 @@ export class AuthService {
       };
     }
 
-    return this.completeDeviceLogin(user, deviceInfo, loginDto.fcmToken);
+    return this.completeDeviceLogin(user, deviceInfo);
   }
 
   /**
    * Complete device login after OTP verification
    */
-  async completeDeviceLogin(
-    user: User,
-    deviceInfo: DeviceInfo,
-    fcmToken?: string,
-  ) {
+  async completeDeviceLogin(user: User, deviceInfo: DeviceInfo) {
     await this.devicesService.registerDevice(user.id, deviceInfo);
 
     const tokens = await this.tokensService.generateTokens(user);

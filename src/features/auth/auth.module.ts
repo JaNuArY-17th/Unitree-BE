@@ -11,6 +11,8 @@ import { CacheService } from '../../services/cache.service';
 import { EmailService } from '../../services/email.service';
 import { TokensModule } from '../tokens/tokens.module';
 import { DevicesModule } from '../devices/devices.module';
+import { Student } from '../../database/entities/student.entity';
+import { FirebaseService } from '../../services/firebase.service';
 
 /**
  * Auth Module - Refactored
@@ -22,7 +24,7 @@ import { DevicesModule } from '../devices/devices.module';
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Student]),
     PassportModule,
     TokensModule,
     forwardRef(() => DevicesModule),
@@ -35,6 +37,7 @@ import { DevicesModule } from '../devices/devices.module';
     LocalStrategy,
     CacheService,
     EmailService,
+    FirebaseService,
   ],
   exports: [AuthService, OtpRedisService],
 })

@@ -24,17 +24,19 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: any) {
+  async validate(payload: { sub?: string }) {
     if (!payload || !payload.sub) {
       this.logger.warn('Token payload missing required "sub"');
       throw new UnauthorizedException('Invalid token');
     }
 
     // Try to get user info from Redis cache first
-    const userInfo = await this.tokensService.getUserInfo(payload.sub);
+    const userInfo = await this.tokensService.getUserInfo(String(payload.sub));
 
     if (userInfo) {
-      this.logger.debug(`Using cached user info for user ID: ${payload.sub}`);
+      this.logger.debug(
+        `Using cached user info for user ID: ${String(payload.sub)}`,
+      );
       // Return user from cache
       return {
         id: userInfo.id,
@@ -46,10 +48,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     // If not in cache, fetch from database
     this.logger.debug(
-      `No cached user info found, fetching from DB for user ID: ${payload.sub}`,
+      `No cached user info found, fetching from DB for user ID: ${String(payload.sub)}`,
     );
     const user = await this.userRepository.findOne({
-      where: { id: payload.sub },
+      where: { id: String(payload.sub) },
     });
 
     if (!user) {

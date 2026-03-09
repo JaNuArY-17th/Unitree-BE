@@ -1,4 +1,11 @@
-import { Entity, Column, ManyToOne, JoinColumn, Index, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  Index,
+  CreateDateColumn,
+} from 'typeorm';
 
 /**
  * PvpActionLog Entity
@@ -49,7 +56,10 @@ export class PvpActionLog {
   @JoinColumn({ name: 'defender_id' })
   defender: any;
 
-  @ManyToOne('UserTree', 'pvpActionLogs', { onDelete: 'NO ACTION', nullable: true })
+  @ManyToOne('UserTree', 'pvpActionLogs', {
+    onDelete: 'NO ACTION',
+    nullable: true,
+  })
   @JoinColumn({ name: 'target_tree_id' })
   targetTree: any;
 }
