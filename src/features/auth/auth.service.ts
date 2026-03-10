@@ -2,6 +2,8 @@ import {
   Injectable,
   UnauthorizedException,
   NotFoundException,
+  InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -15,6 +17,8 @@ import * as admin from 'firebase-admin';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -46,11 +50,21 @@ export class AuthService {
     let decodedToken: admin.auth.DecodedIdToken;
     try {
       decodedToken = await this.firebaseService.verifyIdToken(idToken);
-    } catch {
+    } catch (error: any) {
+      this.logger.warn(
+        `Google token verification failed: ${error?.message || 'unknown error'}`,
+      );
+
+      if (error?.message?.includes('Firebase is not initialized')) {
+        throw new InternalServerErrorException(
+          'Firebase authentication is not configured on server',
+        );
+      }
+
       throw new UnauthorizedException('Invalid Google ID token');
     }
 
-    const { email, name, picture, uid } = decodedToken;
+    const { email, name, picture } = decodedToken;
     if (!email) {
       throw new UnauthorizedException('Google account does not have an email');
     }
@@ -60,21 +74,25 @@ export class AuthService {
     });
 
     if (!user) {
-      // Attempt to link to the student table by email to get a student_id
-      const student = await this.studentRepository.findOne({
-        where: { email },
-      });
-      const fallBackStudentId = student ? student.studentId : `google-${uid}`;
+      // Only check if email exists in students table, ignore domain
+      // Case-insensitive email check
+      const student = await this.studentRepository
+        .createQueryBuilder('student')
+        .where('LOWER(student.email) = LOWER(:email)', { email })
+        .getOne();
+      if (!student) {
+        throw new UnauthorizedException('auth.must_use_school_email');
+      }
+
       const defaultAvatar = picture || undefined;
-      const defaultUsername =
-        String(email.split('@')[0]) || `user_${uid.slice(0, 6)}`;
+      const defaultUsername = String(email.split('@')[0]);
 
       user = this.userRepository.create({
         email,
-        fullname: name || 'Google User',
+        fullname: student.fullName || name || 'Google User',
         username: defaultUsername,
-        nickname: name || 'Google User',
-        studentId: fallBackStudentId,
+        nickname: student.fullName || name || 'Google User',
+        studentId: student.studentId,
         avatar: defaultAvatar,
         role: 'user', // Default role
       });
@@ -82,6 +100,7 @@ export class AuthService {
       user = await this.userRepository.save(user);
     }
 
+    // TokensService automatically stores generated tokens into Redis
     const tokens = await this.tokensService.generateTokens(user);
 
     return {
