@@ -8,6 +8,9 @@ import {
   Unique,
 } from 'typeorm';
 import { BaseEntity } from './base.entity';
+import { User } from './user.entity';
+import { Tree } from './tree.entity';
+import { PvpActionLog } from './pvp-action-log.entity';
 
 /**
  * UserTree Entity
@@ -42,6 +45,9 @@ export class UserTree extends BaseEntity {
   })
   lastHarvestTime: Date;
 
+  @Column({ name: 'damaged_at', type: 'timestamp', nullable: true })
+  damagedAt: Date | null;
+
   /**
    * Optimistic locking version counter.
    * Tăng lên mỗi lần record được update để tránh race condition.
@@ -58,12 +64,12 @@ export class UserTree extends BaseEntity {
   // Relations
   @ManyToOne('User', 'userTrees', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
-  user: any;
+  user: User;
 
   @ManyToOne('Tree', 'userTrees', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'tree_id' })
-  tree: any;
+  tree: Tree;
 
   @OneToMany('PvpActionLog', 'targetTree')
-  pvpActionLogs: any[];
+  pvpActionLogs: PvpActionLog[];
 }

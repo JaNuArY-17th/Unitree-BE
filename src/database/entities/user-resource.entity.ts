@@ -1,5 +1,7 @@
 import { Entity, Column, ManyToOne, JoinColumn, Index, Unique } from 'typeorm';
 import { BaseEntity } from './base.entity';
+import { User } from './user.entity';
+import { Resource } from './resource.entity';
 
 /**
  * UserResource Entity
@@ -24,9 +26,9 @@ export class UserResource extends BaseEntity {
   // Relations
   @ManyToOne('User', 'userResources', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
-  user: any;
+  user: User;
 
   @ManyToOne('Resource', 'userResources', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'resource_id' })
-  resource: any;
+  resource: Resource;
 }

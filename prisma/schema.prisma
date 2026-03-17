@@ -183,6 +183,7 @@ model user_trees {
   last_harvest_time DateTime          @default(now()) @db.Timestamp(6)
   version           Int               @default(1)
   checksum          String            @db.VarChar
+  damaged_at        DateTime?         @db.Timestamp(6)
   pvp_action_logs   pvp_action_logs[]
   trees             trees             @relation(fields: [tree_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_trees_id_user_trees")
   users             users             @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_id_user_trees")
@@ -209,6 +210,7 @@ model users {
   watering_can_count                                 Int                         @default(0) @db.SmallInt
   shield_count                                       Int                         @default(0) @db.SmallInt
   last_spin_regen                                    DateTime?                   @db.Timestamp(6)
+  total_oxy                                          BigInt                      @default(0)
   conversation_participants                          conversation_participants[]
   economy_logs                                       economy_logs[]
   friendships_friendships_user_id_2Tousers           friendships[]               @relation("friendships_user_id_2Tousers")
@@ -224,6 +226,8 @@ model users {
   user_trees                                         user_trees[]
   students                                           students                    @relation(fields: [student_id], references: [student_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_users_student_id_students")
   wifi_sessions                                      wifi_sessions[]
+
+  @@index([total_oxy], map: "idx_users_total_oxy_desc")
 }
 
 model conversation_participants {

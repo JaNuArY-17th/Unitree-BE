@@ -1,5 +1,6 @@
 import { Entity, Column, OneToMany } from 'typeorm';
 import { BaseEntity } from './base.entity';
+import { UserTree } from './user-tree.entity';
 
 /**
  * Tree Entity (Catalog)
@@ -54,5 +55,5 @@ export class Tree extends BaseEntity {
 
   // Relations
   @OneToMany('UserTree', 'tree')
-  userTrees: any[];
+  userTrees: UserTree[];
 }

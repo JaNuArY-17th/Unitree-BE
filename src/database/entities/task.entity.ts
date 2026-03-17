@@ -1,5 +1,6 @@
 import { Entity, Column, OneToMany } from 'typeorm';
 import { BaseEntity } from './base.entity';
+import { UserTask } from './user-task.entity';
 
 /**
  * Task Entity
@@ -26,5 +27,5 @@ export class Task extends BaseEntity {
 
   // Relations
   @OneToMany('UserTask', 'task')
-  userTasks: any[];
+  userTasks: UserTask[];
 }

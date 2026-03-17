@@ -48,5 +48,5 @@ export class Otp extends BaseEntity {
   isUsed: boolean;
 
   @Column({ type: 'jsonb', nullable: true })
-  metadata?: any; // Additional data (IP, user agent, etc.)
+  metadata?: Record<string, unknown>; // Additional data (IP, user agent, etc.)
 }

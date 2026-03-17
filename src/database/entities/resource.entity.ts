@@ -1,5 +1,7 @@
 import { Entity, Column, OneToMany } from 'typeorm';
 import { BaseEntity } from './base.entity';
+import { AirdropCode } from './airdrop-code.entity';
+import { UserResource } from './user-resource.entity';
 
 /**
  * Resource Entity
@@ -17,8 +19,8 @@ export class Resource extends BaseEntity {
 
   // Relations
   @OneToMany('AirdropCode', 'resource')
-  airdropCodes: any[];
+  airdropCodes: AirdropCode[];
 
   @OneToMany('UserResource', 'resource')
-  userResources: any[];
+  userResources: UserResource[];
 }

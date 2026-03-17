@@ -7,6 +7,7 @@ import {
   PrimaryColumn,
 } from 'typeorm';
 import { FriendshipStatus } from '../../shared/constants/enums.constant';
+import { User } from './user.entity';
 
 /**
  * Friendship Entity
@@ -39,9 +40,9 @@ export class Friendship {
   // Relations
   @ManyToOne('User', 'friendshipsAsUser1', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id_1' })
-  user1: any;
+  user1: User;
 
   @ManyToOne('User', 'friendshipsAsUser2', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id_2' })
-  user2: any;
+  user2: User;
 }

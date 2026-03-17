@@ -1,5 +1,6 @@
 import { Entity, Column, OneToOne } from 'typeorm';
 import { BaseEntity } from './base.entity';
+import { User } from './user.entity';
 
 /**
  * Student Entity
@@ -20,5 +21,5 @@ export class Student extends BaseEntity {
 
   // Relations
   @OneToOne('User', 'student')
-  user: any;
+  user: User;
 }

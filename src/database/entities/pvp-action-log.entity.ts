@@ -6,6 +6,8 @@ import {
   Index,
   CreateDateColumn,
 } from 'typeorm';
+import { User } from './user.entity';
+import { UserTree } from './user-tree.entity';
 
 /**
  * PvpActionLog Entity
@@ -50,16 +52,16 @@ export class PvpActionLog {
   // Relations
   @ManyToOne('User', 'pvpAttackLogs', { onDelete: 'NO ACTION' })
   @JoinColumn({ name: 'attacker_id' })
-  attacker: any;
+  attacker: User;
 
   @ManyToOne('User', 'pvpDefendLogs', { onDelete: 'NO ACTION' })
   @JoinColumn({ name: 'defender_id' })
-  defender: any;
+  defender: User;
 
   @ManyToOne('UserTree', 'pvpActionLogs', {
     onDelete: 'NO ACTION',
     nullable: true,
   })
   @JoinColumn({ name: 'target_tree_id' })
-  targetTree: any;
+  targetTree: UserTree;
 }

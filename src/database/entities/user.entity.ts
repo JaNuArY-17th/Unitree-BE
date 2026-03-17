@@ -1,5 +1,23 @@
-import { Entity, Column, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  OneToMany,
+  ManyToOne,
+  JoinColumn,
+  Index,
+} from 'typeorm';
 import { BaseEntity } from './base.entity';
+import { Student } from './student.entity';
+import { EconomyLog } from './economy-log.entity';
+import { Friendship } from './friendship.entity';
+import { Notification } from './notification.entity';
+import { PvpActionLog } from './pvp-action-log.entity';
+import { UserResource } from './user-resource.entity';
+import { UserTask } from './user-task.entity';
+import { UserTree } from './user-tree.entity';
+import { WifiSession } from './wifi-session.entity';
+import { ConversationParticipant } from './conversation-participant.entity';
+import { Message } from './message.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -59,45 +77,49 @@ export class User extends BaseEntity {
   })
   lastSpinRegen?: Date;
 
+  @Index('idx_users_total_oxy_desc')
+  @Column({ name: 'total_oxy', type: 'bigint', default: 0 })
+  totalOxy: string; // TypeORM maps bigint to string in JS
+
   // Relations
   @ManyToOne('Student', 'users')
   @JoinColumn({ name: 'student_id', referencedColumnName: 'studentId' })
-  student: any;
+  student: Student;
 
   @OneToMany('EconomyLog', 'user')
-  economyLogs: any[];
+  economyLogs: EconomyLog[];
 
   @OneToMany('Friendship', 'user1')
-  friendshipsAsUser1: any[];
+  friendshipsAsUser1: Friendship[];
 
   @OneToMany('Friendship', 'user2')
-  friendshipsAsUser2: any[];
+  friendshipsAsUser2: Friendship[];
 
   @OneToMany('Notification', 'user')
-  notifications: any[];
+  notifications: Notification[];
 
   @OneToMany('PvpActionLog', 'attacker')
-  pvpAttackLogs: any[];
+  pvpAttackLogs: PvpActionLog[];
 
   @OneToMany('PvpActionLog', 'defender')
-  pvpDefendLogs: any[];
+  pvpDefendLogs: PvpActionLog[];
 
   @OneToMany('UserResource', 'user')
-  userResources: any[];
+  userResources: UserResource[];
 
   @OneToMany('UserTask', 'user')
-  userTasks: any[];
+  userTasks: UserTask[];
 
   @OneToMany('UserTree', 'user')
-  userTrees: any[];
+  userTrees: UserTree[];
 
   // Relations from kept features (wifi-sessions, chat)
   @OneToMany('WifiSession', 'user')
-  wifiSessions: any[];
+  wifiSessions: WifiSession[];
 
   @OneToMany('ConversationParticipant', 'user')
-  conversationParticipants: any[];
+  conversationParticipants: ConversationParticipant[];
 
   @OneToMany('Message', 'sender')
-  messages: any[];
+  messages: Message[];
 }

@@ -25,7 +25,7 @@ export class Message extends BaseEntity {
   content: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 
   @Column({ name: 'reply_to_id', nullable: true })
   replyToId?: string;

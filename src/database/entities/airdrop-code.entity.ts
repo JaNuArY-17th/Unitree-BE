@@ -1,5 +1,6 @@
 import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { BaseEntity } from './base.entity';
+import { Resource } from './resource.entity';
 
 /**
  * AirdropCode Entity
@@ -25,5 +26,5 @@ export class AirdropCode extends BaseEntity {
   // Relations
   @ManyToOne('Resource', 'airdropCodes', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'resource_id' })
-  resource: any;
+  resource: Resource;
 }

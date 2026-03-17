@@ -6,6 +6,7 @@ import {
   Index,
   CreateDateColumn,
 } from 'typeorm';
+import { User } from './user.entity';
 
 /**
  * EconomyLog Entity
@@ -51,5 +52,5 @@ export class EconomyLog {
   // Relations
   @ManyToOne('User', 'economyLogs', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
-  user: any;
+  user: User;
 }
