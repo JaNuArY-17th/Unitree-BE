@@ -12,7 +12,6 @@ export interface UserInfo {
   email: string;
   username: string;
   fullname: string;
-  nickname: string;
   avatar?: string;
   role: string;
   studentId: string;

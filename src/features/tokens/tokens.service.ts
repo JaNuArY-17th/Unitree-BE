@@ -46,7 +46,6 @@ export class TokensService {
       email: user.email,
       username: user.username,
       fullname: user.fullname,
-      nickname: user.nickname,
       avatar: user.avatar,
       role: user.role,
       studentId: user.studentId,

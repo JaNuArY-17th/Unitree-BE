@@ -91,7 +91,6 @@ export class AuthService {
         email,
         fullname: student.fullName || name || 'Google User',
         username: defaultUsername,
-        nickname: student.fullName || name || 'Google User',
         studentId: student.studentId,
         avatar: defaultAvatar,
         role: 'user', // Default role
@@ -280,7 +279,6 @@ export class AuthService {
       email: user.email,
       username: user.username,
       fullname: user.fullname,
-      nickname: user.nickname,
       studentId: user.studentId,
       avatar: user.avatar,
       role: user.role,
