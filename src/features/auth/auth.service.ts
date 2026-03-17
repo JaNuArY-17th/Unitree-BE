@@ -69,9 +69,7 @@ export class AuthService {
       throw new UnauthorizedException('Google account does not have an email');
     }
 
-    let user = await this.userRepository.findOne({
-      where: { email },
-    });
+    let user = await this.userRepository.findOne({ where: { email } });
 
     if (!user) {
       // Only check if email exists in students table, ignore domain
@@ -98,6 +96,12 @@ export class AuthService {
 
       user = await this.userRepository.save(user);
     }
+
+    // Tạo referral code nếu chưa có
+    const usersService = new (require('../users/users.service').UsersService)(
+      this.userRepository,
+    );
+    await usersService.generateReferralCode(user.id);
 
     // TokensService automatically stores generated tokens into Redis
     const tokens = await this.tokensService.generateTokens(user);
