@@ -42,6 +42,18 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar' })
   role: string;
 
+  // Referral code: unique, nullable, chỉ tạo sau khi user đã có record
+  @Column({
+    name: 'referral_code',
+    type: 'varchar',
+    unique: true,
+    nullable: true,
+  })
+  referralCode?: string;
+
+  // Mã mời đã nhập: nullable, chỉ nhập 1 lần, lưu mã của người mời
+  @Column({ name: 'invited_by_code', type: 'varchar', nullable: true })
+  invitedByCode?: string;
   @Column({
     name: 'spin_count',
     type: 'smallint',

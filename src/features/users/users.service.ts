@@ -32,6 +32,8 @@ export class UsersService {
         'shieldCount',
         'createdAt',
         'updatedAt',
+        'referralCode',
+        'invitedByCode',
       ],
     });
 
@@ -42,10 +44,36 @@ export class UsersService {
     return user;
   }
 
+  // Tạo mã mời 4 ký tự (chữ + số) và gán cho user nếu chưa có
+  async generateReferralCode(userId: string): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+    if (user.referralCode) return user; // Đã có mã mời
+
+    // Sinh mã 4 ký tự, tránh trùng
+    let code: string;
+    let exists = true;
+    const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    do {
+      code = Array.from(
+        { length: 4 },
+        () => charset[Math.floor(Math.random() * charset.length)],
+      ).join('');
+      exists = !!(await this.userRepository.findOne({
+        where: { referralCode: code },
+      }));
+    } while (exists);
+
+    user.referralCode = code;
+    await this.userRepository.save(user);
+    return user;
+  }
+
   async findAll(
     paginationDto: PaginationDto,
     search?: string,
   ): Promise<PaginationResult<User>> {
+    // ...existing code...
     const { page = 1, limit = 10 } = paginationDto;
     const skip = (page - 1) * limit;
 

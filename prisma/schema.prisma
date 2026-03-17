@@ -211,6 +211,8 @@ model users {
   shield_count                                       Int                         @default(0) @db.SmallInt
   last_spin_regen                                    DateTime?                   @db.Timestamp(6)
   total_oxy                                          BigInt                      @default(0)
+  referral_code                                      String?                     @unique(map: "UQ_ba10055f9ef9690e77cf6445cba") @db.VarChar
+  invited_by_code                                    String?                     @db.VarChar
   conversation_participants                          conversation_participants[]
   economy_logs                                       economy_logs[]
   friendships_friendships_user_id_2Tousers           friendships[]               @relation("friendships_user_id_2Tousers")
