@@ -30,9 +30,6 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar' })
   fullname: string;
 
-  @Column({ type: 'varchar' })
-  nickname: string;
-
   @Column({ name: 'student_id', type: 'varchar', unique: true })
   studentId: string;
 

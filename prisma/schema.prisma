@@ -201,7 +201,6 @@ model users {
   username                                           String                      @db.VarChar
   email                                              String                      @unique(map: "UQ_97672ac88f789774dd47f7c8be3") @db.VarChar
   fullname                                           String                      @db.VarChar
-  nickname                                           String                      @db.VarChar
   student_id                                         String                      @unique(map: "UQ_4bcc4fd204f448ad671c0747ab4") @db.VarChar
   avatar                                             String?                     @db.VarChar
   role                                               String                      @db.VarChar
