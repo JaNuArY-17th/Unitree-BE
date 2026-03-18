@@ -5,6 +5,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
+  ApiBody,
 } from '@nestjs/swagger';
 import { TreesService } from './trees.service';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
@@ -19,7 +20,20 @@ export class TreesController {
 
   @Post('unlock')
   @ApiOperation({ summary: 'Mở khóa cây cho user' })
-  @ApiResponse({ status: 201, description: 'Mở khóa cây thành công' })
+  @ApiBody({ type: UnlockTreeDto, description: 'Dữ liệu mở khóa cây' })
+  @ApiResponse({
+    status: 201,
+    description: 'Mở khóa cây thành công',
+    schema: {
+      example: {
+        success: true,
+        data: {
+          /* userTree */
+        },
+        message: 'Mở khóa cây thành công',
+      },
+    },
+  })
   @ApiResponse({ status: 400, description: 'User đã sở hữu cây này' })
   async unlockTree(
     @CurrentUser('id') userId: string,
