@@ -12,10 +12,19 @@ import { UserResource } from './user-resource.entity';
 @Entity('resources')
 export class Resource extends BaseEntity {
   @Column({ type: 'varchar', unique: true })
+  code: string;
+
+  @Column({ type: 'varchar', unique: false })
   name: string;
 
   @Column({ type: 'text', nullable: true })
   description?: string;
+
+  @Column({ name: 'assets_path', type: 'varchar', nullable: true })
+  assetsPath?: string;
+
+  @Column({ name: 'max_stack', type: 'int', nullable: true })
+  maxStack?: number;
 
   // Relations
   @OneToMany('AirdropCode', 'resource')

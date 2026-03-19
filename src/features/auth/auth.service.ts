@@ -286,10 +286,6 @@ export class AuthService {
       studentId: user.studentId,
       avatar: user.avatar,
       role: user.role,
-      spinCount: user.spinCount,
-      gloveCount: user.gloveCount,
-      wateringCanCount: user.wateringCanCount,
-      shieldCount: user.shieldCount,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
