@@ -1,4 +1,7 @@
 import { Controller, Get, Param, Body, Post } from '@nestjs/common';
+import { UpgradeTreeDto } from './dto/upgrade-tree.dto';
+import { RepairTreeDto } from './dto/repair-tree.dto';
+import { EvolveTreeDto } from './dto/evolve-tree.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -17,6 +20,78 @@ import { UnlockTreeDto } from './dto/unlock-tree.dto';
 @Controller('trees')
 export class TreesController {
   constructor(private readonly treesService: TreesService) {}
+
+  @Post('upgrade')
+  @ApiOperation({ summary: 'Người dùng nâng cấp cây' })
+  @ApiBody({ type: UpgradeTreeDto, description: 'Dữ liệu nâng cấp cây' })
+  @ApiResponse({
+    status: 200,
+    description: 'Nâng cấp cây thành công',
+    schema: {
+      example: {
+        success: true,
+        data: {
+          /* userTree */
+        },
+        message: 'Nâng cấp cây thành công',
+      },
+    },
+  })
+  async upgradeTree(
+    @CurrentUser('id') userId: string,
+    @Body() dto: UpgradeTreeDto,
+  ) {
+    const userTree = await this.treesService.upgradeTree(userId, dto);
+    return ResponseUtil.success(userTree, 'Nâng cấp cây thành công');
+  }
+
+  @Post('repair')
+  @ApiOperation({ summary: 'Người dùng sửa cây' })
+  @ApiBody({ type: RepairTreeDto, description: 'Dữ liệu sửa cây' })
+  @ApiResponse({
+    status: 200,
+    description: 'Sửa cây thành công',
+    schema: {
+      example: {
+        success: true,
+        data: {
+          /* userTree */
+        },
+        message: 'Sửa cây thành công',
+      },
+    },
+  })
+  async repairTree(
+    @CurrentUser('id') userId: string,
+    @Body() dto: RepairTreeDto,
+  ) {
+    const userTree = await this.treesService.repairTree(userId, dto);
+    return ResponseUtil.success(userTree, 'Sửa cây thành công');
+  }
+
+  @Post('evolve')
+  @ApiOperation({ summary: 'Cây tiến hóa' })
+  @ApiBody({ type: EvolveTreeDto, description: 'Dữ liệu tiến hóa cây' })
+  @ApiResponse({
+    status: 200,
+    description: 'Tiến hóa cây thành công',
+    schema: {
+      example: {
+        success: true,
+        data: {
+          /* userTree */
+        },
+        message: 'Tiến hóa cây thành công',
+      },
+    },
+  })
+  async evolveTree(
+    @CurrentUser('id') userId: string,
+    @Body() dto: EvolveTreeDto,
+  ) {
+    const userTree = await this.treesService.evolveTree(userId, dto);
+    return ResponseUtil.success(userTree, 'Tiến hóa cây thành công');
+  }
 
   @Post('unlock')
   @ApiOperation({ summary: 'Mở khóa cây cho user' })

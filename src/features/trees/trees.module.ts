@@ -4,9 +4,20 @@ import { TreesController } from './trees.controller';
 import { TreesService } from './trees.service';
 import { UserTree } from '../../database/entities/user-tree.entity';
 import { Tree } from '../../database/entities/tree.entity';
+import { UserResource } from '../../database/entities/user-resource.entity';
+import { Resource } from '../../database/entities/resource.entity';
+import { EconomyLog } from '../../database/entities/economy-log.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserTree, Tree])],
+  imports: [
+    TypeOrmModule.forFeature([
+      UserTree,
+      Tree,
+      UserResource,
+      Resource,
+      EconomyLog,
+    ]),
+  ],
   controllers: [TreesController],
   providers: [TreesService],
   exports: [TreesService],
