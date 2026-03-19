@@ -51,33 +51,6 @@ export class User extends BaseEntity {
   // Mã mời đã nhập: nullable, chỉ nhập 1 lần, lưu mã của người mời
   @Column({ name: 'invited_by_code', type: 'varchar', nullable: true })
   invitedByCode?: string;
-  @Column({
-    name: 'spin_count',
-    type: 'smallint',
-    default: 5,
-  })
-  spinCount: number;
-
-  @Column({
-    name: 'glove_count',
-    type: 'smallint',
-    default: 0,
-  })
-  gloveCount: number;
-
-  @Column({
-    name: 'watering_can_count',
-    type: 'smallint',
-    default: 0,
-  })
-  wateringCanCount: number;
-
-  @Column({
-    name: 'shield_count',
-    type: 'smallint',
-    default: 0,
-  })
-  shieldCount: number;
 
   @Column({
     name: 'last_spin_regen',
@@ -85,10 +58,6 @@ export class User extends BaseEntity {
     nullable: true,
   })
   lastSpinRegen?: Date;
-
-  @Index('idx_users_total_oxy_desc')
-  @Column({ name: 'total_oxy', type: 'bigint', default: 0 })
-  totalOxy: string; // TypeORM maps bigint to string in JS
 
   // Relations
   @ManyToOne('Student', 'users')
