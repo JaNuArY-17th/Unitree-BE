@@ -1,7 +1,6 @@
 import { Controller, Get, Param, Body, Post } from '@nestjs/common';
 import { UpgradeTreeDto } from './dto/upgrade-tree.dto';
 import { RepairTreeDto } from './dto/repair-tree.dto';
-import { EvolveTreeDto } from './dto/evolve-tree.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -69,28 +68,41 @@ export class TreesController {
     return ResponseUtil.success(userTree, 'Sửa cây thành công');
   }
 
-  @Post('evolve')
-  @ApiOperation({ summary: 'Cây tiến hóa' })
-  @ApiBody({ type: EvolveTreeDto, description: 'Dữ liệu tiến hóa cây' })
+  @Get(':id/upgrade-status')
+  @ApiOperation({ summary: 'Lấy trạng thái nâng cấp của cây' })
+  @ApiParam({
+    name: 'id',
+    description: 'UUID của user tree',
+    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+  })
   @ApiResponse({
     status: 200,
-    description: 'Tiến hóa cây thành công',
+    description: 'Trả về trạng thái nâng cấp hiện tại của cây',
     schema: {
       example: {
         success: true,
         data: {
-          /* userTree */
+          userTreeId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+          level: 12,
+          maxLevel: 100,
+          isUpgrading: true,
+          upgradeEndTime: '2026-03-21T15:30:00.000Z',
+          secondsRemaining: 87,
+          canUpgrade: false,
         },
-        message: 'Tiến hóa cây thành công',
+        message: 'Lấy trạng thái nâng cấp thành công',
       },
     },
   })
-  async evolveTree(
+  async getTreeUpgradeStatus(
     @CurrentUser('id') userId: string,
-    @Body() dto: EvolveTreeDto,
+    @Param('id') userTreeId: string,
   ) {
-    const userTree = await this.treesService.evolveTree(userId, dto);
-    return ResponseUtil.success(userTree, 'Tiến hóa cây thành công');
+    const status = await this.treesService.getTreeUpgradeStatus(
+      userId,
+      userTreeId,
+    );
+    return ResponseUtil.success(status, 'Lấy trạng thái nâng cấp thành công');
   }
 
   @Post('unlock')

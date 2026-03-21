@@ -1,6 +1,5 @@
 import { UpgradeTreeDto } from './dto/upgrade-tree.dto';
 import { RepairTreeDto } from './dto/repair-tree.dto';
-import { EvolveTreeDto } from './dto/evolve-tree.dto';
 import {
   BadRequestException,
   Injectable,
@@ -14,9 +13,15 @@ import { UnlockTreeDto } from 'src/features/trees/dto/unlock-tree.dto';
 import { UserResource } from '../../database/entities/user-resource.entity';
 import { Resource } from '../../database/entities/resource.entity';
 import { EconomyLog } from '../../database/entities/economy-log.entity';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class TreesService {
+  @Cron(CronExpression.EVERY_10_SECONDS)
+  async handleUpgradeCompletionScheduler(): Promise<void> {
+    await this.completeFinishedUpgrades();
+  }
+
   async upgradeTree(userId: string, dto: UpgradeTreeDto): Promise<UserTree> {
     await this.completeFinishedUpgradesForUser(userId);
 
@@ -79,7 +84,7 @@ export class TreesService {
       await economyLogRepo.save(
         economyLogRepo.create({
           userId,
-          resourceType: leafResource.name,
+          resourceType: leafResource.code,
           amount: -upgradeCost,
           source: 'tree_upgrade',
         }),
@@ -103,17 +108,52 @@ export class TreesService {
     return this.userTreeRepository.save(userTree);
   }
 
-  async evolveTree(userId: string, dto: EvolveTreeDto): Promise<UserTree> {
+  async getTreeUpgradeStatus(
+    userId: string,
+    userTreeId: string,
+  ): Promise<{
+    userTreeId: string;
+    level: number;
+    maxLevel: number;
+    isUpgrading: boolean;
+    upgradeEndTime?: Date;
+    secondsRemaining: number;
+    canUpgrade: boolean;
+  }> {
     await this.completeFinishedUpgradesForUser(userId);
 
     const userTree = await this.userTreeRepository.findOne({
-      where: { id: dto.userTreeId, userId },
+      where: { id: userTreeId, userId },
       relations: ['tree'],
     });
-    if (!userTree) throw new NotFoundException('UserTree not found');
-    // TODO: implement evolve logic
-    return userTree;
+    if (!userTree) {
+      throw new NotFoundException('UserTree not found');
+    }
+
+    const now = new Date();
+    const isUpgrading =
+      !!userTree.upgradeEndTime &&
+      userTree.upgradeEndTime.getTime() > now.getTime();
+    const secondsRemaining = isUpgrading
+      ? Math.max(
+          0,
+          Math.ceil(
+            (userTree.upgradeEndTime!.getTime() - now.getTime()) / 1000,
+          ),
+        )
+      : 0;
+
+    return {
+      userTreeId: userTree.id,
+      level: userTree.level,
+      maxLevel: userTree.tree.maxLevel,
+      isUpgrading,
+      upgradeEndTime: userTree.upgradeEndTime,
+      secondsRemaining,
+      canUpgrade: !isUpgrading && userTree.level < userTree.tree.maxLevel,
+    };
   }
+
   async unlockTree(userId: string, dto: UnlockTreeDto): Promise<UserTree> {
     // Kiểm tra user đã sở hữu cây này chưa
     const existed = await this.userTreeRepository.findOne({
@@ -135,6 +175,7 @@ export class TreesService {
       treeId: dto.treeId,
       level: 1,
       isDamaged: false,
+      assetPath: this.buildAssetPath(tree.assetsPath, 1),
       lastHarvestTime: new Date(),
       checksum: '', // TODO: generate checksum
     });
@@ -196,12 +237,22 @@ export class TreesService {
   }
 
   private async completeFinishedUpgradesForUser(userId: string): Promise<void> {
+    await this.completeFinishedUpgrades(userId);
+  }
+
+  private async completeFinishedUpgrades(userId?: string): Promise<void> {
     const now = new Date();
+    const whereClause = userId
+      ? {
+          userId,
+          upgradeEndTime: LessThanOrEqual(now),
+        }
+      : {
+          upgradeEndTime: LessThanOrEqual(now),
+        };
+
     const finishedTrees = await this.userTreeRepository.find({
-      where: {
-        userId,
-        upgradeEndTime: LessThanOrEqual(now),
-      },
+      where: whereClause,
       relations: ['tree'],
     });
 
@@ -213,6 +264,18 @@ export class TreesService {
       if (userTree.level < userTree.tree.maxLevel) {
         userTree.level += 1;
       }
+
+      const reachedEvolutionMilestone =
+        userTree.level % 20 === 0 || userTree.level === userTree.tree.maxLevel;
+
+      if (reachedEvolutionMilestone) {
+        const stage = Math.ceil(userTree.level / 20);
+        userTree.assetPath = this.buildAssetPath(
+          userTree.tree.assetsPath,
+          stage,
+        );
+      }
+
       userTree.upgradeEndTime = undefined;
     }
 
@@ -220,20 +283,20 @@ export class TreesService {
   }
 
   private async findUpgradeCurrencyResource(): Promise<Resource> {
-    const preferredNames = [
-      'green_leaf',
-      'green_leaves',
-      'leaf',
-      'leaves',
-      'la_xanh',
-      'coin',
-      'coins',
-      'gold',
+    const preferredCodes = [
+      'GREEN_LEAF',
+      'GREEN_LEAVES',
+      'LEAF',
+      'LEAVES',
+      'LA_XANH',
+      'COIN',
+      'COINS',
+      'GOLD',
     ];
 
-    for (const name of preferredNames) {
+    for (const code of preferredCodes) {
       const resource = await this.resourceRepository.findOne({
-        where: { name },
+        where: { code },
       });
       if (resource) {
         return resource;
@@ -241,7 +304,12 @@ export class TreesService {
     }
 
     throw new BadRequestException(
-      'Không tìm thấy resource Lá Xanh. Cần seed resource với tên phù hợp.',
+      'Không tìm thấy resource Lá Xanh. Cần seed resource với code phù hợp.',
     );
+  }
+
+  private buildAssetPath(basePath: string, stage: number): string {
+    const normalizedBasePath = basePath.replace(/\.png$/i, '');
+    return `${normalizedBasePath}${stage}.png`;
   }
 }

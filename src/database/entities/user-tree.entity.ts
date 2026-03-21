@@ -38,6 +38,9 @@ export class UserTree extends BaseEntity {
   @Column({ name: 'upgrade_end_time', type: 'timestamp', nullable: true })
   upgradeEndTime?: Date;
 
+  @Column({ name: 'asset_path', type: 'varchar', nullable: true })
+  assetPath?: string;
+
   @Column({
     name: 'last_harvest_time',
     type: 'timestamp',
