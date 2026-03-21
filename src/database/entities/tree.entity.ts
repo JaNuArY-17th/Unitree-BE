@@ -53,6 +53,9 @@ export class Tree extends BaseEntity {
   @Column({ name: 'assets_path', type: 'varchar' })
   assetsPath: string;
 
+  @Column({ name: 'unlock_condition', type: 'text', nullable: true })
+  unlockCondition?: string;
+
   // Relations
   @OneToMany('UserTree', 'tree')
   userTrees: UserTree[];
