@@ -40,6 +40,7 @@ import { WifiSessionsModule } from './features/wifi-sessions/wifi-sessions.modul
 import { PointsModule } from './features/points/points.module';
 import { TreesModule } from './features/trees/trees.module';
 import { ChatModule } from './features/chat/chat.module';
+import { PvpModule } from './features/pvp/pvp.module';
 
 @Module({
   imports: [
@@ -96,6 +97,7 @@ import { ChatModule } from './features/chat/chat.module';
     PointsModule,
     TreesModule,
     ChatModule,
+    PvpModule,
   ],
   providers: [
     // Global Guards

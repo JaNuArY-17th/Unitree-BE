@@ -1,29 +1,23 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UsersController } from './users.controller';
-import { UsersService } from './users.service';
-import { User } from '../../database/entities/user.entity';
+import { PvpController } from './pvp.controller';
+import { PvpService } from './pvp.service';
 import { UserResource } from '../../database/entities/user-resource.entity';
-import { Resource } from '../../database/entities/resource.entity';
 import { UserTree } from '../../database/entities/user-tree.entity';
-import { Friendship } from '../../database/entities/friendship.entity';
 import { PvpActionLog } from '../../database/entities/pvp-action-log.entity';
 import { EconomyLog } from '../../database/entities/economy-log.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      User,
       UserResource,
-      Resource,
       UserTree,
-      Friendship,
       PvpActionLog,
       EconomyLog,
     ]),
   ],
-  controllers: [UsersController],
-  providers: [UsersService],
-  exports: [UsersService],
+  controllers: [PvpController],
+  providers: [PvpService],
+  exports: [PvpService],
 })
-export class UsersModule {}
+export class PvpModule {}
