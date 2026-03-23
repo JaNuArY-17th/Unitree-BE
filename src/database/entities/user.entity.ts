@@ -3,6 +3,7 @@ import {
   Column,
   OneToMany,
   OneToOne,
+  ManyToOne,
   JoinColumn,
   Index,
 } from 'typeorm';
@@ -40,9 +41,11 @@ export class User extends BaseEntity {
   })
   referralCode?: string;
 
-  // Mã mời đã nhập: nullable, chỉ nhập 1 lần, lưu mã của người mời
-  @Column({ name: 'invited_by_code', type: 'varchar', nullable: true })
-  invitedByCode?: string;
+  // User đã mời user này: nullable, chỉ nhập 1 lần
+  @Index()
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'invited_by_user_id' })
+  invitedBy?: User;
 
   @Column({
     name: 'last_spin_regen',

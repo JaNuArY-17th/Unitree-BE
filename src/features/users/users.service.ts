@@ -9,21 +9,17 @@ import { NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class UsersService {
-  // Đếm số người đã được mời bởi user hiện tại (dựa trên referralCode)
+  // Đếm số người đã được mời bởi user hiện tại
   async countReferredUsers(userId: string): Promise<number> {
-    const user = await this.findById(userId);
-    if (!user.referralCode) return 0;
     return this.userRepository.count({
-      where: { invitedByCode: user.referralCode },
+      where: { invitedBy: { id: userId } },
     });
   }
 
   // Lấy danh sách user đã được mời bởi user hiện tại
   async getReferredUsers(userId: string): Promise<User[]> {
-    const user = await this.findById(userId);
-    if (!user.referralCode) return [];
     return this.userRepository.find({
-      where: { invitedByCode: user.referralCode },
+      where: { invitedBy: { id: userId } },
     });
   }
   constructor(
