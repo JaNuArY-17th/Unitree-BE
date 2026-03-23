@@ -10,7 +10,6 @@ import {
 import { BaseEntity } from './base.entity';
 import { Student } from './student.entity';
 import { EconomyLog } from './economy-log.entity';
-import { Friendship } from './friendship.entity';
 import { Notification } from './notification.entity';
 import { PvpActionLog } from './pvp-action-log.entity';
 import { UserResource } from './user-resource.entity';
@@ -66,12 +65,6 @@ export class User extends BaseEntity {
 
   @OneToMany('EconomyLog', 'user')
   economyLogs: EconomyLog[];
-
-  @OneToMany('Friendship', 'user1')
-  friendshipsAsUser1: Friendship[];
-
-  @OneToMany('Friendship', 'user2')
-  friendshipsAsUser2: Friendship[];
 
   @OneToMany('Notification', 'user')
   notifications: Notification[];

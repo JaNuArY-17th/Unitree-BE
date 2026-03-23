@@ -9,13 +9,6 @@ export enum UserTaskStatus {
   CLAIMED = 'CLAIMED',
 }
 
-/** Trạng thái quan hệ bạn bè */
-export enum FriendshipStatus {
-  ACCEPTED = 'ACCEPTED',
-  PENDING = 'PENDING',
-  BLOCKED = 'BLOCKED',
-}
-
 /** Role của user */
 export enum UserRole {
   USER = 'USER',

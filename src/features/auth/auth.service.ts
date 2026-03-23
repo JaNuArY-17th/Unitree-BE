@@ -105,7 +105,7 @@ export class AuthService {
 
       user = await this.userRepository.save(user);
     }
-    
+
     // Tạo referral code nếu chưa có
     await this.usersService.generateReferralCode(user.id);
 
