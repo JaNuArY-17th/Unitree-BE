@@ -13,6 +13,7 @@ import { TokensModule } from '../tokens/tokens.module';
 import { DevicesModule } from '../devices/devices.module';
 import { Student } from '../../database/entities/student.entity';
 import { FirebaseService } from '../../services/firebase.service';
+import { UsersModule } from '../users/users.module';
 
 /**
  * Auth Module - Refactored
@@ -28,6 +29,7 @@ import { FirebaseService } from '../../services/firebase.service';
     PassportModule,
     TokensModule,
     forwardRef(() => DevicesModule),
+    UsersModule,
   ],
   controllers: [AuthController],
   providers: [

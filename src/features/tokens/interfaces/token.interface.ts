@@ -13,7 +13,7 @@ export interface UserInfo {
   username: string;
   fullname?: string;
   avatar?: string;
-  role: string;
+  role: UserRole;
   studentId?: string;
   createdAt: Date;
   updatedAt: Date;

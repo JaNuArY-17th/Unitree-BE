@@ -19,6 +19,7 @@ import { UserTree } from './user-tree.entity';
 import { WifiSession } from './wifi-session.entity';
 import { ConversationParticipant } from './conversation-participant.entity';
 import { Message } from './message.entity';
+import { UserRole } from '../../shared/constants/roles.constant';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -29,8 +30,12 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar', nullable: true })
   avatar?: string;
 
-  @Column({ type: 'varchar' })
-  role: string;
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.USER,
+  })
+  role: UserRole;
 
   // Referral code: unique, nullable, chỉ tạo sau khi user đã có record
   @Column({

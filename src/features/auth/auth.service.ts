@@ -13,6 +13,8 @@ import { DevicesService } from '../devices/devices.service';
 import { DeviceInfo } from '../devices/interfaces';
 import { Student } from '../../database/entities/student.entity';
 import { FirebaseService } from '../../services/firebase.service';
+import { UserRole } from '../../shared/constants/roles.constant';
+import { UsersService } from '../users/users.service';
 import * as admin from 'firebase-admin';
 
 @Injectable()
@@ -27,6 +29,7 @@ export class AuthService {
     private readonly tokensService: TokensService,
     private readonly devicesService: DevicesService,
     private readonly firebaseService: FirebaseService,
+    private readonly usersService: UsersService,
   ) {}
 
   async login(loginDto: { email: string; password?: string }) {
@@ -97,17 +100,14 @@ export class AuthService {
         username: defaultUsername,
         student: student,
         avatar: defaultAvatar,
-        role: 'user', // Default role
+        role: UserRole.USER, // Default role
       });
 
       user = await this.userRepository.save(user);
     }
-
+    
     // Tạo referral code nếu chưa có
-    const usersService = new (require('../users/users.service').UsersService)(
-      this.userRepository,
-    );
-    await usersService.generateReferralCode(user.id);
+    await this.usersService.generateReferralCode(user.id);
 
     // TokensService automatically stores generated tokens into Redis
     const tokens = await this.tokensService.generateTokens(user);
