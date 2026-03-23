@@ -2,6 +2,7 @@ import {
   Entity,
   Column,
   OneToMany,
+  OneToOne,
   ManyToOne,
   JoinColumn,
   Index,
@@ -60,7 +61,7 @@ export class User extends BaseEntity {
   lastSpinRegen?: Date;
 
   // Relations
-  @ManyToOne('Student', 'users')
+  @OneToOne('Student', 'user')
   @JoinColumn({ name: 'student_id', referencedColumnName: 'studentId' })
   student: Student;
 
