@@ -43,12 +43,12 @@ export class TokensService {
   private buildUserInfo(user: User): UserInfo {
     return {
       id: user.id,
-      email: user.email,
+      email: user.student?.email,
       username: user.username,
-      fullname: user.fullname,
+      fullname: user.student?.fullName,
       avatar: user.avatar,
       role: user.role,
-      studentId: user.studentId,
+      studentId: user.student?.studentId,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };

@@ -9,12 +9,12 @@ export interface TokenPayload {
 
 export interface UserInfo {
   id: string;
-  email: string;
+  email?: string;
   username: string;
-  fullname: string;
+  fullname?: string;
   avatar?: string;
   role: string;
-  studentId: string;
+  studentId?: string;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -3,7 +3,6 @@ import {
   Column,
   OneToMany,
   OneToOne,
-  ManyToOne,
   JoinColumn,
   Index,
 } from 'typeorm';
@@ -22,17 +21,9 @@ import { Message } from './message.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
+  @Index()
   @Column({ type: 'varchar' })
   username: string;
-
-  @Column({ type: 'varchar', unique: true })
-  email: string;
-
-  @Column({ type: 'varchar' })
-  fullname: string;
-
-  @Column({ name: 'student_id', type: 'varchar', unique: true })
-  studentId: string;
 
   @Column({ type: 'varchar', nullable: true })
   avatar?: string;
@@ -62,7 +53,7 @@ export class User extends BaseEntity {
 
   // Relations
   @OneToOne('Student', 'user')
-  @JoinColumn({ name: 'student_id', referencedColumnName: 'studentId' })
+  @JoinColumn({ name: 'student_id' })
   student: Student;
 
   @OneToMany('EconomyLog', 'user')

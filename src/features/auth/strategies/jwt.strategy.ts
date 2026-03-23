@@ -52,6 +52,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     );
     const user = await this.userRepository.findOne({
       where: { id: String(payload.sub) },
+      relations: ['student'],
     });
 
     if (!user) {
@@ -63,9 +64,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     return {
       id: user.id,
-      email: user.email,
+      email: user.student?.email,
       role: user.role,
-      fullname: user.fullname,
+      fullname: user.student?.fullName,
     };
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User } from '../../database/entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PaginationDto } from '../../shared/dto/pagination.dto';
@@ -34,19 +34,7 @@ export class UsersService {
   async findById(id: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id },
-      select: [
-        'id',
-        'email',
-        'username',
-        'fullname',
-        'studentId',
-        'avatar',
-        'role',
-        'createdAt',
-        'updatedAt',
-        'referralCode',
-        'invitedByCode',
-      ],
+      relations: ['student'],
     });
 
     if (!user) {
@@ -85,35 +73,23 @@ export class UsersService {
     paginationDto: PaginationDto,
     search?: string,
   ): Promise<PaginationResult<User>> {
-    // ...existing code...
     const { page = 1, limit = 10 } = paginationDto;
     const skip = (page - 1) * limit;
 
-    const where = search
-      ? [
-          { fullname: ILike(`%${search}%`) },
-          { email: ILike(`%${search}%`) },
-          { username: ILike(`%${search}%`) },
-          { nickname: ILike(`%${search}%`) },
-        ]
-      : {};
+    const qb = this.userRepository
+      .createQueryBuilder('user')
+      .innerJoinAndSelect('user.student', 'student');
 
-    const [data, total] = await this.userRepository.findAndCount({
-      where,
-      skip,
-      take: limit,
-      order: { createdAt: 'DESC' },
-      select: [
-        'id',
-        'email',
-        'username',
-        'fullname',
-        'studentId',
-        'avatar',
-        'role',
-        'createdAt',
-      ],
-    });
+    if (search) {
+      qb.where(
+        '(student.fullName ILIKE :search OR student.email ILIKE :search OR user.username ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    qb.orderBy('user.createdAt', 'DESC').skip(skip).take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
 
     return new PaginationResult<User>({
       data,

@@ -30,9 +30,13 @@ export class AuthService {
   ) {}
 
   async login(loginDto: { email: string; password?: string }) {
-    const user = await this.userRepository.findOne({
-      where: { email: loginDto.email },
-    });
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .innerJoinAndSelect('user.student', 'student')
+      .where('LOWER(student.email) = LOWER(:email)', {
+        email: loginDto.email,
+      })
+      .getOne();
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -64,12 +68,16 @@ export class AuthService {
       throw new UnauthorizedException('Invalid Google ID token');
     }
 
-    const { email, name, picture } = decodedToken;
+    const { email, picture } = decodedToken;
     if (!email) {
       throw new UnauthorizedException('Google account does not have an email');
     }
 
-    let user = await this.userRepository.findOne({ where: { email } });
+    let user = await this.userRepository
+      .createQueryBuilder('user')
+      .innerJoinAndSelect('user.student', 'student')
+      .where('LOWER(student.email) = LOWER(:email)', { email })
+      .getOne();
 
     if (!user) {
       // Only check if email exists in students table, ignore domain
@@ -86,10 +94,8 @@ export class AuthService {
       const defaultUsername = String(email.split('@')[0]);
 
       user = this.userRepository.create({
-        email,
-        fullname: student.fullName || name || 'Google User',
         username: defaultUsername,
-        studentId: student.studentId,
+        student: student,
         avatar: defaultAvatar,
         role: 'user', // Default role
       });
@@ -118,6 +124,7 @@ export class AuthService {
 
       const user = await this.userRepository.findOne({
         where: { id: payload.sub },
+        relations: ['student'],
       });
 
       if (!user) {
@@ -133,6 +140,7 @@ export class AuthService {
   async getProfile(userId: string) {
     const user = await this.userRepository.findOne({
       where: { id: userId },
+      relations: ['student'],
     });
 
     if (!user) {
@@ -164,9 +172,13 @@ export class AuthService {
     ipAddress?: string,
     userAgent?: string,
   ) {
-    const user = await this.userRepository.findOne({
-      where: { email: loginDto.email },
-    });
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .innerJoinAndSelect('user.student', 'student')
+      .where('LOWER(student.email) = LOWER(:email)', {
+        email: loginDto.email,
+      })
+      .getOne();
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -185,7 +197,7 @@ export class AuthService {
 
     const deviceCheck = await this.devicesService.handleDeviceLogin(
       user.id,
-      user.email,
+      user.student.email,
       deviceInfo,
     );
 
@@ -227,6 +239,7 @@ export class AuthService {
   ) {
     const user = await this.userRepository.findOne({
       where: { id: userId },
+      relations: ['student'],
     });
 
     if (!user) {
@@ -240,7 +253,7 @@ export class AuthService {
 
     await this.devicesService.verifyAndRegisterDevice(
       userId,
-      user.email,
+      user.student.email,
       baseDeviceInfo,
       verifyDto.otpCode,
     );
@@ -280,10 +293,10 @@ export class AuthService {
   private sanitizeUser(user: User) {
     return {
       id: user.id,
-      email: user.email,
+      email: user.student?.email,
       username: user.username,
-      fullname: user.fullname,
-      studentId: user.studentId,
+      fullname: user.student?.fullName,
+      studentId: user.student?.studentId,
       avatar: user.avatar,
       role: user.role,
       createdAt: user.createdAt,
@@ -292,7 +305,11 @@ export class AuthService {
   }
 
   async validateUser(email: string): Promise<any> {
-    const user = await this.userRepository.findOne({ where: { email } });
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .innerJoinAndSelect('user.student', 'student')
+      .where('LOWER(student.email) = LOWER(:email)', { email })
+      .getOne();
     return user || null;
   }
 }
