@@ -41,6 +41,7 @@ import { PointsModule } from './features/points/points.module';
 import { TreesModule } from './features/trees/trees.module';
 import { ChatModule } from './features/chat/chat.module';
 import { PvpModule } from './features/pvp/pvp.module';
+import { MinigamesModule } from './features/minigames/minigames.module';
 
 @Module({
   imports: [
@@ -98,6 +99,7 @@ import { PvpModule } from './features/pvp/pvp.module';
     TreesModule,
     ChatModule,
     PvpModule,
+    MinigamesModule,
   ],
   providers: [
     // Global Guards
