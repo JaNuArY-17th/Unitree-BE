@@ -6,6 +6,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { PaginationDto } from '../../shared/dto/pagination.dto';
 import { PaginationResult } from '../../shared/repositories/pagination.repository';
 import { NotFoundException } from '@nestjs/common';
+import { UserInfoDto } from './dto/user-info.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class UsersService {
@@ -37,7 +39,7 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    return user;
+    return plainToInstance(UserInfoDto, user) as unknown as User;
   }
 
   // Tạo mã mời 4 ký tự (chữ + số) và gán cho user nếu chưa có
@@ -87,8 +89,8 @@ export class UsersService {
 
     const [data, total] = await qb.getManyAndCount();
 
-    return new PaginationResult<User>({
-      data,
+    return new PaginationResult<any>({
+      data: plainToInstance(UserInfoDto, data),
       total,
       page,
       limit,

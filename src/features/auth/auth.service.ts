@@ -15,6 +15,8 @@ import { Student } from '../../database/entities/student.entity';
 import { FirebaseService } from '../../services/firebase.service';
 import { UserRole } from '../../shared/constants/roles.constant';
 import { UsersService } from '../users/users.service';
+import { UserInfoDto } from '../users/dto/user-info.dto';
+import { plainToInstance } from 'class-transformer';
 import * as admin from 'firebase-admin';
 
 @Injectable()
@@ -48,7 +50,7 @@ export class AuthService {
     const tokens = await this.tokensService.generateTokens(user);
 
     return {
-      user: this.sanitizeUser(user),
+      user: plainToInstance(UserInfoDto, user),
       ...tokens,
     };
   }
@@ -113,7 +115,7 @@ export class AuthService {
     const tokens = await this.tokensService.generateTokens(user);
 
     return {
-      user: this.sanitizeUser(user),
+      user: plainToInstance(UserInfoDto, user),
       ...tokens,
     };
   }
@@ -147,7 +149,7 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    return this.sanitizeUser(user);
+    return plainToInstance(UserInfoDto, user);
   }
 
   async logout(userId: string) {
@@ -222,7 +224,7 @@ export class AuthService {
     const tokens = await this.tokensService.generateTokens(user);
 
     return {
-      user: this.sanitizeUser(user),
+      user: plainToInstance(UserInfoDto, user),
       ...tokens,
       deviceId: deviceInfo.deviceId,
     };
@@ -288,20 +290,6 @@ export class AuthService {
    */
   async getActiveSessions(userId: string) {
     return this.devicesService.getActiveSessions(userId);
-  }
-
-  private sanitizeUser(user: User) {
-    return {
-      id: user.id,
-      email: user.student?.email,
-      username: user.username,
-      fullname: user.student?.fullName,
-      studentId: user.student?.studentId,
-      avatar: user.avatar,
-      role: user.role,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
   }
 
   async validateUser(email: string): Promise<any> {
