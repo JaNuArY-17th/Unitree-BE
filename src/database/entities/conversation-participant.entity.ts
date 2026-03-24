@@ -37,7 +37,7 @@ export class ConversationParticipant extends BaseEntity {
   @JoinColumn({ name: 'conversation_id' })
   conversation: Conversation;
 
-  @ManyToOne(() => User, (user: User) => user.conversationParticipants)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
 }

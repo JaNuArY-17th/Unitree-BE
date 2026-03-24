@@ -1,7 +1,6 @@
 import {
   Entity,
   Column,
-  OneToMany,
   OneToOne,
   ManyToOne,
   JoinColumn,
@@ -9,15 +8,6 @@ import {
 } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Student } from './student.entity';
-import { EconomyLog } from './economy-log.entity';
-import { Notification } from './notification.entity';
-import { PvpActionLog } from './pvp-action-log.entity';
-import { UserResource } from './user-resource.entity';
-import { UserTask } from './user-task.entity';
-import { UserTree } from './user-tree.entity';
-import { WifiSession } from './wifi-session.entity';
-import { ConversationParticipant } from './conversation-participant.entity';
-import { Message } from './message.entity';
 import { UserRole } from '../../shared/constants/roles.constant';
 
 @Entity('users')
@@ -62,35 +52,4 @@ export class User extends BaseEntity {
   @OneToOne('Student', 'user')
   @JoinColumn({ name: 'student_id' })
   student: Student;
-
-  @OneToMany('EconomyLog', 'user')
-  economyLogs: EconomyLog[];
-
-  @OneToMany('Notification', 'user')
-  notifications: Notification[];
-
-  @OneToMany('PvpActionLog', 'attacker')
-  pvpAttackLogs: PvpActionLog[];
-
-  @OneToMany('PvpActionLog', 'defender')
-  pvpDefendLogs: PvpActionLog[];
-
-  @OneToMany('UserResource', 'user')
-  userResources: UserResource[];
-
-  @OneToMany('UserTask', 'user')
-  userTasks: UserTask[];
-
-  @OneToMany('UserTree', 'user')
-  userTrees: UserTree[];
-
-  // Relations from kept features (wifi-sessions, chat)
-  @OneToMany('WifiSession', 'user')
-  wifiSessions: WifiSession[];
-
-  @OneToMany('ConversationParticipant', 'user')
-  conversationParticipants: ConversationParticipant[];
-
-  @OneToMany('Message', 'sender')
-  messages: Message[];
 }

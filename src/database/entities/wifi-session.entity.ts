@@ -51,7 +51,7 @@ export class WifiSession extends BaseEntity {
   ipAddress?: string;
 
   // Relations
-  @ManyToOne(() => User, (user: User) => user.wifiSessions)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
 }
