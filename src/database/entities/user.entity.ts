@@ -41,13 +41,6 @@ export class User extends BaseEntity {
   @JoinColumn({ name: 'invited_by_user_id' })
   invitedBy?: User;
 
-  @Column({
-    name: 'last_spin_regen',
-    type: 'timestamp',
-    nullable: true,
-  })
-  lastSpinRegen?: Date;
-
   // Relations
   @OneToOne('Student', 'user')
   @JoinColumn({ name: 'student_id' })
