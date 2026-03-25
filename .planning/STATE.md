@@ -12,12 +12,12 @@
 - Existing codebase map available under `.planning/codebase/`.
 - Project objective: production-ready endpoint and service quality with complete API docs.
 - Deadline pressure: 4 days.
-- Phase 1 plan created at `.planning/phases/1/PLAN.md`.
+- Phase 1 plan updated to all-module endpoint completion at `.planning/phases/1/PLAN.md`.
 
 ## Active Milestone
 
 - Milestone: v1
-- Current phase target: Phase 1 - Auth Hardening and Token Lifecycle
+- Current phase target: Phase 1 - All-Module Endpoint Completion and Hardening
 
 ## Next Command
 

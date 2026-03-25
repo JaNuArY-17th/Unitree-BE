@@ -1,210 +1,188 @@
-# Phase 1 Plan: Auth Hardening and Token Lifecycle
+# Phase 1 Plan: All-Module Endpoint Completion and Hardening
 
 ## Goal
-Within 4 days, harden authentication flows and token lifecycle so local and Google login are secure, deterministic, Redis-enforced, and contract-accurate in Swagger/OpenAPI.
+Within 4 days, complete and harden endpoints across all active modules so contracts are stable, validation is strict, auth/authorization is consistent, and APIs are production-ready for frontend integration.
 
 ## Why This Phase Matters
-Auth and token control are the highest-risk production path. This phase removes known security gaps (password validation, revocation enforcement), adds regression tests, and ensures API contracts are reliable for frontend integration.
+The project outcome is not auth-only. Production readiness depends on every module being complete and reliable, with predictable behavior and documented contracts.
 
 ## Scope
 
 ### In Scope
-- Complete and harden auth endpoints under `src/features/auth/` (local + Google login paths).
-- Enforce Redis-backed token policy in runtime auth checks (`issue`, `refresh`, `revoke`, `logout`).
-- Add/upgrade unit + e2e tests for success/failure and edge cases.
-- Align auth DTO/response Swagger docs with runtime behavior.
+- Endpoint inventory and gap closure for all active modules under `src/features/*`.
+- Contract hardening: DTO validation, response envelope consistency, error semantics.
+- Security and policy consistency: auth guard behavior, role checks, token/session handling where applicable.
+- Test expansion for critical endpoints across modules.
+- Swagger/OpenAPI alignment and export for frontend.
 
 ### Out of Scope
-- Feature-module endpoint parity outside auth/tokens/devices.
-- Broad architecture refactor beyond auth/token-critical boundaries.
-- ORM migration decisions (TypeORM vs Prisma).
+- New domain features outside current module responsibilities.
+- Major architecture rewrite or ORM migration.
+
+## Module Waves
+
+### Wave A (Day 1)
+- auth, users, devices, tokens
+- Reason: cross-cutting and identity-critical flows affect most endpoints.
+
+### Wave B (Day 2)
+- wifi-sessions, points, trees
+- Reason: core business flows with state transitions and reward logic.
+
+### Wave C (Day 3)
+- chat and remaining active feature modules
+- Reason: real-time + residual endpoint parity closure.
+
+### Wave D (Day 4)
+- docs parity, full verification, release-readiness stabilization.
 
 ## Deliverables
-1. Hardened auth service/controller/strategy implementation for local + Google paths.
-2. Redis-backed access token revocation enforcement in request authentication path.
-3. Auth/token lifecycle test suite (unit + e2e) covering positive/negative scenarios.
-4. Updated Swagger contracts and exported OpenAPI JSON for auth endpoints.
-5. Verification note (commands + outcomes) recorded in phase summary.
+1. Endpoint inventory matrix covering all active modules and route status (complete/missing/partial).
+2. Hardened endpoint implementations for identified gaps.
+3. Standardized request/response/error contract behavior across modules.
+4. Unit + e2e test coverage for critical success/failure paths by module.
+5. Updated OpenAPI docs and exported JSON artifact for frontend.
+6. Phase verification report with executed commands and outcomes.
 
 ## Task Breakdown (Implementation-Oriented)
 
 ### Dependency Graph
-- T1 and T2 can start in parallel.
-- T3 depends on T1.
-- T4 depends on T2 and T3.
-- T5 depends on T1, T2, T3, T4.
+- T1 starts first and drives all downstream work.
+- T2/T3/T4 execute in wave order with overlap only after T1 baseline exists.
+- T5 depends on implementation completion from T2/T3/T4.
 - T6 depends on T5.
 
 ```text
-T1 (Auth endpoint/logic hardening) ----\
-                                        > T3 (Token revocation enforcement) --\
-T2 (Contract inventory + DTO response) -/                                      \
-                                                                                 > T4 (Refresh/logout policy completion) --> T5 (Tests) --> T6 (Docs export + phase verify)
+T1 (Inventory + acceptance matrix)
+  -> T2 (Wave A implementation)
+  -> T3 (Wave B implementation)
+  -> T4 (Wave C implementation)
+  -> T5 (Cross-module tests + fixes)
+  -> T6 (OpenAPI export + final verification)
 ```
 
-### Tasks
-
-#### T1 - Local + Google Auth Flow Hardening
+### T1 - Endpoint Inventory and Acceptance Matrix
 - Targets:
-  - `src/features/auth/auth.service.ts`
-  - `src/features/auth/auth.controller.ts`
-  - `src/features/auth/strategies/local.strategy.ts`
-  - `src/features/auth/dto/login.dto.ts`
-  - `src/features/auth/dto/login-with-device.dto.ts`
+  - `src/features/**/**.controller.ts`
+  - `src/features/**/dto/*.ts`
+  - `docs/` and `.planning/codebase/*`
 - Actions:
-  - Enforce password hash verification for local login paths.
-  - Keep Google login path strictly ID-token validated via Firebase service.
-  - Normalize unauthorized/invalid credential responses.
-  - Ensure device verification flow consumes validated DTO fields only.
+  - Enumerate all current endpoints by module.
+  - Classify each endpoint: complete, partial, missing production guards, missing docs, missing tests.
+  - Define module-level acceptance checklist for production readiness.
 - Verification:
-  - `npm run test -- src/features/auth`
-  - `npm run lint`
+  - Matrix reviewed and mapped to all active modules.
 - Done when:
-  - Invalid local password cannot issue tokens.
-  - Google invalid token is rejected consistently.
-  - Response shape for auth failures is stable and documented.
+  - No active module is missing from inventory.
 
-#### T2 - Auth Contract and Swagger Alignment
-- Targets:
-  - `src/features/auth/dto/*.ts`
-  - `src/features/auth/auth.controller.ts`
-  - `src/main.ts` (swagger setup only if needed)
+### T2 - Wave A Completion and Hardening (auth/users/devices/tokens)
 - Actions:
-  - Audit auth endpoint request/response contracts against real behavior.
-  - Add/adjust `@ApiProperty`, `@ApiOperation`, `@ApiResponse` metadata.
-  - Ensure DTO validators match expected runtime constraints.
+  - Close endpoint/contract gaps.
+  - Enforce password/token/session policies and consistent unauthorized/error behavior.
+  - Ensure DTO validators and Swagger metadata reflect runtime behavior.
 - Verification:
-  - `npm run build`
-  - Manually inspect Swagger UI `/api/docs` for auth endpoints.
+  - Targeted module tests + lint/build.
 - Done when:
-  - Auth endpoints show accurate schema + status code variants.
-  - DTOs reject out-of-contract payloads.
+  - Wave A endpoints are complete, test-backed, and documented.
 
-#### T3 - Enforce Redis Revocation During JWT Validation
-- Targets:
-  - `src/features/auth/strategies/jwt.strategy.ts`
-  - `src/features/tokens/tokens.service.ts`
-  - `src/shared/guards/jwt-auth.guard.ts` (if integration point required)
+### T3 - Wave B Completion and Hardening (wifi-sessions/points/trees)
 - Actions:
-  - Wire token validation path to Redis revocation checks on every authenticated request.
-  - Ensure revoked access token fails before expiry.
-  - Keep behavior consistent with existing key-prefix and TTL policy.
+  - Close endpoint and business-rule gaps.
+  - Normalize pagination/filtering/validation patterns.
+  - Ensure state transitions are protected and deterministic.
 - Verification:
-  - `npm run test -- src/features/tokens`
-  - Add/execute targeted tests for revoked-token request rejection.
+  - Targeted tests + regression checks on reward/session flows.
 - Done when:
-  - Revoked token receives unauthorized response on protected endpoint.
-  - Non-revoked token still works until policy expiry.
+  - Wave B endpoints are production-ready with negative-path handling.
 
-#### T4 - Refresh and Logout Lifecycle Completion
-- Targets:
-  - `src/features/tokens/tokens.service.ts`
-  - `src/features/auth/auth.service.ts`
-  - `src/features/devices/devices.service.ts`
+### T4 - Wave C Completion and Hardening (chat + remaining modules)
 - Actions:
-  - Validate refresh-token rotation semantics and replay protection.
-  - Confirm single-device/session invalidation policy behavior.
-  - Ensure logout invalidates active token set in Redis deterministically.
+  - Close remaining endpoint gaps and contract inconsistencies.
+  - Validate websocket-related auth/room/message constraints where applicable.
+  - Align docs for residual modules.
 - Verification:
-  - `npm run test -- src/features/auth src/features/devices src/features/tokens`
+  - Targeted tests for chat and residual module coverage.
 - Done when:
-  - Refresh rotates as designed.
-  - Old/replayed refresh tokens fail.
-  - Logout invalidates active session tokens.
+  - No endpoint category remains in partial/missing state.
 
-#### T5 - Auth/Token Test Coverage Expansion
+### T5 - Cross-Module Test and Regression Gate
 - Targets:
-  - `src/features/auth/**/*.spec.ts`
-  - `src/features/tokens/**/*.spec.ts`
-  - `test/features/auth-token-lifecycle.e2e-spec.ts`
+  - `src/features/**/*.spec.ts`
+  - `test/features/**/*.e2e-spec.ts`
 - Actions:
-  - Add unit tests for service-level negative paths.
-  - Add e2e scenario coverage for: local login success/failure, Google login failure, refresh rotation, revoke/logout enforcement.
-  - Update base e2e assumptions away from non-existent root route behavior where needed.
+  - Add/expand unit and e2e tests for critical paths in each module.
+  - Focus on negative cases: invalid DTO, unauthorized, forbidden, not found, conflict, external dependency failures.
+  - Fix discovered regressions.
 - Verification:
   - `npm run test`
   - `npm run test:e2e`
   - `npm run test:cov`
 - Done when:
-  - Critical auth/token scenarios are test-backed.
-  - No known auth P0/P1 regressions remain untested.
+  - Critical multi-module flows are covered and passing.
 
-#### T6 - OpenAPI Export and Final Phase Verification
-- Targets:
-  - `docs/` (generated auth contract export note)
-  - Optional script/config location if export helper is needed
+### T6 - OpenAPI Parity and Release Verification
 - Actions:
-  - Export OpenAPI JSON from current runtime config.
-  - Validate exported auth contract with frontend-facing expectations.
-  - Record verification command outputs and known limitations.
+  - Validate Swagger schemas for all module endpoints.
+  - Export OpenAPI JSON and shareable artifact for frontend.
+  - Run final quality gates and record outcomes.
 - Verification:
-  - `npm run build`
   - `npm run lint`
   - `npx tsc --noEmit`
-  - OpenAPI export command succeeds and artifact is generated.
+  - `npm run build`
+  - OpenAPI export command succeeds.
 - Done when:
-  - Exported OpenAPI artifact is available and reflects implemented auth behavior.
-  - Phase verification checklist passes.
+  - Docs/runtime parity is confirmed and release checklist passes.
 
-## 4-Day Execution Schedule
+## 4-Day Schedule
 
 ### Day 1
-- Execute T1 + T2 in parallel.
-- Deliverable checkpoint: secure login behavior and contract baseline established.
+- Execute T1 and T2.
+- Checkpoint: inventory complete, Wave A hardened.
 
 ### Day 2
 - Execute T3.
-- Start T4 once revocation path is integrated.
-- Deliverable checkpoint: runtime revocation and lifecycle core wired.
+- Checkpoint: Wave B hardened.
 
 ### Day 3
-- Finish T4.
-- Execute T5 (unit + e2e).
-- Deliverable checkpoint: auth/token regressions captured by tests.
+- Execute T4 and start T5.
+- Checkpoint: all modules covered, most regressions addressed.
 
 ### Day 4
-- Execute T6.
-- Run full verification suite and stabilize issues.
-- Deliverable checkpoint: docs exported, phase exit criteria validated.
+- Finish T5 and execute T6.
+- Checkpoint: docs export complete and final verification done.
 
-## Verification Plan (Phase-Level)
-1. Static quality gate:
+## Phase-Level Verification Plan
+1. Inventory gate:
+   - Every active module has endpoint matrix and status.
+2. Quality gate:
    - `npm run lint`
    - `npx tsc --noEmit`
-2. Build gate:
+3. Build gate:
    - `npm run build`
-3. Test gate:
+4. Test gate:
    - `npm run test`
    - `npm run test:e2e`
-4. Behavior gate:
-   - revoked access token rejected on protected route.
-   - invalid local credentials rejected.
-   - invalid Google ID token rejected.
-   - refresh replay rejected after rotation.
 5. Contract gate:
-   - Swagger `/api/docs` auth schemas align with runtime responses.
-   - OpenAPI JSON export generated and validated.
+   - Swagger docs match runtime responses for all modules.
+   - OpenAPI JSON export artifact exists and is FE-ready.
 
 ## Risks and Mitigations
+1. Risk: scope is wide for 4 days.
+- Mitigation: strict wave prioritization + freeze non-critical additions.
 
-1. Risk: hidden coupling between auth/devices/tokens services delays fixes.
-- Mitigation: keep T1/T3/T4 sequence strict; avoid broad refactor, touch only auth-token boundaries.
+2. Risk: inconsistent conventions across modules.
+- Mitigation: enforce common checklist per module (DTO, response envelope, errors, docs, tests).
 
-2. Risk: Redis availability or key-shape mismatch causes false negatives.
-- Mitigation: add integration-like tests around revocation keys and fallback error handling.
+3. Risk: hidden regressions from cross-module changes.
+- Mitigation: continuous test gate after each wave, not only at end.
 
-3. Risk: 4-day deadline compresses testing depth.
-- Mitigation: prioritize P0/P1 auth scenarios first (credential checks, revocation, refresh replay), then extend coverage if time remains.
-
-4. Risk: Swagger mismatch persists after code changes.
-- Mitigation: tie T2 + T6 to explicit schema verification and OpenAPI export validation.
+4. Risk: docs drift from code.
+- Mitigation: require Swagger parity check as exit condition for each wave.
 
 ## Exit Criteria
 Phase 1 is complete only when all are true:
-1. Local login validates password hash; invalid credentials never issue tokens.
-2. Google login strictly validates ID token and rejects invalid/expired token input.
-3. Redis-backed revocation is enforced during authenticated request validation.
-4. Refresh rotation and logout invalidation are deterministic and tested.
-5. Auth/token tests (unit + e2e) pass in CI-equivalent local commands.
-6. Swagger/OpenAPI auth contracts match runtime behavior and export artifact exists.
-7. No open blocker/high-severity auth hardening item remains from phase 1 scope.
+1. All active modules have endpoint inventory and zero unresolved P0/P1 endpoint gaps.
+2. Endpoint contracts are validated, consistent, and documented.
+3. Critical module flows have both success and negative-path test coverage.
+4. Lint/typecheck/build/test gates pass.
+5. Exported OpenAPI artifact is complete and usable by frontend.
