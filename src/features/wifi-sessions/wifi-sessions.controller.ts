@@ -6,6 +6,7 @@ import {
   Param,
   UseGuards,
   Query,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -85,7 +86,7 @@ export class WifiSessionsController {
   @ApiParam({
     name: 'id',
     description: 'UUID của phiên WiFi',
-    example: 'session-uuid-abc123',
+    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
   })
   @ApiResponse({
     status: 200,
@@ -96,7 +97,7 @@ export class WifiSessionsController {
   @ApiResponse({ status: 404, description: 'Phiên không tồn tại' })
   async endSession(
     @CurrentUser('id') userId: string,
-    @Param('id') sessionId: string,
+    @Param('id', new ParseUUIDPipe()) sessionId: string,
     @Body() dto: EndSessionDto,
   ) {
     const result = await this.wifiSessionsService.endSession(
@@ -163,7 +164,7 @@ export class WifiSessionsController {
   @ApiParam({
     name: 'id',
     description: 'UUID của phiên WiFi',
-    example: 'session-uuid-abc123',
+    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
   })
   @ApiResponse({ status: 200, description: 'Trả về thông tin phiên WiFi' })
   @ApiResponse({ status: 401, description: 'Chưa xác thực' })
@@ -173,7 +174,7 @@ export class WifiSessionsController {
   })
   async getSession(
     @CurrentUser('id') userId: string,
-    @Param('id') sessionId: string,
+    @Param('id', new ParseUUIDPipe()) sessionId: string,
   ) {
     const session = await this.wifiSessionsService.getSessionById(
       sessionId,
