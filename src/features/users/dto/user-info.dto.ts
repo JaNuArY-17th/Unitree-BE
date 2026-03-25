@@ -39,12 +39,4 @@ export class UserInfoDto {
   @Expose()
   @ApiProperty({ nullable: true })
   referralCode?: string;
-
-  @Expose()
-  @ApiProperty()
-  createdAt: Date;
-
-  @Expose()
-  @ApiProperty()
-  updatedAt: Date;
 }
