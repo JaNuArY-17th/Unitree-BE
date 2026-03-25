@@ -12,6 +12,7 @@
 - Existing codebase map available under `.planning/codebase/`.
 - Project objective: production-ready endpoint and service quality with complete API docs.
 - Deadline pressure: 4 days.
+- Phase 1 plan created at `.planning/phases/1/PLAN.md`.
 
 ## Active Milestone
 
@@ -20,4 +21,4 @@
 
 ## Next Command
 
-- `/gsd-plan-phase 1`
+- `/gsd-execute-phase 1`
