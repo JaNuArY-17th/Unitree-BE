@@ -6,6 +6,7 @@ import {
   Param,
   Query,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -105,7 +106,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'Trả về thông tin user' })
   @ApiResponse({ status: 401, description: 'Chưa xác thực' })
   @ApiResponse({ status: 404, description: 'User không tồn tại' })
-  async findById(@Param('id') id: string) {
+  async findById(@Param('id', new ParseUUIDPipe()) id: string) {
     const user = await this.usersService.findById(id);
     return ResponseUtil.success(user);
   }
