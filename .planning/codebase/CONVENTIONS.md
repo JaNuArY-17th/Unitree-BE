@@ -5,24 +5,29 @@
 ## Naming Patterns
 
 **Files:**
+
 - Use kebab-case filenames for modules and DTOs: `src/features/users/users.controller.ts`, `src/features/auth/dto/login-with-device.dto.ts`, `src/shared/utils/response.util.ts`.
 - Keep NestJS suffixes explicit: `*.controller.ts`, `*.service.ts`, `*.module.ts`, `*.guard.ts`, `*.interceptor.ts`, `*.filter.ts`, `*.entity.ts`, `*.dto.ts`.
 
 **Functions/Methods:**
+
 - Use camelCase for methods and variables: `findById`, `updateCurrentUser`, `generateReferralCode` in `src/features/users/users.service.ts`.
 - Use async methods with explicit Promise returns in services.
 
 **Variables:**
+
 - Use camelCase for local values and injected dependencies: `configService`, `userRepository`, `paginationDto`.
 - Use descriptive names for request-level data: `ipAddress`, `userAgent` in `src/features/auth/auth.controller.ts`.
 
 **Types/Classes:**
+
 - Use PascalCase for classes/interfaces/enums: `UsersService`, `RegisterDto`, `PaginationDto`, `UserRole`.
 - Keep DTO classes singular and feature-scoped in `src/features/*/dto/`.
 
 ## Code Style
 
 **Formatting:**
+
 - Tool: Prettier via `npm run format` in `package.json`.
 - Config from `.prettierrc`:
   - `singleQuote: true`
@@ -30,6 +35,7 @@
 - Format command targets only `src/**/*.ts` and `test/**/*.ts`.
 
 **Linting:**
+
 - Tool: ESLint flat config in `eslint.config.mjs`.
 - Command: `npm run lint` runs `eslint "{src,apps,libs,test}/**/*.ts" --fix`.
 - Config uses `typescript-eslint` recommended type-checked rules and `eslint-plugin-prettier/recommended`.
@@ -52,16 +58,19 @@
 ## Import Organization
 
 **Observed Order Pattern:**
+
 1. Nest/framework imports
 2. Third-party imports
 3. Project imports (feature/shared/config)
 
 **Evidence:**
+
 - `src/features/users/users.controller.ts`
 - `src/features/auth/auth.controller.ts`
 - `src/app.module.ts` (uses section-grouped imports with comments for Config/Guards/Filters/Interceptors/Services/Feature Modules)
 
 **Path Aliases:**
+
 - Not detected; imports are relative paths (`../../shared/...`, `./dto/...`).
 
 ## DTO and Validation Patterns
@@ -79,6 +88,7 @@
 ## Error Handling
 
 **Patterns:**
+
 - Throw NestJS HTTP exceptions in services for business/domain failures (`NotFoundException`, `BadRequestException`, `UnauthorizedException`) across:
   - `src/features/users/users.service.ts`
   - `src/features/auth/auth.service.ts`
@@ -104,11 +114,13 @@
 ## Function and Module Design
 
 **Function Design:**
+
 - Controllers remain thin and delegate to services (`src/features/users/users.controller.ts`).
 - Services centralize business logic and repository access (`src/features/users/users.service.ts`, `src/features/auth/auth.service.ts`).
 - Prefer DTO output mapping with `plainToInstance(...)` where response fields are curated.
 
 **Module Design:**
+
 - Register cross-cutting concerns globally in `src/app.module.ts`:
   - guard: `JwtAuthGuard`
   - filter: `HttpExceptionFilter`
@@ -117,4 +129,4 @@
 
 ---
 
-*Convention analysis: 2026-03-25*
+_Convention analysis: 2026-03-25_

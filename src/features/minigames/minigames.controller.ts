@@ -1,5 +1,10 @@
 import { Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { MinigamesService } from './minigames.service';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 

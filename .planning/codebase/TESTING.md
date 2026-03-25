@@ -5,15 +5,18 @@
 ## Test Framework
 
 **Runner:**
+
 - Jest `^30.0.0` with `ts-jest` in `package.json`.
 - Unit/integration config is embedded under `jest` in `package.json` (rootDir `src`, regex `.*\.spec\.ts$`).
 - E2E config is in `test/jest-e2e.json` (regex `.e2e-spec.ts$`).
 
 **Assertion Library:**
+
 - Jest built-in assertions (`expect(...)`).
 - HTTP assertions via Supertest in E2E tests.
 
 **Run Commands:**
+
 ```bash
 npm run test          # Jest using package.json config
 npm run test:watch    # Jest watch mode
@@ -25,14 +28,17 @@ npm run test:debug    # In-band debug execution with ts-node + tsconfig-paths
 ## Test File Organization
 
 **Location:**
+
 - E2E tests are under `test/`.
 - Unit tests in `src/**/*.spec.ts` are expected by config but currently not present.
 
 **Naming:**
+
 - E2E naming pattern: `*.e2e-spec.ts`.
 - Unit naming pattern expected: `*.spec.ts`.
 
 **Current Structure:**
+
 ```text
 test/
   app.e2e-spec.ts
@@ -44,6 +50,7 @@ test/
 ## Test Structure
 
 **Suite Organization (current pattern):**
+
 ```typescript
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
@@ -65,9 +72,11 @@ describe('AppController (e2e)', () => {
   });
 });
 ```
+
 - Source: `test/app.e2e-spec.ts`.
 
 **Patterns:**
+
 - Setup per-test using `beforeEach` and full app bootstrap.
 - Request-driven endpoint verification with Supertest.
 - Minimal teardown pattern; explicit `afterEach`/`afterAll` cleanup is not present in current E2E example.
@@ -75,33 +84,40 @@ describe('AppController (e2e)', () => {
 ## Mocking
 
 **Framework:**
+
 - Jest mocking is available but not demonstrated in current repository tests.
 
 **Current State:**
+
 - No in-repo `jest.mock(...)` usage detected in active test files.
 - No unit test double patterns currently established in `src/**/*.spec.ts` (none found).
 
 ## Fixtures and Factories
 
 **Test Data Pattern:**
+
 - No shared factories/fixtures detected for Jest tests.
 - `test/prisma-test/prisma/schema.prisma` and `test/prisma-test/prisma.config.ts` indicate planned/auxiliary test database setup.
 
 **Location:**
+
 - Candidate location exists: `test/prisma-test/`.
 - Dedicated fixture directories for Jest are not detected.
 
 ## Coverage
 
 **Requirements:**
+
 - `npm run test:cov` exists.
 - No coverage thresholds are configured in `package.json` Jest settings.
 
 **Collection Config:**
+
 - `collectCoverageFrom: ["**/*.(t|j)s"]`
 - `coverageDirectory: "../coverage"` (relative to Jest rootDir `src`).
 
 **View Coverage:**
+
 ```bash
 npm run test:cov
 ```
@@ -109,12 +125,15 @@ npm run test:cov
 ## Test Types
 
 **Unit Tests:**
+
 - Expected by config (`src/**/*.spec.ts`) but not currently implemented.
 
 **Integration Tests:**
+
 - No dedicated integration suite detected.
 
 **E2E Tests:**
+
 - Present with Jest + Supertest via `test/app.e2e-spec.ts` and `test/jest-e2e.json`.
 - Coverage is currently only a smoke-level root endpoint check.
 
@@ -135,4 +154,4 @@ npm run test:cov
 
 ---
 
-*Testing analysis: 2026-03-25*
+_Testing analysis: 2026-03-25_

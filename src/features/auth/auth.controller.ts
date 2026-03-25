@@ -168,10 +168,7 @@ export class AuthController {
     status: 400,
     description: 'OTP không chính xác hoặc đã hết hạn',
   })
-  async verifyDevice(
-    @Body() verifyDto: VerifyDeviceDto,
-    @Req() req: Request,
-  ) {
+  async verifyDevice(@Body() verifyDto: VerifyDeviceDto, @Req() req: Request) {
     const ipAddress = req.ip || req.socket.remoteAddress;
     const userAgent = req.headers['user-agent'];
 

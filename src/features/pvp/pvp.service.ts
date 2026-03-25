@@ -48,10 +48,10 @@ export class PvpService {
         .setLock('pessimistic_write')
         .getMany();
 
-      let raidItem = attackerResources.find((ur) =>
+      const raidItem = attackerResources.find((ur) =>
         ['RAID_ITEM'].includes(ur.resource.code.toUpperCase()),
       );
-      let spinItem = attackerResources.find((ur) =>
+      const spinItem = attackerResources.find((ur) =>
         ['SPIN', 'SPINS', 'LUOT_QUAY'].includes(ur.resource.code.toUpperCase()),
       );
 
@@ -59,7 +59,9 @@ export class PvpService {
       const spinBal = spinItem ? Number(spinItem.balance) : 0;
 
       if (raidBal <= 0 && spinBal <= 0) {
-        throw new BadRequestException('Không đủ Găng Tay hoặc Lượt Quay để Hái Lộc');
+        throw new BadRequestException(
+          'Không đủ Găng Tay hoặc Lượt Quay để Hái Lộc',
+        );
       }
 
       // Determine consumed item
@@ -84,10 +86,10 @@ export class PvpService {
         .setLock('pessimistic_write')
         .getMany();
 
-      let shieldItem = defenderResources.find((ur) =>
+      const shieldItem = defenderResources.find((ur) =>
         ['SHIELD', 'MAN'].includes(ur.resource.code.toUpperCase()),
       );
-      let targetGoldItem = defenderResources.find((ur) =>
+      const targetGoldItem = defenderResources.find((ur) =>
         ['GOLD', 'COIN'].includes(ur.resource.code.toUpperCase()),
       );
 
@@ -164,13 +166,17 @@ export class PvpService {
         ['GOLD', 'COIN'].includes(ur.resource.code.toUpperCase()),
       );
       if (attackerGoldItem) {
-        attackerGoldItem.balance = (Number(attackerGoldItem.balance) + stolenAmount).toString();
+        attackerGoldItem.balance = (
+          Number(attackerGoldItem.balance) + stolenAmount
+        ).toString();
         await urRepo.save(attackerGoldItem);
       } else {
         // Create gold balance if they don't have it (requires fetching Gold resource, simplified here)
         // Usually handled gracefully or Gold is pre-seeded. We'll throw if missing for simplicity,
         // or we fetch the gold resource ID.
-        const goldRes = await manager.getRepository('Resource').findOne({ where: { code: targetGoldItem!.resource.code } });
+        const goldRes = await manager
+          .getRepository('Resource')
+          .findOne({ where: { code: targetGoldItem!.resource.code } });
         if (goldRes) {
           attackerGoldItem = urRepo.create({
             userId,
@@ -188,7 +194,7 @@ export class PvpService {
           resourceType: targetGoldItem!.resource.code,
           amount: -stolenAmount,
           source: 'pvp_raided',
-        })
+        }),
       );
       await ecoLogRepo.save(
         ecoLogRepo.create({
@@ -196,7 +202,7 @@ export class PvpService {
           resourceType: targetGoldItem!.resource.code,
           amount: stolenAmount,
           source: 'pvp_raid_reward',
-        })
+        }),
       );
 
       await actionLogRepo.save(
@@ -230,9 +236,12 @@ export class PvpService {
         lock: { mode: 'pessimistic_write' },
       });
 
-      if (!targetTree) throw new NotFoundException('Không tìm thấy cây mục tiêu');
-      if (targetTree.userId === userId) throw new BadRequestException('Không thể thả bọ vườn nhà mình');
-      if (targetTree.isDamaged) throw new BadRequestException('Cây này đã bị héo rồi');
+      if (!targetTree)
+        throw new NotFoundException('Không tìm thấy cây mục tiêu');
+      if (targetTree.userId === userId)
+        throw new BadRequestException('Không thể thả bọ vườn nhà mình');
+      if (targetTree.isDamaged)
+        throw new BadRequestException('Cây này đã bị héo rồi');
 
       // Fetch attacker items
       const attackerResources = await urRepo
@@ -245,7 +254,7 @@ export class PvpService {
         .setLock('pessimistic_write')
         .getMany();
 
-      let attackItem = attackerResources.find((ur) =>
+      const attackItem = attackerResources.find((ur) =>
         ['ATTACK_ITEM'].includes(ur.resource.code.toUpperCase()),
       );
 
@@ -295,7 +304,8 @@ export class PvpService {
 
         return {
           success: true,
-          message: 'Đối thủ có Màn bắt côn trùng! Bọ Xít của bạn đã bị tiêu diệt.',
+          message:
+            'Đối thủ có Màn bắt côn trùng! Bọ Xít của bạn đã bị tiêu diệt.',
           wasBlocked: true,
         };
       }
