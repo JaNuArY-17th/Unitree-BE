@@ -37,16 +37,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       this.logger.debug(
         `Using cached user info for user ID: ${String(payload.sub)}`,
       );
-      // Return user from cache
       return {
         id: userInfo.id,
-        email: userInfo.email,
+        username: userInfo.username,
         role: userInfo.role,
-        fullname: userInfo.fullname,
+        studentId: userInfo.studentId,
       };
     }
 
-    // If not in cache, fetch from database
     this.logger.debug(
       `No cached user info found, fetching from DB for user ID: ${String(payload.sub)}`,
     );
@@ -59,14 +57,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('User not found');
     }
 
-    // Store user info in Redis for future requests
-    await this.tokensService.storeUserInfo(user);
+    await this.tokensService.storeUserProfile(user);
 
     return {
       id: user.id,
-      email: user.student?.email,
+      username: user.username,
       role: user.role,
-      fullname: user.student?.fullName,
+      studentId: user.student?.studentId,
     };
   }
 }

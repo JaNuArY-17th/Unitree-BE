@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
+import { TokenPrefixes } from '../shared/constants/token.constant';
 
 @Injectable()
 export class CacheService {
@@ -100,6 +101,20 @@ export class CacheService {
 
   async hdel(key: string, field: string): Promise<number> {
     return await this.redis.hdel(key, field);
+  }
+
+  async hsetWithExpiry(
+    key: string,
+    field: string,
+    value: string,
+    ttlSeconds: number,
+  ): Promise<void> {
+    await this.redis.hset(key, field, value);
+    await this.redis.expire(key, ttlSeconds);
+  }
+
+  async delUserHash(userId: string): Promise<void> {
+    await this.redis.del(`${TokenPrefixes.USER}${userId}`);
   }
 
   // ===== SORTED SET OPERATIONS (for leaderboards) =====
