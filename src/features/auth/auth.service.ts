@@ -12,6 +12,8 @@ import { TokensService } from '../tokens/tokens.service';
 import { DevicesService } from '../devices/devices.service';
 import { DeviceInfo } from '../devices/interfaces';
 import { Student } from '../../database/entities/student.entity';
+import { Tree } from '../../database/entities/tree.entity';
+import { UserTree } from '../../database/entities/user-tree.entity';
 import { FirebaseService } from '../../services/firebase.service';
 import { UserRole } from '../../shared/constants/roles.constant';
 import { UsersService } from '../users/users.service';
@@ -28,6 +30,10 @@ export class AuthService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Student)
     private readonly studentRepository: Repository<Student>,
+    @InjectRepository(Tree)
+    private readonly treeRepository: Repository<Tree>,
+    @InjectRepository(UserTree)
+    private readonly userTreeRepository: Repository<UserTree>,
     private readonly tokensService: TokensService,
     private readonly devicesService: DevicesService,
     private readonly firebaseService: FirebaseService,
@@ -102,10 +108,28 @@ export class AuthService {
         username: defaultUsername,
         student: student,
         avatar: defaultAvatar,
-        role: UserRole.USER, // Default role
+        role: UserRole.USER,
       });
 
       user = await this.userRepository.save(user);
+
+      // Tạo cây mặc định cho user mới
+      const tree = await this.treeRepository.findOne({
+        where: { code: 'BANANA_TREE' },
+      });
+
+      if (tree) {
+        await this.userTreeRepository.save({
+          userId: user.id,
+          treeId: tree.id,
+          level: 1,
+          isDamaged: false,
+          lastHarvestTime: new Date(),
+          checksum: '',
+        });
+      } else {
+        this.logger.warn('Default tree BANANA_TREE not found in trees catalog');
+      }
     }
 
     // Tạo referral code nếu chưa có
