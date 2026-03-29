@@ -65,7 +65,19 @@ export class GardenService {
       isDamaged: userTree.isDamaged,
       hasWifiBoost,
     });
-    console.log('[sync_oxy] oxygenEarned:', oxygenEarned, 'tree:', tree.name, 'oxyBase:', tree.oxyBase, 'oxyRate:', tree.oxyRate);
+    const earnedWholeOxygen = Math.floor(oxygenEarned);
+    console.log(
+      '[sync_oxy] oxygenEarned:',
+      oxygenEarned,
+      'earnedWholeOxygen:',
+      earnedWholeOxygen,
+      'tree:',
+      tree.name,
+      'oxyBase:',
+      tree.oxyBase,
+      'oxyRate:',
+      tree.oxyRate,
+    );
 
     const oxygenResource = await this.findOxygenResource();
 
@@ -87,20 +99,21 @@ export class GardenService {
       }
 
       const currentBalance = BigInt(userOxygen.balance || '0');
-      userOxygen.balance = (
-        currentBalance + BigInt(Math.floor(oxygenEarned))
-      ).toString();
-      await userResourceRepo.save(userOxygen);
+      if (earnedWholeOxygen > 0) {
+        userOxygen.balance = (
+          currentBalance + BigInt(earnedWholeOxygen)
+        ).toString();
+        await userResourceRepo.save(userOxygen);
 
-      userTree.lastHarvestTime = now;
-      await userTreeRepo.save(userTree);
+        // Preserve fractional progress by moving lastHarvestTime only when at least 1 O2 was actually credited.
+        userTree.lastHarvestTime = now;
+        await userTreeRepo.save(userTree);
 
-      if (oxygenEarned > 0) {
         await economyLogRepo.save(
           economyLogRepo.create({
             userId,
             resourceType: oxygenResource.code,
-            amount: Math.floor(oxygenEarned),
+            amount: earnedWholeOxygen,
             source: 'sync_oxy',
           }),
         );
@@ -108,10 +121,13 @@ export class GardenService {
 
       return {
         userTreeId: userTree.id,
-        oxygenEarned: Math.floor(oxygenEarned),
-        currentBalance: userOxygen.balance,
+        oxygenEarned: earnedWholeOxygen,
+        currentBalance:
+          earnedWholeOxygen > 0
+            ? userOxygen.balance
+            : currentBalance.toString(),
         hasWifiBoost,
-        lastHarvestTime: now,
+        lastHarvestTime: userTree.lastHarvestTime,
       };
     });
   }
