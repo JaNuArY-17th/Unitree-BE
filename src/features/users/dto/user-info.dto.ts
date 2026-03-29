@@ -39,4 +39,19 @@ export class UserInfoDto {
   @Expose()
   @ApiProperty({ nullable: true })
   referralCode?: string;
+
+  @Expose()
+  @ApiProperty({ nullable: true })
+  @Transform(({ obj }: { obj: User }) => obj.referredBy?.id ?? null)
+  referredById?: string;
+
+  @Expose()
+  @ApiProperty({ nullable: true })
+  @Transform(({ obj }: { obj: User }) => obj.referredBy?.username ?? null)
+  referredByUsername?: string;
+
+  @Expose()
+  @ApiProperty({ nullable: true })
+  @Transform(({ obj }: { obj: User }) => obj.referredBy?.avatar ?? null)
+  referredByAvatarUrl?: string;
 }

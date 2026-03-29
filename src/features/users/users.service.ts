@@ -12,17 +12,23 @@ import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class UsersService {
+  private static readonly REF_CODE_NOT_FOUND_MESSAGE = 'Mã mời không tồn tại';
+  private static readonly REF_CODE_SELF_MESSAGE =
+    'Không thể tự nhập mã của mình';
+  private static readonly REF_CODE_ALREADY_APPLIED_MESSAGE =
+    'Bạn đã nhập mã mời trước đó';
+
   // Đếm số người đã được mời bởi user hiện tại
   async countReferredUsers(userId: string): Promise<number> {
     return this.userRepository.count({
-      where: { invitedBy: { id: userId } },
+      where: { referredBy: { id: userId } },
     });
   }
 
   // Lấy danh sách user đã được mời bởi user hiện tại
   async getReferredUsers(userId: string): Promise<User[]> {
     return this.userRepository.find({
-      where: { invitedBy: { id: userId } },
+      where: { referredBy: { id: userId } },
     });
   }
   constructor(
@@ -33,7 +39,7 @@ export class UsersService {
   async findById(id: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id },
-      relations: ['student'],
+      relations: ['student', 'referredBy'],
     });
 
     if (!user) {
@@ -109,33 +115,84 @@ export class UsersService {
     return this.findById(id);
   }
 
-  async applyReferralCode(userId: string, dto: ApplyReferralCodeDto): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user) throw new NotFoundException('User not found');
-
-    if (user.invitedBy) {
-      throw new BadRequestException('You have already applied a referral code');
-    }
-
-    if (user.referralCode === dto.referralCode) {
-      throw new BadRequestException('You cannot use your own referral code');
-    }
-
-    const inviter = await this.userRepository.findOne({
-      where: { referralCode: dto.referralCode },
+  async validateReferralCode(
+    userId: string,
+    code: string,
+  ): Promise<{
+    targetUserId: string;
+    targetUsername: string;
+    targetAvatarUrl: string;
+  }> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['referredBy'],
     });
-
-    if (!inviter) {
-      throw new BadRequestException('Invalid referral code');
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
 
-    if (inviter.id === userId) {
-      throw new BadRequestException('You cannot use your own referral code');
+    const target = await this.validateReferralCodeForUser(user, code);
+
+    return {
+      targetUserId: target.id,
+      targetUsername: target.username,
+      targetAvatarUrl: target.avatar ?? '',
+    };
+  }
+
+  async applyReferralCode(
+    userId: string,
+    dto: ApplyReferralCodeDto,
+  ): Promise<{ success: true; message: string }> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['referredBy'],
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
 
-    user.invitedBy = inviter;
+    const target = await this.validateReferralCodeForUser(user, dto.refCode);
+
+    user.referredBy = target;
     await this.userRepository.save(user);
 
-    return this.findById(userId);
+    return {
+      success: true,
+      message: 'Nhập mã thành công',
+    };
+  }
+
+  private normalizeRefCode(code: string): string {
+    return code.trim().toUpperCase();
+  }
+
+  private async validateReferralCodeForUser(
+    user: User,
+    code: string,
+  ): Promise<User> {
+    const normalizedCode = this.normalizeRefCode(code);
+
+    // Rule 1: referral code must exist.
+    const target = await this.userRepository.findOne({
+      where: { referralCode: normalizedCode },
+    });
+    if (!target) {
+      throw new NotFoundException(UsersService.REF_CODE_NOT_FOUND_MESSAGE);
+    }
+
+    // Rule 2: cannot apply own code.
+    if (target.id === user.id || user.referralCode === normalizedCode) {
+      throw new BadRequestException(UsersService.REF_CODE_SELF_MESSAGE);
+    }
+
+    // Rule 3: current user must not have applied referral before.
+    if (user.referredBy) {
+      throw new BadRequestException(
+        UsersService.REF_CODE_ALREADY_APPLIED_MESSAGE,
+      );
+    }
+
+    return target;
   }
 }

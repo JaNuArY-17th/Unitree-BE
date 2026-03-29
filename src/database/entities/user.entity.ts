@@ -38,8 +38,8 @@ export class User extends BaseEntity {
   // User đã mời user này: nullable, chỉ nhập 1 lần
   @Index()
   @ManyToOne(() => User, { nullable: true })
-  @JoinColumn({ name: 'invited_by_user_id' })
-  invitedBy?: User;
+  @JoinColumn({ name: 'referred_by_id' })
+  referredBy?: User;
 
   // Relations
   @OneToOne('Student', 'user')

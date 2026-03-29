@@ -98,6 +98,27 @@ export class UsersController {
     return ResponseUtil.success(result, 'Users retrieved successfully');
   }
 
+  @Get('ref-code/:code')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Kiểm tra mã mời và lấy thông tin người giới thiệu',
+  })
+  @ApiParam({
+    name: 'code',
+    description: 'Mã mời 4 ký tự',
+    example: 'AB12',
+  })
+  @ApiResponse({ status: 200, description: 'Kiểm tra mã mời thành công' })
+  @ApiResponse({ status: 400, description: 'Mã mời không hợp lệ' })
+  @ApiResponse({ status: 404, description: 'Mã mời không tồn tại' })
+  @ApiResponse({ status: 401, description: 'Chưa xác thực' })
+  async validateReferralCode(
+    @CurrentUser('id') userId: string,
+    @Param('code') code: string,
+  ) {
+    return this.usersService.validateReferralCode(userId, code);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Lấy thông tin user theo ID' })
   @ApiParam({
@@ -113,18 +134,20 @@ export class UsersController {
     return ResponseUtil.success(user);
   }
 
-  @Post('apply-referral')
+  @Post(['apply-ref', 'apply-referral'])
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Nhập mã mời của người khác' })
   @ApiBody({ type: ApplyReferralCodeDto })
   @ApiResponse({ status: 200, description: 'Áp dụng mã mời thành công' })
-  @ApiResponse({ status: 400, description: 'Mã mời không hợp lệ hoặc đã sử dụng' })
+  @ApiResponse({
+    status: 400,
+    description: 'Mã mời không hợp lệ hoặc đã sử dụng',
+  })
   @ApiResponse({ status: 401, description: 'Chưa xác thực' })
   async applyReferralCode(
     @CurrentUser('id') userId: string,
     @Body() dto: ApplyReferralCodeDto,
   ) {
-    const user = await this.usersService.applyReferralCode(userId, dto);
-    return ResponseUtil.success(user, 'Referral code applied successfully');
+    return this.usersService.applyReferralCode(userId, dto);
   }
 }
