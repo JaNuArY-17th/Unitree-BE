@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../../database/entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ApplyReferralCodeDto } from './dto/apply-referral.dto';
 import { PaginationDto } from '../../shared/dto/pagination.dto';
 import { PaginationResult } from '../../shared/repositories/pagination.repository';
 import { NotFoundException } from '@nestjs/common';
@@ -106,5 +107,35 @@ export class UsersService {
     await this.userRepository.save(user);
 
     return this.findById(id);
+  }
+
+  async applyReferralCode(userId: string, dto: ApplyReferralCodeDto): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    if (user.invitedBy) {
+      throw new BadRequestException('You have already applied a referral code');
+    }
+
+    if (user.referralCode === dto.referralCode) {
+      throw new BadRequestException('You cannot use your own referral code');
+    }
+
+    const inviter = await this.userRepository.findOne({
+      where: { referralCode: dto.referralCode },
+    });
+
+    if (!inviter) {
+      throw new BadRequestException('Invalid referral code');
+    }
+
+    if (inviter.id === userId) {
+      throw new BadRequestException('You cannot use your own referral code');
+    }
+
+    user.invitedBy = inviter;
+    await this.userRepository.save(user);
+
+    return this.findById(userId);
   }
 }

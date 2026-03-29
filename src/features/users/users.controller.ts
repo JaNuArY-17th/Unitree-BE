@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Put,
+  Post,
   Body,
   Param,
   Query,
@@ -19,6 +20,7 @@ import {
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ApplyReferralCodeDto } from './dto/apply-referral.dto';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { ResponseUtil } from '../../shared/utils/response.util';
 import { Roles } from '../../shared/decorators/roles.decorator';
@@ -109,5 +111,20 @@ export class UsersController {
   async findById(@Param('id', new ParseUUIDPipe()) id: string) {
     const user = await this.usersService.findById(id);
     return ResponseUtil.success(user);
+  }
+
+  @Post('apply-referral')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Nhập mã mời của người khác' })
+  @ApiBody({ type: ApplyReferralCodeDto })
+  @ApiResponse({ status: 200, description: 'Áp dụng mã mời thành công' })
+  @ApiResponse({ status: 400, description: 'Mã mời không hợp lệ hoặc đã sử dụng' })
+  @ApiResponse({ status: 401, description: 'Chưa xác thực' })
+  async applyReferralCode(
+    @CurrentUser('id') userId: string,
+    @Body() dto: ApplyReferralCodeDto,
+  ) {
+    const user = await this.usersService.applyReferralCode(userId, dto);
+    return ResponseUtil.success(user, 'Referral code applied successfully');
   }
 }
