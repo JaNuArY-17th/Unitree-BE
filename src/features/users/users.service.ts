@@ -83,11 +83,11 @@ export class UsersService {
 
     const qb = this.userRepository
       .createQueryBuilder('user')
-      .innerJoinAndSelect('user.student', 'student');
+      .leftJoinAndSelect('user.student', 'student');
 
     if (search) {
       qb.where(
-        '(student.fullName ILIKE :search OR student.email ILIKE :search OR user.username ILIKE :search)',
+        '(student.fullName ILIKE :search OR student.email ILIKE :search OR user.email ILIKE :search OR user.username ILIKE :search)',
         { search: `%${search}%` },
       );
     }

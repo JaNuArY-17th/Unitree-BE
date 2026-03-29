@@ -1,6 +1,7 @@
 import {
   Injectable,
   UnauthorizedException,
+  BadRequestException,
   NotFoundException,
   InternalServerErrorException,
   Logger,
@@ -40,14 +41,29 @@ export class AuthService {
     private readonly usersService: UsersService,
   ) {}
 
-  async login(loginDto: { email: string; password?: string }) {
-    const user = await this.userRepository
+  private normalizeEmail(email: string): string {
+    return email.trim().toLowerCase();
+  }
+
+  private async findUserByEmail(email: string): Promise<User | null> {
+    return this.userRepository
       .createQueryBuilder('user')
-      .innerJoinAndSelect('user.student', 'student')
-      .where('LOWER(student.email) = LOWER(:email)', {
-        email: loginDto.email,
-      })
+      .leftJoinAndSelect('user.student', 'student')
+      .where('LOWER(user.email) = LOWER(:email)', { email })
       .getOne();
+  }
+
+  private getUserEmailOrThrow(user: User): string {
+    const email = user.email?.trim();
+    if (!email) {
+      throw new BadRequestException('User does not have an email');
+    }
+    return email;
+  }
+
+  async login(loginDto: { email: string; password?: string }) {
+    const normalizedEmail = this.normalizeEmail(loginDto.email);
+    const user = await this.findUserByEmail(normalizedEmail);
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -84,29 +100,25 @@ export class AuthService {
       throw new UnauthorizedException('Google account does not have an email');
     }
 
-    let user = await this.userRepository
-      .createQueryBuilder('user')
-      .innerJoinAndSelect('user.student', 'student')
-      .where('LOWER(student.email) = LOWER(:email)', { email })
-      .getOne();
+    const normalizedEmail = this.normalizeEmail(email);
+
+    let user = await this.findUserByEmail(normalizedEmail);
 
     if (!user) {
-      // Only check if email exists in students table, ignore domain
-      // Case-insensitive email check
       const student = await this.studentRepository
         .createQueryBuilder('student')
-        .where('LOWER(student.email) = LOWER(:email)', { email })
+        .where('LOWER(student.email) = LOWER(:email)', {
+          email: normalizedEmail,
+        })
         .getOne();
-      if (!student) {
-        throw new UnauthorizedException('auth.must_use_school_email');
-      }
 
       const defaultAvatar = picture || undefined;
-      const defaultUsername = String(email.split('@')[0]);
+      const defaultUsername = String(normalizedEmail.split('@')[0]);
 
       user = this.userRepository.create({
         username: defaultUsername,
-        student: student,
+        email: normalizedEmail,
+        student: student ?? null,
         avatar: defaultAvatar,
         role: UserRole.USER,
       });
@@ -129,6 +141,18 @@ export class AuthService {
         });
       } else {
         this.logger.warn('Default tree BANANA_TREE not found in trees catalog');
+      }
+    } else if (!user.student) {
+      const student = await this.studentRepository
+        .createQueryBuilder('student')
+        .where('LOWER(student.email) = LOWER(:email)', {
+          email: normalizedEmail,
+        })
+        .getOne();
+
+      if (student) {
+        user.student = student;
+        user = await this.userRepository.save(user);
       }
     }
 
@@ -198,17 +222,14 @@ export class AuthService {
     ipAddress?: string,
     userAgent?: string,
   ) {
-    const user = await this.userRepository
-      .createQueryBuilder('user')
-      .innerJoinAndSelect('user.student', 'student')
-      .where('LOWER(student.email) = LOWER(:email)', {
-        email: loginDto.email,
-      })
-      .getOne();
+    const normalizedEmail = this.normalizeEmail(loginDto.email);
+    const user = await this.findUserByEmail(normalizedEmail);
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
+
+    const userEmail = this.getUserEmailOrThrow(user);
 
     const deviceInfo: DeviceInfo = {
       deviceId: loginDto.deviceId,
@@ -223,7 +244,7 @@ export class AuthService {
 
     const deviceCheck = await this.devicesService.handleDeviceLogin(
       user.id,
-      user.student.email,
+      userEmail,
       deviceInfo,
     );
 
@@ -272,6 +293,8 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
+    const userEmail = this.getUserEmailOrThrow(user);
+
     const baseDeviceInfo: DeviceInfo = {
       deviceId: verifyDto.deviceId,
       deviceType: 'unknown',
@@ -279,7 +302,7 @@ export class AuthService {
 
     await this.devicesService.verifyAndRegisterDevice(
       userId,
-      user.student.email,
+      userEmail,
       baseDeviceInfo,
       verifyDto.otpCode,
     );
@@ -317,11 +340,7 @@ export class AuthService {
   }
 
   async validateUser(email: string): Promise<any> {
-    const user = await this.userRepository
-      .createQueryBuilder('user')
-      .innerJoinAndSelect('user.student', 'student')
-      .where('LOWER(student.email) = LOWER(:email)', { email })
-      .getOne();
+    const user = await this.findUserByEmail(this.normalizeEmail(email));
     return user || null;
   }
 }

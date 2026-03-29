@@ -15,7 +15,9 @@ export class UserInfoDto {
 
   @Expose()
   @ApiProperty({ nullable: true })
-  @Transform(({ obj }: { obj: User }) => obj.student?.email)
+  @Transform(
+    ({ obj }: { obj: User }) => obj.student?.email ?? obj.email ?? null,
+  )
   email?: string;
 
   @Expose()
@@ -27,6 +29,21 @@ export class UserInfoDto {
   @ApiProperty({ nullable: true })
   @Transform(({ obj }: { obj: User }) => obj.student?.studentId)
   studentId?: string;
+
+  @Expose()
+  @ApiProperty({
+    nullable: true,
+    example: { studentId: 'SE171234', fullName: 'Nguyen Van A' },
+  })
+  @Transform(({ obj }: { obj: User }) =>
+    obj.student
+      ? {
+          studentId: obj.student.studentId,
+          fullName: obj.student.fullName,
+        }
+      : null,
+  )
+  student?: { studentId: string; fullName: string } | null;
 
   @Expose()
   @ApiProperty({ nullable: true })
