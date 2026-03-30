@@ -6,7 +6,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { UserTree } from '../../database/entities/user-tree.entity';
-import { Tree } from '../../database/entities/tree.entity';
 import { UserResource } from '../../database/entities/user-resource.entity';
 import { Resource } from '../../database/entities/resource.entity';
 import { WifiSession } from '../../database/entities/wifi-session.entity';
@@ -16,33 +15,30 @@ import { WifiSessionStatus } from '../../shared/constants/enums.constant';
 
 @Injectable()
 export class GardenService {
+  private readonly fallbackLeafResourceCodes = [
+    'GREEN_LEAF',
+    'GREEN_LEAVES',
+    'LEAF',
+    'LEAVES',
+    'LA_XANH',
+  ];
+
   constructor(
     @InjectRepository(UserTree)
     private readonly userTreeRepository: Repository<UserTree>,
-    @InjectRepository(Tree)
-    private readonly treeRepository: Repository<Tree>,
-    @InjectRepository(UserResource)
-    private readonly userResourceRepository: Repository<UserResource>,
     @InjectRepository(Resource)
     private readonly resourceRepository: Repository<Resource>,
     @InjectRepository(WifiSession)
     private readonly wifiSessionRepository: Repository<WifiSession>,
-    @InjectRepository(EconomyLog)
-    private readonly economyLogRepository: Repository<EconomyLog>,
     private readonly dataSource: DataSource,
   ) {}
 
-  async syncOxygen(userId: string, userTreeId: string) {
-    const userTree = await this.userTreeRepository.findOne({
-      where: { id: userTreeId, userId },
+  async syncAllOxygen(userId: string) {
+    const userTrees = await this.userTreeRepository.find({
+      where: { userId },
       relations: ['tree'],
     });
 
-    if (!userTree) {
-      throw new NotFoundException('Cây không tồn tại');
-    }
-
-    const tree = userTree.tree;
     const now = new Date();
 
     const activeWifiSession = await this.wifiSessionRepository.findOne({
@@ -55,29 +51,30 @@ export class GardenService {
     const hasWifiBoost = !!activeWifiSession;
     const lastHeartbeat = activeWifiSession?.lastHeartbeat || null;
 
-    const oxygenEarned = EconomyUtil.calculateOxygenHarvest({
-      baseYield: tree.oxyBase || 10,
-      rate: Number(tree.oxyRate || 1.1),
-      level: userTree.level,
-      lastHarvestTime: userTree.lastHarvestTime,
-      lastHeartbeat,
-      now,
-      isDamaged: userTree.isDamaged,
-      hasWifiBoost,
-    });
-    const earnedWholeOxygen = Math.floor(oxygenEarned);
-    console.log(
-      '[sync_oxy] oxygenEarned:',
-      oxygenEarned,
-      'earnedWholeOxygen:',
-      earnedWholeOxygen,
-      'tree:',
-      tree.name,
-      'oxyBase:',
-      tree.oxyBase,
-      'oxyRate:',
-      tree.oxyRate,
-    );
+    let earnedWholeOxygen = 0;
+    const treesToUpdate: UserTree[] = [];
+
+    for (const userTree of userTrees) {
+      const tree = userTree.tree;
+
+      const oxygenEarned = EconomyUtil.calculateOxygenHarvest({
+        baseYield: tree.oxyBase || 10,
+        rate: Number(tree.oxyRate || 1.1),
+        level: userTree.level,
+        lastHarvestTime: userTree.lastHarvestTime,
+        lastHeartbeat,
+        now,
+        isDamaged: userTree.isDamaged,
+        hasWifiBoost,
+      });
+
+      const earnedForTree = Math.floor(oxygenEarned);
+      if (earnedForTree > 0) {
+        earnedWholeOxygen += earnedForTree;
+        userTree.lastHarvestTime = now;
+        treesToUpdate.push(userTree);
+      }
+    }
 
     const oxygenResource = await this.findOxygenResource();
 
@@ -85,6 +82,7 @@ export class GardenService {
       const userResourceRepo = manager.getRepository(UserResource);
       const userTreeRepo = manager.getRepository(UserTree);
       const economyLogRepo = manager.getRepository(EconomyLog);
+      const resourceRepo = manager.getRepository(Resource);
 
       let userOxygen = await userResourceRepo.findOne({
         where: { userId, resourceId: oxygenResource.id },
@@ -99,35 +97,47 @@ export class GardenService {
       }
 
       const currentBalance = BigInt(userOxygen.balance || '0');
+
       if (earnedWholeOxygen > 0) {
         userOxygen.balance = (
           currentBalance + BigInt(earnedWholeOxygen)
         ).toString();
         await userResourceRepo.save(userOxygen);
 
-        // Preserve fractional progress by moving lastHarvestTime only when at least 1 O2 was actually credited.
-        userTree.lastHarvestTime = now;
-        await userTreeRepo.save(userTree);
+        if (treesToUpdate.length > 0) {
+          await userTreeRepo.save(treesToUpdate);
+        }
 
         await economyLogRepo.save(
           economyLogRepo.create({
             userId,
             resourceType: oxygenResource.code,
             amount: earnedWholeOxygen,
-            source: 'sync_oxy',
+            source: 'sync_resources',
           }),
         );
       }
 
+      const leafResource = await this.findLeafResource(resourceRepo);
+      let currentLeafBalance = '0';
+
+      if (leafResource) {
+        const userLeaf = await userResourceRepo.findOne({
+          where: { userId, resourceId: leafResource.id },
+        });
+        currentLeafBalance = userLeaf?.balance ?? '0';
+      }
+
       return {
-        userTreeId: userTree.id,
         oxygenEarned: earnedWholeOxygen,
         currentBalance:
           earnedWholeOxygen > 0
             ? userOxygen.balance
             : currentBalance.toString(),
+        currentLeafBalance,
         hasWifiBoost,
-        lastHarvestTime: userTree.lastHarvestTime,
+        syncedTreeCount: userTrees.length,
+        syncedAt: now,
       };
     });
   }
@@ -220,15 +230,6 @@ export class GardenService {
     });
   }
 
-  async getActiveWifiSession(userId: string): Promise<WifiSession | null> {
-    return this.wifiSessionRepository.findOne({
-      where: {
-        userId,
-        status: WifiSessionStatus.ACTIVE,
-      },
-    });
-  }
-
   private async findOxygenResource(): Promise<Resource> {
     const oxygenCodes = ['OXYGEN', 'OXY', 'O2', 'O2_GENERATED'];
 
@@ -244,5 +245,22 @@ export class GardenService {
     throw new BadRequestException(
       'Không tìm thấy resource Oxygen. Cần seed resource với code phù hợp.',
     );
+  }
+
+  private async findLeafResource(
+    repo: Repository<Resource> = this.resourceRepository,
+  ): Promise<Resource | null> {
+    for (const code of this.fallbackLeafResourceCodes) {
+      const resource = await repo
+        .createQueryBuilder('resource')
+        .where('LOWER(resource.code) = LOWER(:code)', { code })
+        .getOne();
+
+      if (resource) {
+        return resource;
+      }
+    }
+
+    return null;
   }
 }

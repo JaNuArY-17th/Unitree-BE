@@ -13,6 +13,7 @@ import jwtConfig from './config/jwt.config';
 import appConfig from './config/app.config';
 import cloudinaryConfig from './config/cloudinary.config';
 import emailConfig from './config/email.config';
+import onboardingConfig from './config/onboarding.config';
 
 // Guards
 import { JwtAuthGuard } from './shared/guards/jwt-auth.guard';
@@ -55,6 +56,7 @@ import { GardenModule } from './features/garden/garden.module';
         appConfig,
         cloudinaryConfig,
         emailConfig,
+        onboardingConfig,
       ],
     }),
 

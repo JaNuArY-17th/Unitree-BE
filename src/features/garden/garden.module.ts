@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { GardenGateway } from './garden.gateway';
 import { GardenService } from './garden.service';
+import { GardenController } from './garden.controller';
 import { UserTree } from '../../database/entities/user-tree.entity';
 import { Tree } from '../../database/entities/tree.entity';
 import { UserResource } from '../../database/entities/user-resource.entity';
@@ -11,6 +12,7 @@ import { WifiSession } from '../../database/entities/wifi-session.entity';
 import { EconomyLog } from '../../database/entities/economy-log.entity';
 
 @Module({
+  controllers: [GardenController],
   imports: [
     TypeOrmModule.forFeature([
       UserTree,

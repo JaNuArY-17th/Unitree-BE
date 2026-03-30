@@ -6,6 +6,7 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../../database/entities/user.entity';
@@ -15,6 +16,9 @@ import { DeviceInfo } from '../devices/interfaces';
 import { Student } from '../../database/entities/student.entity';
 import { Tree } from '../../database/entities/tree.entity';
 import { UserTree } from '../../database/entities/user-tree.entity';
+import { Resource } from '../../database/entities/resource.entity';
+import { UserResource } from '../../database/entities/user-resource.entity';
+import { EconomyLog } from '../../database/entities/economy-log.entity';
 import { FirebaseService } from '../../services/firebase.service';
 import { UserRole } from '../../shared/constants/roles.constant';
 import { UsersService } from '../users/users.service';
@@ -25,6 +29,14 @@ import * as admin from 'firebase-admin';
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
+  private readonly starterTreeCode = 'BANANA_TREE';
+  private readonly fallbackLeafResourceCodes = [
+    'GREEN_LEAF',
+    'GREEN_LEAVES',
+    'LEAF',
+    'LEAVES',
+    'LA_XANH',
+  ];
 
   constructor(
     @InjectRepository(User)
@@ -35,11 +47,139 @@ export class AuthService {
     private readonly treeRepository: Repository<Tree>,
     @InjectRepository(UserTree)
     private readonly userTreeRepository: Repository<UserTree>,
+    @InjectRepository(Resource)
+    private readonly resourceRepository: Repository<Resource>,
+    @InjectRepository(UserResource)
+    private readonly userResourceRepository: Repository<UserResource>,
+    @InjectRepository(EconomyLog)
+    private readonly economyLogRepository: Repository<EconomyLog>,
     private readonly tokensService: TokensService,
     private readonly devicesService: DevicesService,
     private readonly firebaseService: FirebaseService,
     private readonly usersService: UsersService,
+    private readonly configService: ConfigService,
   ) {}
+
+  private getStarterLeafAmount(): number {
+    const amount =
+      this.configService.get<number>('onboarding.starterLeafAmount') ?? 100;
+    return Number.isFinite(amount) && amount > 0 ? Math.floor(amount) : 0;
+  }
+
+  private getStarterLeafResourceCodes(): string[] {
+    const configuredCode = this.configService
+      .get<string>('onboarding.starterLeafResourceCode')
+      ?.trim();
+
+    const preferredCodes = [
+      ...(configuredCode ? [configuredCode] : []),
+      ...this.fallbackLeafResourceCodes,
+    ];
+
+    const normalizedCodes = preferredCodes
+      .map((code) => code.trim())
+      .filter((code) => code.length > 0);
+
+    return Array.from(new Set(normalizedCodes));
+  }
+
+  private async findResourceByCodeIgnoreCase(
+    code: string,
+  ): Promise<Resource | null> {
+    return this.resourceRepository
+      .createQueryBuilder('resource')
+      .where('LOWER(resource.code) = LOWER(:code)', { code })
+      .getOne();
+  }
+
+  private async findStarterLeafResource(): Promise<Resource | null> {
+    const preferredCodes = this.getStarterLeafResourceCodes();
+
+    for (const code of preferredCodes) {
+      const resource = await this.findResourceByCodeIgnoreCase(code);
+      if (resource) {
+        return resource;
+      }
+    }
+
+    return null;
+  }
+
+  private async ensureStarterLeafResource(): Promise<Resource | null> {
+    const existingResource = await this.findStarterLeafResource();
+    if (existingResource) {
+      return existingResource;
+    }
+
+    const [fallbackCode] = this.getStarterLeafResourceCodes();
+    if (!fallbackCode) {
+      return null;
+    }
+
+    const normalizedCode = fallbackCode.toUpperCase();
+
+    try {
+      const createdResource = this.resourceRepository.create({
+        code: normalizedCode,
+        name: normalizedCode,
+        description: 'Starter leaf resource auto-created for onboarding reward',
+      });
+      return await this.resourceRepository.save(createdResource);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'unknown database error';
+      this.logger.warn(
+        `Starter leaf resource auto-create failed for code ${normalizedCode}: ${errorMessage}`,
+      );
+      return this.findResourceByCodeIgnoreCase(normalizedCode);
+    }
+  }
+
+  private async grantStarterLeafReward(userId: string): Promise<void> {
+    const starterLeafAmount = this.getStarterLeafAmount();
+
+    if (starterLeafAmount <= 0) {
+      return;
+    }
+
+    const leafResource = await this.ensureStarterLeafResource();
+    if (!leafResource) {
+      this.logger.warn(
+        'Starter leaf reward skipped because no matching leaf resource code was found',
+      );
+      return;
+    }
+
+    let userLeafBalance = await this.userResourceRepository.findOne({
+      where: {
+        userId,
+        resourceId: leafResource.id,
+      },
+    });
+
+    if (!userLeafBalance) {
+      userLeafBalance = this.userResourceRepository.create({
+        userId,
+        resourceId: leafResource.id,
+        balance: '0',
+      });
+    }
+
+    const currentBalance = BigInt(userLeafBalance.balance || '0');
+    userLeafBalance.balance = (
+      currentBalance + BigInt(starterLeafAmount)
+    ).toString();
+    await this.userResourceRepository.save(userLeafBalance);
+
+    await this.economyLogRepository.save(
+      this.economyLogRepository.create({
+        userId,
+        resourceType: leafResource.code,
+        amount: starterLeafAmount,
+        source: 'new_user_starter_reward',
+      }),
+    );
+  }
 
   private normalizeEmail(email: string): string {
     return email.trim().toLowerCase();
@@ -127,7 +267,7 @@ export class AuthService {
 
       // Tạo cây mặc định cho user mới
       const tree = await this.treeRepository.findOne({
-        where: { code: 'BANANA_TREE' },
+        where: { code: this.starterTreeCode },
       });
 
       if (tree) {
@@ -140,8 +280,12 @@ export class AuthService {
           checksum: '',
         });
       } else {
-        this.logger.warn('Default tree BANANA_TREE not found in trees catalog');
+        this.logger.warn(
+          `Default tree ${this.starterTreeCode} not found in trees catalog`,
+        );
       }
+
+      await this.grantStarterLeafReward(user.id);
     } else if (!user.student) {
       const student = await this.studentRepository
         .createQueryBuilder('student')

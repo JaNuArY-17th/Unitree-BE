@@ -10,6 +10,9 @@ import { User } from '../../database/entities/user.entity';
 import { Student } from '../../database/entities/student.entity';
 import { Tree } from '../../database/entities/tree.entity';
 import { UserTree } from '../../database/entities/user-tree.entity';
+import { Resource } from '../../database/entities/resource.entity';
+import { UserResource } from '../../database/entities/user-resource.entity';
+import { EconomyLog } from '../../database/entities/economy-log.entity';
 import { CacheService } from '../../services/cache.service';
 import { EmailService } from '../../services/email.service';
 import { TokensModule } from '../tokens/tokens.module';
@@ -27,7 +30,15 @@ import { UsersModule } from '../users/users.module';
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Student, Tree, UserTree]),
+    TypeOrmModule.forFeature([
+      User,
+      Student,
+      Tree,
+      UserTree,
+      Resource,
+      UserResource,
+      EconomyLog,
+    ]),
     PassportModule,
     TokensModule,
     forwardRef(() => DevicesModule),

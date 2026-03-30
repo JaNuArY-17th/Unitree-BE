@@ -10,7 +10,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { Logger } from '../../shared/utils/logger.util';
 import { JwtService } from '@nestjs/jwt';
-import { Inject, UnauthorizedException, forwardRef } from '@nestjs/common';
+import { Inject, forwardRef } from '@nestjs/common';
 import { GardenService } from './garden.service';
 
 @WebSocketGateway({
@@ -63,33 +63,6 @@ export class GardenGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (client.data.userId) {
       this.userSockets.delete(client.data.userId);
       Logger.log(`Garden: Client disconnected ${client.id}`, 'GardenGateway');
-    }
-  }
-
-  @SubscribeMessage('sync_oxy')
-  async handleSyncOxy(
-    @MessageBody() data: { userTreeId: string },
-    @ConnectedSocket() client: Socket,
-  ) {
-    console.log('[sync_oxy] Received:', data);
-    const userId = client.data.userId;
-    console.log('[sync_oxy] UserId:', userId);
-
-    try {
-      const result = await this.gardenService.syncOxygen(
-        userId,
-        data.userTreeId,
-      );
-
-      return {
-        event: 'sync_result',
-        data: result,
-      };
-    } catch (error) {
-      console.log('[sync_oxy] Error:', error.message);
-      client.emit('sync_error', {
-        message: error.message || 'Sync failed',
-      });
     }
   }
 
