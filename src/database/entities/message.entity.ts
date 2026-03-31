@@ -47,7 +47,7 @@ export class Message extends BaseEntity {
   @JoinColumn({ name: 'conversation_id' })
   conversation: Conversation;
 
-  @ManyToOne(() => User, (user: User) => user.messages)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'sender_id' })
   sender: User;
 }

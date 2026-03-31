@@ -24,7 +24,7 @@ export class UserResource extends BaseEntity {
   balance: string; // bigint được TypeORM trả về dạng string
 
   // Relations
-  @ManyToOne('User', 'userResources', { onDelete: 'CASCADE' })
+  @ManyToOne('User', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
 

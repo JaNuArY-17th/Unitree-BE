@@ -9,23 +9,14 @@ export interface TokenPayload {
 
 export interface UserInfo {
   id: string;
-  email: string;
   username: string;
-  fullname: string;
-  avatar?: string;
-  role: string;
-  studentId: string;
-  createdAt: Date;
-  updatedAt: Date;
+  role: UserRole;
+  studentId?: string;
 }
 
-export interface CachedAccessToken {
-  token: string;
-  revoked: boolean;
-}
-
-export interface CachedRefreshToken {
-  token: string;
-  tokenId: string;
-  revoked: boolean;
+export interface CoreUserProfile {
+  id: string;
+  username: string;
+  role: UserRole;
+  studentId?: string;
 }

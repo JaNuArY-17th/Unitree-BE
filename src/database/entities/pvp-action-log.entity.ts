@@ -50,11 +50,11 @@ export class PvpActionLog {
   createdAt: Date;
 
   // Relations
-  @ManyToOne('User', 'pvpAttackLogs', { onDelete: 'NO ACTION' })
+  @ManyToOne('User', { onDelete: 'NO ACTION' })
   @JoinColumn({ name: 'attacker_id' })
   attacker: User;
 
-  @ManyToOne('User', 'pvpDefendLogs', { onDelete: 'NO ACTION' })
+  @ManyToOne('User', { onDelete: 'NO ACTION' })
   @JoinColumn({ name: 'defender_id' })
   defender: User;
 

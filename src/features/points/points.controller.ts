@@ -9,6 +9,7 @@ import {
 import { PointsService } from './points.service';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { ResponseUtil } from '../../shared/utils/response.util';
+import { PaginationDto } from '../../shared/dto/pagination.dto';
 
 @ApiTags('Points')
 @ApiBearerAuth()
@@ -41,9 +42,10 @@ export class PointsController {
   @ApiResponse({ status: 401, description: 'Chưa xác thực' })
   async getEconomyHistory(
     @CurrentUser('id') userId: string,
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
+    @Query() pagination: PaginationDto,
   ) {
+    const page = pagination.page || 1;
+    const limit = pagination.limit || 10;
     const result = await this.pointsService.getEconomyHistory(
       userId,
       page,

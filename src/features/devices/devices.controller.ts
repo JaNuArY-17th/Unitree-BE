@@ -3,6 +3,7 @@ import {
   Get,
   Delete,
   Param,
+  ParseUUIDPipe,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -65,14 +66,14 @@ export class DevicesController {
   @ApiParam({
     name: 'deviceId',
     description: 'UUID của thiết bị cần xoá',
-    example: 'device-uuid-abc123',
+    example: '550e8400-e29b-41d4-a716-446655440000',
   })
   @ApiResponse({ status: 200, description: 'Thiết bị đã được xoá thành công' })
   @ApiResponse({ status: 401, description: 'Chưa xác thực' })
   @ApiResponse({ status: 404, description: 'Thiết bị không tồn tại' })
   async removeDevice(
     @CurrentUser() user: { id: string },
-    @Param('deviceId') deviceId: string,
+    @Param('deviceId', new ParseUUIDPipe()) deviceId: string,
   ) {
     await this.devicesService.removeDevice(user.id, deviceId);
     return ResponseUtil.success(null, 'Device removed successfully');

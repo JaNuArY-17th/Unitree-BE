@@ -1,4 +1,11 @@
-import { Controller, Get, Param, Body, Post } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Body,
+  Post,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { UpgradeTreeDto } from './dto/upgrade-tree.dto';
 import { RepairTreeDto } from './dto/repair-tree.dto';
 import {
@@ -96,7 +103,7 @@ export class TreesController {
   })
   async getTreeUpgradeStatus(
     @CurrentUser('id') userId: string,
-    @Param('id') userTreeId: string,
+    @Param('id', new ParseUUIDPipe()) userTreeId: string,
   ) {
     const status = await this.treesService.getTreeUpgradeStatus(
       userId,
@@ -151,7 +158,7 @@ export class TreesController {
   @ApiOperation({ summary: 'Lấy chi tiết một loại cây theo ID (catalog)' })
   @ApiParam({ name: 'id', description: 'UUID của loại cây' })
   @ApiResponse({ status: 200, description: 'Chi tiết loại cây' })
-  async getCatalogTreeById(@Param('id') id: string) {
+  async getCatalogTreeById(@Param('id', new ParseUUIDPipe()) id: string) {
     const tree = await this.treesService.getCatalogTreeById(id);
     return ResponseUtil.success(tree);
   }
@@ -174,7 +181,7 @@ export class TreesController {
   })
   async getTreeById(
     @CurrentUser('id') userId: string,
-    @Param('id') treeId: string,
+    @Param('id', new ParseUUIDPipe()) treeId: string,
   ) {
     const tree = await this.treesService.getTreeById(treeId, userId);
     return ResponseUtil.success(tree);

@@ -50,7 +50,7 @@ export class EconomyLog {
   createdAt: Date;
 
   // Relations
-  @ManyToOne('User', 'economyLogs', { onDelete: 'CASCADE' })
+  @ManyToOne('User', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
 }

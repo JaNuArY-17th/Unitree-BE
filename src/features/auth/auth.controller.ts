@@ -8,6 +8,7 @@ import {
   Req,
   Param,
   Delete,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -167,16 +168,12 @@ export class AuthController {
     status: 400,
     description: 'OTP không chính xác hoặc đã hết hạn',
   })
-  async verifyDevice(
-    @Body() verifyDto: VerifyDeviceDto,
-    @Body('userId') userId: string,
-    @Req() req: Request,
-  ) {
+  async verifyDevice(@Body() verifyDto: VerifyDeviceDto, @Req() req: Request) {
     const ipAddress = req.ip || req.socket.remoteAddress;
     const userAgent = req.headers['user-agent'];
 
     const result = await this.authService.verifyDeviceAndLogin(
-      userId,
+      verifyDto.userId,
       verifyDto,
       ipAddress,
       userAgent,
@@ -220,7 +217,7 @@ export class AuthController {
   @ApiResponse({ status: 404, description: 'Thiết bị không tồn tại' })
   async logoutDevice(
     @CurrentUser('id') userId: string,
-    @Param('deviceId') deviceId: string,
+    @Param('deviceId', new ParseUUIDPipe()) deviceId: string,
   ) {
     await this.authService.logoutDevice(userId, deviceId);
     return ResponseUtil.success(null, 'Device logged out successfully');

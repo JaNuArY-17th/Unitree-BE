@@ -1,0 +1,17 @@
+{
+  "projectType": "brownfield",
+  "autoMode": true,
+  "preferredLanguage": "vi",
+  "deadlineDays": 4,
+  "priorities": [
+    "endpoint-completeness",
+    "production-ready-services",
+    "api-docs-completeness"
+  ],
+  "qualityGates": {
+    "requireValidation": true,
+    "requireErrorModeling": true,
+    "requireApiDocs": true,
+    "requireAuthTokenRedisChecks": true
+  }
+}

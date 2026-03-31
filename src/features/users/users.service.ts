@@ -1,29 +1,34 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User } from '../../database/entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ApplyReferralCodeDto } from './dto/apply-referral.dto';
 import { PaginationDto } from '../../shared/dto/pagination.dto';
 import { PaginationResult } from '../../shared/repositories/pagination.repository';
 import { NotFoundException } from '@nestjs/common';
+import { UserInfoDto } from './dto/user-info.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class UsersService {
-  // Đếm số người đã được mời bởi user hiện tại (dựa trên referralCode)
+  private static readonly REF_CODE_NOT_FOUND_MESSAGE = 'Mã mời không tồn tại';
+  private static readonly REF_CODE_SELF_MESSAGE =
+    'Không thể tự nhập mã của mình';
+  private static readonly REF_CODE_ALREADY_APPLIED_MESSAGE =
+    'Bạn đã nhập mã mời trước đó';
+
+  // Đếm số người đã được mời bởi user hiện tại
   async countReferredUsers(userId: string): Promise<number> {
-    const user = await this.findById(userId);
-    if (!user.referralCode) return 0;
     return this.userRepository.count({
-      where: { invitedByCode: user.referralCode },
+      where: { referredBy: { id: userId } },
     });
   }
 
   // Lấy danh sách user đã được mời bởi user hiện tại
   async getReferredUsers(userId: string): Promise<User[]> {
-    const user = await this.findById(userId);
-    if (!user.referralCode) return [];
     return this.userRepository.find({
-      where: { invitedByCode: user.referralCode },
+      where: { referredBy: { id: userId } },
     });
   }
   constructor(
@@ -34,26 +39,14 @@ export class UsersService {
   async findById(id: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id },
-      select: [
-        'id',
-        'email',
-        'username',
-        'fullname',
-        'studentId',
-        'avatar',
-        'role',
-        'createdAt',
-        'updatedAt',
-        'referralCode',
-        'invitedByCode',
-      ],
+      relations: ['student', 'referredBy'],
     });
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    return user;
+    return plainToInstance(UserInfoDto, user) as unknown as User;
   }
 
   // Tạo mã mời 4 ký tự (chữ + số) và gán cho user nếu chưa có
@@ -85,38 +78,26 @@ export class UsersService {
     paginationDto: PaginationDto,
     search?: string,
   ): Promise<PaginationResult<User>> {
-    // ...existing code...
     const { page = 1, limit = 10 } = paginationDto;
     const skip = (page - 1) * limit;
 
-    const where = search
-      ? [
-          { fullname: ILike(`%${search}%`) },
-          { email: ILike(`%${search}%`) },
-          { username: ILike(`%${search}%`) },
-          { nickname: ILike(`%${search}%`) },
-        ]
-      : {};
+    const qb = this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.student', 'student');
 
-    const [data, total] = await this.userRepository.findAndCount({
-      where,
-      skip,
-      take: limit,
-      order: { createdAt: 'DESC' },
-      select: [
-        'id',
-        'email',
-        'username',
-        'fullname',
-        'studentId',
-        'avatar',
-        'role',
-        'createdAt',
-      ],
-    });
+    if (search) {
+      qb.where(
+        '(student.fullName ILIKE :search OR student.email ILIKE :search OR user.email ILIKE :search OR user.username ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
 
-    return new PaginationResult<User>({
-      data,
+    qb.orderBy('user.createdAt', 'DESC').skip(skip).take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+
+    return new PaginationResult<any>({
+      data: plainToInstance(UserInfoDto, data),
       total,
       page,
       limit,
@@ -132,5 +113,86 @@ export class UsersService {
     await this.userRepository.save(user);
 
     return this.findById(id);
+  }
+
+  async validateReferralCode(
+    userId: string,
+    code: string,
+  ): Promise<{
+    targetUserId: string;
+    targetUsername: string;
+    targetAvatarUrl: string;
+  }> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['referredBy'],
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const target = await this.validateReferralCodeForUser(user, code);
+
+    return {
+      targetUserId: target.id,
+      targetUsername: target.username,
+      targetAvatarUrl: target.avatar ?? '',
+    };
+  }
+
+  async applyReferralCode(
+    userId: string,
+    dto: ApplyReferralCodeDto,
+  ): Promise<{ success: true; message: string }> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['referredBy'],
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const target = await this.validateReferralCodeForUser(user, dto.refCode);
+
+    user.referredBy = target;
+    await this.userRepository.save(user);
+
+    return {
+      success: true,
+      message: 'Nhập mã thành công',
+    };
+  }
+
+  private normalizeRefCode(code: string): string {
+    return code.trim().toUpperCase();
+  }
+
+  private async validateReferralCodeForUser(
+    user: User,
+    code: string,
+  ): Promise<User> {
+    const normalizedCode = this.normalizeRefCode(code);
+
+    // Rule 1: referral code must exist.
+    const target = await this.userRepository.findOne({
+      where: { referralCode: normalizedCode },
+    });
+    if (!target) {
+      throw new NotFoundException(UsersService.REF_CODE_NOT_FOUND_MESSAGE);
+    }
+
+    // Rule 2: cannot apply own code.
+    if (target.id === user.id || user.referralCode === normalizedCode) {
+      throw new BadRequestException(UsersService.REF_CODE_SELF_MESSAGE);
+    }
+
+    // Rule 3: current user must not have applied referral before.
+    if (user.referredBy) {
+      throw new BadRequestException(
+        UsersService.REF_CODE_ALREADY_APPLIED_MESSAGE,
+      );
+    }
+
+    return target;
   }
 }

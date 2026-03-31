@@ -5,8 +5,12 @@ export const TOKEN_EXPIRATION_TIME = {
 
 // Cache key prefixes
 export enum TokenPrefixes {
-  ACCESS = 'auth:access_token:',
-  REFRESH = 'auth:refresh_token:',
-  USER_TOKENS = 'auth:user_tokens:',
-  USER_INFO = 'auth:user_info:',
+  USER = 'users:', // Hash structure: users:{userId}
+}
+
+// Hash field names for user data
+export enum UserHashFields {
+  PROFILE = 'profile',
+  REFRESH_TOKENS = 'refresh_tokens',
+  GARDEN_STATE = 'garden_state',
 }

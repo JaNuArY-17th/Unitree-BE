@@ -12,6 +12,9 @@ import { UserTree } from './user-tree.entity';
 @Entity('trees')
 export class Tree extends BaseEntity {
   @Column({ type: 'varchar', unique: true })
+  code: string;
+
+  @Column({ type: 'varchar', unique: true })
   name: string;
 
   @Column({ name: 'tree_type', type: 'varchar' })

@@ -1,24 +1,20 @@
-import {
-  Inject,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
 import { CacheService } from '../../services/cache.service';
 import { User } from '../../database/entities/user.entity';
-import {
-  CachedAccessToken,
-  CachedRefreshToken,
-  TokenPayload,
-  UserInfo,
-} from './interfaces/token.interface';
+import { TokenPayload, UserInfo } from './interfaces/token.interface';
 import {
   TOKEN_EXPIRATION_TIME,
   TokenPrefixes,
+  UserHashFields,
 } from '../../shared/constants/token.constant';
+
+interface RefreshTokenEntry {
+  tokenId: string;
+  revoked: boolean;
+}
 
 @Injectable()
 export class TokensService {
@@ -33,7 +29,6 @@ export class TokensService {
     private readonly configService: ConfigService,
   ) {}
 
-  // ========== PAYLOAD ==========
   private buildPayload(user: User): TokenPayload {
     return {
       sub: user.id,
@@ -43,35 +38,16 @@ export class TokensService {
   private buildUserInfo(user: User): UserInfo {
     return {
       id: user.id,
-      email: user.email,
       username: user.username,
-      fullname: user.fullname,
-      avatar: user.avatar,
       role: user.role,
-      studentId: user.studentId,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
+      studentId: user.student?.studentId,
     };
   }
 
-  // ========== CACHE KEYS ==========
-  private getAccessTokenKey(userId: string): string {
-    return `${TokenPrefixes.ACCESS}${userId}`;
+  private getUserHashKey(userId: string): string {
+    return `${TokenPrefixes.USER}${userId}`;
   }
 
-  private getRefreshTokenKey(userId: string, tokenId: string): string {
-    return `${TokenPrefixes.REFRESH}${userId}:${tokenId}`;
-  }
-
-  private getUserTokensKey(userId: string): string {
-    return `${TokenPrefixes.USER_TOKENS}${userId}`;
-  }
-
-  private getUserInfoKey(userId: string): string {
-    return `${TokenPrefixes.USER_INFO}${userId}`;
-  }
-
-  // ========== TOKEN GENERATION ==========
   async generateTokens(user: User): Promise<{
     access_token: string;
     refresh_token: string;
@@ -92,9 +68,8 @@ export class TokensService {
       },
     );
 
-    await this.storeAccessToken(user.id, access_token);
-    await this.storeRefreshToken(user.id, tokenId, refresh_token);
-    await this.storeUserInfo(user);
+    await this.addRefreshTokenToHash(user.id, tokenId);
+    await this.storeUserProfile(user);
 
     return { access_token, refresh_token };
   }
@@ -107,108 +82,97 @@ export class TokensService {
       expiresIn: `${this.ACCESS_TOKEN_EXPIRY}s`,
     });
 
-    await this.storeAccessToken(user.id, access_token);
-    await this.storeUserInfo(user);
+    await this.storeUserProfile(user);
     return { access_token };
   }
 
-  // ========== STORE ==========
-  async storeAccessToken(userId: string, token: string): Promise<void> {
-    const key = this.getAccessTokenKey(userId);
-    const data: CachedAccessToken = { token, revoked: false };
-    await this.cacheService.set(key, data, this.ACCESS_TOKEN_EXPIRY);
-  }
-
-  async storeRefreshToken(
+  private async addRefreshTokenToHash(
     userId: string,
     tokenId: string,
-    token: string,
   ): Promise<void> {
-    const key = this.getRefreshTokenKey(userId, tokenId);
-    const data: CachedRefreshToken = { token, revoked: false, tokenId };
-    await this.cacheService.set(key, data, this.REFRESH_TOKEN_EXPIRY);
+    const hashKey = this.getUserHashKey(userId);
+    const existingTokens = await this.getUserRefreshTokens(userId);
+    existingTokens.push({ tokenId, revoked: false });
 
-    // Store token ID in user's token list
-    const userTokensKey = this.getUserTokensKey(userId);
-    const existing =
-      (await this.cacheService.get<string[]>(userTokensKey)) || [];
-    existing.push(tokenId);
-    await this.cacheService.set(
-      userTokensKey,
-      existing,
+    await this.cacheService.hsetWithExpiry(
+      hashKey,
+      UserHashFields.REFRESH_TOKENS,
+      JSON.stringify(existingTokens),
       this.REFRESH_TOKEN_EXPIRY,
     );
   }
 
-  async storeUserInfo(user: User): Promise<void> {
-    const key = this.getUserInfoKey(user.id);
+  async storeUserProfile(user: User): Promise<void> {
+    const hashKey = this.getUserHashKey(user.id);
     const userInfo = this.buildUserInfo(user);
-    await this.cacheService.set(key, userInfo, this.REFRESH_TOKEN_EXPIRY);
-    this.logger.debug(`Stored user info in Redis for user ID: ${user.id}`);
+
+    await this.cacheService.hsetWithExpiry(
+      hashKey,
+      UserHashFields.PROFILE,
+      JSON.stringify(userInfo),
+      this.REFRESH_TOKEN_EXPIRY,
+    );
+    this.logger.debug(
+      `Stored user profile in Redis hash for user ID: ${user.id}`,
+    );
   }
 
   async getUserInfo(userId: string): Promise<UserInfo | null> {
-    const key = this.getUserInfoKey(userId);
-    return await this.cacheService.get<UserInfo>(key);
-  }
-
-  async removeUserInfo(userId: string): Promise<void> {
-    const key = this.getUserInfoKey(userId);
-    await this.cacheService.del(key);
-    this.logger.debug(`Removed user info from Redis for user ID: ${userId}`);
-  }
-
-  // ========== GET ==========
-  async getAccessToken(userId: string): Promise<CachedAccessToken | null> {
-    const key = this.getAccessTokenKey(userId);
-    return await this.cacheService.get<CachedAccessToken>(key);
-  }
-
-  async getRefreshToken(
-    userId: string,
-    tokenId: string,
-  ): Promise<CachedRefreshToken | null> {
-    const key = this.getRefreshTokenKey(userId, tokenId);
-    return await this.cacheService.get<CachedRefreshToken>(key);
-  }
-
-  // ========== REVOKE ==========
-  async revokeAccessToken(userId: string): Promise<void> {
-    const key = this.getAccessTokenKey(userId);
-    const token = await this.getAccessToken(userId);
-    if (token) {
-      await this.cacheService.set(
-        key,
-        { ...token, revoked: true },
-        this.ACCESS_TOKEN_EXPIRY,
+    try {
+      const hashKey = this.getUserHashKey(userId);
+      const profileJson = await this.cacheService.hget(
+        hashKey,
+        UserHashFields.PROFILE,
       );
+      return profileJson ? JSON.parse(profileJson) : null;
+    } catch (error) {
+      this.logger.warn(`Error getting user info: ${error.message}`);
+      return null;
     }
   }
 
-  async revokeRefreshToken(userId: string, tokenId: string): Promise<void> {
-    const key = this.getRefreshTokenKey(userId, tokenId);
-    const token = await this.getRefreshToken(userId, tokenId);
-    if (token) {
-      await this.cacheService.set(
-        key,
-        { ...token, revoked: true },
-        this.REFRESH_TOKEN_EXPIRY,
+  async getUserRefreshTokens(userId: string): Promise<RefreshTokenEntry[]> {
+    try {
+      const hashKey = this.getUserHashKey(userId);
+      const tokensJson = await this.cacheService.hget(
+        hashKey,
+        UserHashFields.REFRESH_TOKENS,
       );
+      return tokensJson ? JSON.parse(tokensJson) : [];
+    } catch (error) {
+      this.logger.warn(`Error parsing refresh tokens: ${error.message}`);
+      return [];
+    }
+  }
+
+  async removeUserData(userId: string): Promise<void> {
+    await this.cacheService.delUserHash(userId);
+    this.logger.debug(`Removed user data from Redis for user ID: ${userId}`);
+  }
+
+  async revokeRefreshToken(userId: string, tokenId: string): Promise<void> {
+    try {
+      const hashKey = this.getUserHashKey(userId);
+      const tokens = await this.getUserRefreshTokens(userId);
+      const updatedTokens = tokens.map((t) =>
+        t.tokenId === tokenId ? { ...t, revoked: true } : t,
+      );
+
+      await this.cacheService.hset(
+        hashKey,
+        UserHashFields.REFRESH_TOKENS,
+        JSON.stringify(updatedTokens),
+      );
+      this.logger.debug(`Revoked refresh token ${tokenId} for user ${userId}`);
+    } catch (error) {
+      this.logger.error(`Error revoking refresh token: ${error.message}`);
     }
   }
 
   async revokeAllTokens(userId: string): Promise<boolean> {
     try {
-      const key = this.getUserTokensKey(userId);
-      const tokenIds = (await this.cacheService.get<string[]>(key)) || [];
-
-      for (const tokenId of tokenIds) {
-        await this.revokeRefreshToken(userId, tokenId);
-      }
-
-      await this.revokeAccessToken(userId);
-      await this.removeUserInfo(userId);
-      await this.cacheService.del(key);
+      await this.removeUserData(userId);
+      this.logger.debug(`All tokens revoked for user ${userId}`);
       return true;
     } catch (error) {
       this.logger.error(`Error revoking all tokens: ${error.message}`);
@@ -216,7 +180,6 @@ export class TokensService {
     }
   }
 
-  // ========== VERIFY ==========
   async verifyRefreshToken(refreshToken: string): Promise<TokenPayload> {
     let decoded: TokenPayload;
     try {
@@ -232,12 +195,14 @@ export class TokensService {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    const stored = await this.getRefreshToken(decoded.sub, decoded.jti);
-    if (!stored) {
+    const tokens = await this.getUserRefreshTokens(decoded.sub);
+    const tokenEntry = tokens.find((t) => t.tokenId === decoded.jti);
+
+    if (!tokenEntry) {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    if (stored.revoked) {
+    if (tokenEntry.revoked) {
       throw new UnauthorizedException('Token has been revoked');
     }
 
@@ -255,18 +220,9 @@ export class TokensService {
       throw new UnauthorizedException('Invalid token');
     }
 
-    const tokenData = await this.getAccessToken(decoded.sub);
-    if (!tokenData || tokenData.revoked) {
-      throw new UnauthorizedException('Token has been revoked');
-    }
-
     return decoded;
   }
 
-  /**
-   * Revoke all tokens for user (for logout all devices)
-   * Alias for revokeAllTokens() to match DeviceService expectations
-   */
   async revokeUserTokens(userId: string): Promise<void> {
     await this.revokeAllTokens(userId);
     this.logger.log(`All tokens revoked for user ${userId}`);

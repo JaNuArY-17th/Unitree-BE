@@ -1,4 +1,4 @@
-import { Entity, Column, OneToOne } from 'typeorm';
+import { Entity, Column, OneToOne, Index } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { User } from './user.entity';
 
@@ -13,6 +13,7 @@ export class Student extends BaseEntity {
   @Column({ name: 'student_id', type: 'varchar', unique: true })
   studentId: string;
 
+  @Index()
   @Column({ name: 'full_name', type: 'varchar' })
   fullName: string;
 

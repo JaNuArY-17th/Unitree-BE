@@ -7,12 +7,18 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { OtpRedisService } from './services/otp-redis.service';
 import { User } from '../../database/entities/user.entity';
+import { Student } from '../../database/entities/student.entity';
+import { Tree } from '../../database/entities/tree.entity';
+import { UserTree } from '../../database/entities/user-tree.entity';
+import { Resource } from '../../database/entities/resource.entity';
+import { UserResource } from '../../database/entities/user-resource.entity';
+import { EconomyLog } from '../../database/entities/economy-log.entity';
 import { CacheService } from '../../services/cache.service';
 import { EmailService } from '../../services/email.service';
 import { TokensModule } from '../tokens/tokens.module';
 import { DevicesModule } from '../devices/devices.module';
-import { Student } from '../../database/entities/student.entity';
 import { FirebaseService } from '../../services/firebase.service';
+import { UsersModule } from '../users/users.module';
 
 /**
  * Auth Module - Refactored
@@ -24,10 +30,19 @@ import { FirebaseService } from '../../services/firebase.service';
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Student]),
+    TypeOrmModule.forFeature([
+      User,
+      Student,
+      Tree,
+      UserTree,
+      Resource,
+      UserResource,
+      EconomyLog,
+    ]),
     PassportModule,
     TokensModule,
     forwardRef(() => DevicesModule),
+    UsersModule,
   ],
   controllers: [AuthController],
   providers: [

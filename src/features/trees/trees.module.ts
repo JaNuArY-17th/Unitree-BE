@@ -7,6 +7,7 @@ import { Tree } from '../../database/entities/tree.entity';
 import { UserResource } from '../../database/entities/user-resource.entity';
 import { Resource } from '../../database/entities/resource.entity';
 import { EconomyLog } from '../../database/entities/economy-log.entity';
+import { WifiSession } from '../../database/entities/wifi-session.entity';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { EconomyLog } from '../../database/entities/economy-log.entity';
       UserResource,
       Resource,
       EconomyLog,
+      WifiSession,
     ]),
   ],
   controllers: [TreesController],

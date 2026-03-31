@@ -37,35 +37,33 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       this.logger.debug(
         `Using cached user info for user ID: ${String(payload.sub)}`,
       );
-      // Return user from cache
       return {
         id: userInfo.id,
-        email: userInfo.email,
+        username: userInfo.username,
         role: userInfo.role,
-        fullname: userInfo.fullname,
+        studentId: userInfo.studentId,
       };
     }
 
-    // If not in cache, fetch from database
     this.logger.debug(
       `No cached user info found, fetching from DB for user ID: ${String(payload.sub)}`,
     );
     const user = await this.userRepository.findOne({
       where: { id: String(payload.sub) },
+      relations: ['student'],
     });
 
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
 
-    // Store user info in Redis for future requests
-    await this.tokensService.storeUserInfo(user);
+    await this.tokensService.storeUserProfile(user);
 
     return {
       id: user.id,
-      email: user.email,
+      username: user.username,
       role: user.role,
-      fullname: user.fullname,
+      studentId: user.student?.studentId,
     };
   }
 }

@@ -13,6 +13,8 @@ import jwtConfig from './config/jwt.config';
 import appConfig from './config/app.config';
 import cloudinaryConfig from './config/cloudinary.config';
 import emailConfig from './config/email.config';
+import onboardingConfig from './config/onboarding.config';
+import minigameConfig from './config/minigame.config';
 
 // Guards
 import { JwtAuthGuard } from './shared/guards/jwt-auth.guard';
@@ -40,6 +42,8 @@ import { WifiSessionsModule } from './features/wifi-sessions/wifi-sessions.modul
 import { PointsModule } from './features/points/points.module';
 import { TreesModule } from './features/trees/trees.module';
 import { ChatModule } from './features/chat/chat.module';
+import { GardenModule } from './features/garden/garden.module';
+import { MinigamesModule } from './features/minigames/minigames.module';
 
 @Module({
   imports: [
@@ -54,6 +58,8 @@ import { ChatModule } from './features/chat/chat.module';
         appConfig,
         cloudinaryConfig,
         emailConfig,
+        onboardingConfig,
+        minigameConfig,
       ],
     }),
 
@@ -96,6 +102,8 @@ import { ChatModule } from './features/chat/chat.module';
     PointsModule,
     TreesModule,
     ChatModule,
+    GardenModule,
+    MinigamesModule,
   ],
   providers: [
     // Global Guards

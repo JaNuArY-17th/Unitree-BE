@@ -24,7 +24,7 @@ export class UserTask extends BaseEntity {
   status: string;
 
   // Relations
-  @ManyToOne('User', 'userTasks', { onDelete: 'CASCADE' })
+  @ManyToOne('User', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: any;
 

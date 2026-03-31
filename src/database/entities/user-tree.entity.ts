@@ -65,7 +65,7 @@ export class UserTree extends BaseEntity {
   checksum: string;
 
   // Relations
-  @ManyToOne('User', 'userTrees', { onDelete: 'CASCADE' })
+  @ManyToOne('User', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
 

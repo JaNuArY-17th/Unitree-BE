@@ -12,7 +12,8 @@ export default registerAs('database', (): TypeOrmModuleOptions => {
     entities: [__dirname + '/../database/entities/**/*.entity{.ts,.js}'],
     migrations: [__dirname + '/../database/migrations/**/*{.ts,.js}'],
     synchronize: process.env.NODE_ENV === 'development',
-    logging: process.env.NODE_ENV === 'development',
+    // logging: process.env.NODE_ENV === 'development',
+    logging: false,
     ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
     extra: {
       max: 10,
