@@ -8,6 +8,7 @@ import { UserResource } from '../../database/entities/user-resource.entity';
 import { Resource } from '../../database/entities/resource.entity';
 import { EconomyLog } from '../../database/entities/economy-log.entity';
 import { WifiSession } from '../../database/entities/wifi-session.entity';
+import { GardenModule } from '../garden/garden.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { WifiSession } from '../../database/entities/wifi-session.entity';
       EconomyLog,
       WifiSession,
     ]),
+    GardenModule,
   ],
   controllers: [TreesController],
   providers: [TreesService],

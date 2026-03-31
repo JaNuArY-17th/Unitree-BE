@@ -15,6 +15,7 @@ import cloudinaryConfig from './config/cloudinary.config';
 import emailConfig from './config/email.config';
 import onboardingConfig from './config/onboarding.config';
 import minigameConfig from './config/minigame.config';
+import pvpConfig from './config/pvp.config';
 
 // Guards
 import { JwtAuthGuard } from './shared/guards/jwt-auth.guard';
@@ -44,6 +45,7 @@ import { TreesModule } from './features/trees/trees.module';
 import { ChatModule } from './features/chat/chat.module';
 import { GardenModule } from './features/garden/garden.module';
 import { MinigamesModule } from './features/minigames/minigames.module';
+import { PvpModule } from './features/pvp/pvp.module';
 
 @Module({
   imports: [
@@ -60,6 +62,7 @@ import { MinigamesModule } from './features/minigames/minigames.module';
         emailConfig,
         onboardingConfig,
         minigameConfig,
+        pvpConfig,
       ],
     }),
 
@@ -104,6 +107,7 @@ import { MinigamesModule } from './features/minigames/minigames.module';
     ChatModule,
     GardenModule,
     MinigamesModule,
+    PvpModule,
   ],
   providers: [
     // Global Guards

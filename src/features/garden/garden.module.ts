@@ -27,6 +27,6 @@ import { EconomyLog } from '../../database/entities/economy-log.entity';
     }),
   ],
   providers: [GardenGateway, GardenService],
-  exports: [GardenService],
+  exports: [GardenService, GardenGateway],
 })
 export class GardenModule {}
