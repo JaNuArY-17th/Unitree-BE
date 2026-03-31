@@ -292,8 +292,6 @@ export class TreesService {
   ) {}
 
   async getUserTrees(userId: string): Promise<UserTree[]> {
-    await this.completeFinishedUpgradesForUser(userId);
-
     return this.userTreeRepository.find({
       where: { userId },
       relations: ['tree'],
@@ -311,8 +309,6 @@ export class TreesService {
   }
 
   async getTreeById(treeId: string, userId: string): Promise<UserTree> {
-    await this.completeFinishedUpgradesForUser(userId);
-
     const userTree = await this.userTreeRepository.findOne({
       where: { id: treeId, userId },
       relations: ['tree'],

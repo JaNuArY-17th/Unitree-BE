@@ -35,12 +35,6 @@ export class Tree extends BaseEntity {
   @Column({ name: 'oxy_rate', type: 'decimal', nullable: true })
   oxyRate?: number;
 
-  @Column({ name: 'time_base' })
-  timeBase: number;
-
-  @Column({ name: 'time_rate', type: 'decimal' })
-  timeRate: number;
-
   @Column({ name: 'perk_base', type: 'decimal', nullable: true })
   perkBase?: number;
 
