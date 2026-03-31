@@ -1,7 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { DevicesService } from './devices.service';
-import { DevicesController } from './devices.controller';
+import { DevicesService } from './services/devices.service';
+import { DevicesController } from './controllers/devices.controller';
 import { UserDevice } from '../../database/entities/user-device.entity';
 import { User } from '../../database/entities/user.entity';
 import { TokensModule } from '../tokens/tokens.module';

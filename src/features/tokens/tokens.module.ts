@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TokensService } from './tokens.service';
+import { TokensService } from './services/tokens.service';
 import { CacheService } from '../../services/cache.service';
 
 @Module({

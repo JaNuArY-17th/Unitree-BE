@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ChatGateway } from './chat.gateway';
-import { ChatController } from './chat.controller';
-import { ChatService } from './chat.service';
+import { ChatGateway } from './gateways/chat.gateway';
+import { ChatController } from './controllers/chat.controller';
+import { ChatService } from './services/chat.service';
 import { Conversation } from '../../database/entities/conversation.entity';
 import { Message } from '../../database/entities/message.entity';
 import { ConversationParticipant } from '../../database/entities/conversation-participant.entity';
