@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -16,6 +16,32 @@ import { ResponseUtil } from '../../shared/utils/response.util';
 @Controller('pvp')
 export class PvpController {
   constructor(private readonly pvpService: PvpService) {}
+
+  @Get('targets')
+  @ApiOperation({ summary: 'Lấy danh sách mục tiêu tấn công theo matchmaking' })
+  @ApiResponse({
+    status: 200,
+    description: 'Danh sách mục tiêu gồm 4 thường + 1 báo thủ',
+  })
+  async getTargets(@CurrentUser('id') userId: string) {
+    const result = await this.pvpService.getAttackTargets(userId);
+    return ResponseUtil.success(result, 'Attack targets fetched');
+  }
+
+  @Get('history')
+  @ApiOperation({ summary: 'Lịch sử PvP để hỗ trợ trả thù sau này' })
+  @ApiResponse({
+    status: 200,
+    description: 'Các lượt tấn công và phòng thủ gần đây của user',
+  })
+  async getHistory(
+    @CurrentUser('id') userId: string,
+    @Query('limit') limit?: string,
+  ) {
+    const parsedLimit = limit ? Number.parseInt(limit, 10) : undefined;
+    const result = await this.pvpService.getHistory(userId, parsedLimit);
+    return ResponseUtil.success(result, 'PVP history fetched');
+  }
 
   @Post('raid')
   @ApiOperation({ summary: 'Hái lộc (Đi cướp Vàng)' })
