@@ -7,6 +7,7 @@ import { UserResource } from '../../database/entities/user-resource.entity';
 import { EconomyLog } from '../../database/entities/economy-log.entity';
 import { Resource } from '../../database/entities/resource.entity';
 import { UserGameState } from '../../database/entities/user-game-state.entity';
+import { UserTree } from '../../database/entities/user-tree.entity';
 import { CacheService } from '../../services/cache.service';
 import { ResourceCode } from '../../shared/constants/resource-code.constant';
 import { computeLeafSpinReward } from './utils/leaf-spin-reward.util';
@@ -124,7 +125,11 @@ export class MinigamesService {
 
       if (!isMiss) {
         if (normalizedRewardType === ResourceCode.LA_XANH) {
-          rewardAmount = computeLeafSpinReward(rewardAmount);
+          const leafTier = await this.getLeafScalingTier(userId, manager);
+          rewardAmount = computeLeafSpinReward({
+            baseAmount: rewardAmount,
+            tier: leafTier,
+          });
           if (rewardAmount <= 0) {
             isMiss = true;
           }
@@ -430,5 +435,23 @@ export class MinigamesService {
       spinItem,
       spinBalance: spinCount,
     };
+  }
+
+  private async getLeafScalingTier(
+    userId: string,
+    manager: EntityManager,
+  ): Promise<number> {
+    const userTreeRepo = manager.getRepository(UserTree);
+
+    const aggregate = await userTreeRepo
+      .createQueryBuilder('ut')
+      .select('COALESCE(SUM(ut.level), 0)', 'totalLevel')
+      .where('ut.userId = :userId', { userId })
+      .getRawOne<{ totalLevel: string | number | null }>();
+
+    const totalLevel = Number(aggregate?.totalLevel ?? 0);
+    const computedTier = Math.floor(totalLevel / 67);
+
+    return Math.max(0, Math.min(7, computedTier));
   }
 }
