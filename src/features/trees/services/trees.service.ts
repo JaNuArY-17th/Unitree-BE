@@ -10,13 +10,13 @@ import { DataSource, Repository } from 'typeorm';
 import { UserTree } from '../../../database/entities/user-tree.entity';
 import { Tree } from '../../../database/entities/tree.entity';
 import { UnlockTreeDto } from 'src/features/trees/dto/unlock-tree.dto';
-import { UserResource } from '../../database/entities/user-resource.entity';
-import { Resource } from '../../database/entities/resource.entity';
-import { EconomyLog } from '../../database/entities/economy-log.entity';
-import { WifiSession } from '../../database/entities/wifi-session.entity';
-import { EconomyUtil } from '../../shared/utils/economy.util';
-import { WifiSessionStatus } from '../../shared/constants/enums.constant';
-import { GardenGateway } from '../garden/garden.gateway';
+import { UserResource } from '../../../database/entities/user-resource.entity';
+import { Resource } from '../../../database/entities/resource.entity';
+import { EconomyLog } from '../../../database/entities/economy-log.entity';
+import { WifiSession } from '../../../database/entities/wifi-session.entity';
+import { EconomyUtil } from '../../../shared/utils/economy.util';
+import { WifiSessionStatus } from '../../../shared/constants/enums.constant';
+import { GardenGateway } from '../../garden/gateways/garden.gateway';
 
 @Injectable()
 export class TreesService {
