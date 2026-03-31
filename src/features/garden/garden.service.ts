@@ -224,6 +224,8 @@ export class GardenService {
         attackerId,
         targetId: targetUserId,
         targetTreeId: targetTree.id,
+        userTreeId: targetTree.id,
+        level: targetTree.level,
         oxygenEarned: Math.floor(oxygenEarned),
         isDamaged: true,
       };

@@ -35,10 +35,10 @@ export class Tree extends BaseEntity {
   @Column({ name: 'oxy_rate', type: 'decimal', nullable: true })
   oxyRate?: number;
 
-  @Column({ name: 'time_base' })
+  @Column({ name: 'time_base', type: 'integer', default: 1 })
   timeBase: number;
 
-  @Column({ name: 'time_rate', type: 'decimal' })
+  @Column({ name: 'time_rate', type: 'decimal', default: 1 })
   timeRate: number;
 
   @Column({ name: 'perk_base', type: 'decimal', nullable: true })

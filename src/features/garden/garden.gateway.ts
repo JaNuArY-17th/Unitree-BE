@@ -80,14 +80,13 @@ export class GardenGateway implements OnGatewayConnection, OnGatewayDisconnect {
         data.userTreeId,
       );
 
-      const targetSocketId = this.userSockets.get(data.targetUserId);
-      if (targetSocketId) {
-        this.server.to(targetSocketId).emit('under_attack', {
-          attackerId: userId,
-          treeId: data.userTreeId,
-          message: 'Cây của bạn đang bị sâu bướm tấn công!',
-        });
-      }
+      this.emitToUser(data.targetUserId, 'under_attack', {
+        attackerId: userId,
+        userTreeId: result.userTreeId,
+        level: result.level,
+        isDamaged: result.isDamaged,
+        message: 'Cây của bạn đang bị sâu bướm tấn công!',
+      });
 
       return {
         event: 'attack_result',
@@ -102,5 +101,14 @@ export class GardenGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   getSocketIdByUserId(userId: string): string | undefined {
     return this.userSockets.get(userId);
+  }
+
+  emitToUser(userId: string, event: string, data: unknown): void {
+    const socketId = this.userSockets.get(userId);
+    if (!socketId) {
+      return;
+    }
+
+    this.server.to(socketId).emit(event, data);
   }
 }
