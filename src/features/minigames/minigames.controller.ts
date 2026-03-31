@@ -14,6 +14,16 @@ import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 export class MinigamesController {
   constructor(private readonly minigamesService: MinigamesService) {}
 
+  @Get('inventory/quick')
+  @ApiOperation({ summary: 'Lấy nhanh số dư SPIN và MAN_CHUP_TRANH_MUOI' })
+  @ApiResponse({
+    status: 200,
+    description: 'Số dư hiện tại của SPIN và MAN_CHUP_TRANH_MUOI',
+  })
+  async getQuickInventory(@CurrentUser('id') userId: string) {
+    return this.minigamesService.getQuickInventory(userId);
+  }
+
   @Get('spin/rewards')
   @ApiOperation({ summary: 'Lấy cấu hình phần thưởng vòng quay' })
   @ApiResponse({

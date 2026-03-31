@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, LessThanOrEqual, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { UserTree } from '../../database/entities/user-tree.entity';
 import { Tree } from '../../database/entities/tree.entity';
 import { UnlockTreeDto } from 'src/features/trees/dto/unlock-tree.dto';
@@ -14,30 +14,18 @@ import { UserResource } from '../../database/entities/user-resource.entity';
 import { Resource } from '../../database/entities/resource.entity';
 import { EconomyLog } from '../../database/entities/economy-log.entity';
 import { WifiSession } from '../../database/entities/wifi-session.entity';
-import { Cron, CronExpression } from '@nestjs/schedule';
 import { EconomyUtil } from '../../shared/utils/economy.util';
 import { WifiSessionStatus } from '../../shared/constants/enums.constant';
 
 @Injectable()
 export class TreesService {
-  @Cron(CronExpression.EVERY_10_SECONDS)
-  async handleUpgradeCompletionScheduler(): Promise<void> {
-    await this.completeFinishedUpgrades();
-  }
-
   async upgradeTree(userId: string, dto: UpgradeTreeDto): Promise<UserTree> {
-    await this.completeFinishedUpgradesForUser(userId);
-
     const userTree = await this.userTreeRepository.findOne({
       where: { id: dto.userTreeId, userId },
       relations: ['tree'],
     });
     if (!userTree) {
       throw new NotFoundException('UserTree not found');
-    }
-
-    if (userTree.upgradeEndTime && userTree.upgradeEndTime > new Date()) {
-      throw new BadRequestException('Cây đang trong quá trình nâng cấp');
     }
 
     const tree = userTree.tree;
@@ -69,8 +57,8 @@ export class TreesService {
     });
 
     const upgradeCost = this.calculateUpgradeCost(tree, nextLevel);
-    const upgradeMinutes = this.calculateUpgradeMinutes(tree, nextLevel);
-    const upgradeEndTime = new Date(Date.now() + upgradeMinutes * 60 * 1000);
+    const reachedEvolutionMilestone =
+      nextLevel % 20 === 0 || nextLevel === tree.maxLevel;
 
     const leafResource = await this.findUpgradeCurrencyResource();
     const oxygenResource = await this.findOxygenResource();
@@ -125,7 +113,11 @@ export class TreesService {
 
       userTree.level = nextLevel;
       userTree.lastHarvestTime = now;
-      userTree.upgradeEndTime = upgradeEndTime;
+      userTree.upgradeEndTime = undefined;
+      if (reachedEvolutionMilestone) {
+        const stage = Math.ceil(nextLevel / 20);
+        userTree.assetPath = this.buildAssetPath(tree.assetsPath, stage);
+      }
       await userTreeRepo.save(userTree);
 
       await economyLogRepo.save(
@@ -241,8 +233,6 @@ export class TreesService {
     secondsRemaining: number;
     canUpgrade: boolean;
   }> {
-    await this.completeFinishedUpgradesForUser(userId);
-
     const userTree = await this.userTreeRepository.findOne({
       where: { id: userTreeId, userId },
       relations: ['tree'],
@@ -251,27 +241,14 @@ export class TreesService {
       throw new NotFoundException('UserTree not found');
     }
 
-    const now = new Date();
-    const isUpgrading =
-      !!userTree.upgradeEndTime &&
-      userTree.upgradeEndTime.getTime() > now.getTime();
-    const secondsRemaining = isUpgrading
-      ? Math.max(
-          0,
-          Math.ceil(
-            (userTree.upgradeEndTime!.getTime() - now.getTime()) / 1000,
-          ),
-        )
-      : 0;
-
     return {
       userTreeId: userTree.id,
       level: userTree.level,
       maxLevel: userTree.tree.maxLevel,
-      isUpgrading,
-      upgradeEndTime: userTree.upgradeEndTime,
-      secondsRemaining,
-      canUpgrade: !isUpgrading && userTree.level < userTree.tree.maxLevel,
+      isUpgrading: false,
+      upgradeEndTime: undefined,
+      secondsRemaining: 0,
+      canUpgrade: userTree.level < userTree.tree.maxLevel,
     };
   }
 
@@ -315,8 +292,6 @@ export class TreesService {
   ) {}
 
   async getUserTrees(userId: string): Promise<UserTree[]> {
-    await this.completeFinishedUpgradesForUser(userId);
-
     return this.userTreeRepository.find({
       where: { userId },
       relations: ['tree'],
@@ -334,8 +309,6 @@ export class TreesService {
   }
 
   async getTreeById(treeId: string, userId: string): Promise<UserTree> {
-    await this.completeFinishedUpgradesForUser(userId);
-
     const userTree = await this.userTreeRepository.findOne({
       where: { id: treeId, userId },
       relations: ['tree'],
@@ -351,58 +324,6 @@ export class TreesService {
   private calculateUpgradeCost(tree: Tree, level: number): number {
     const rawCost = tree.costBase * Math.pow(Number(tree.costRate), level - 1);
     return Math.max(10, Math.round(rawCost / 10) * 10);
-  }
-
-  private calculateUpgradeMinutes(tree: Tree, level: number): number {
-    const rawMinutes =
-      tree.timeBase * Math.pow(Number(tree.timeRate), level - 1);
-    return Math.max(1, Math.round(rawMinutes));
-  }
-
-  private async completeFinishedUpgradesForUser(userId: string): Promise<void> {
-    await this.completeFinishedUpgrades(userId);
-  }
-
-  private async completeFinishedUpgrades(userId?: string): Promise<void> {
-    const now = new Date();
-    const whereClause = userId
-      ? {
-          userId,
-          upgradeEndTime: LessThanOrEqual(now),
-        }
-      : {
-          upgradeEndTime: LessThanOrEqual(now),
-        };
-
-    const finishedTrees = await this.userTreeRepository.find({
-      where: whereClause,
-      relations: ['tree'],
-    });
-
-    if (finishedTrees.length === 0) {
-      return;
-    }
-
-    for (const userTree of finishedTrees) {
-      if (userTree.level < userTree.tree.maxLevel) {
-        userTree.level += 1;
-      }
-
-      const reachedEvolutionMilestone =
-        userTree.level % 20 === 0 || userTree.level === userTree.tree.maxLevel;
-
-      if (reachedEvolutionMilestone) {
-        const stage = Math.ceil(userTree.level / 20);
-        userTree.assetPath = this.buildAssetPath(
-          userTree.tree.assetsPath,
-          stage,
-        );
-      }
-
-      userTree.upgradeEndTime = undefined;
-    }
-
-    await this.userTreeRepository.save(finishedTrees);
   }
 
   private async findUpgradeCurrencyResource(): Promise<Resource> {
