@@ -164,13 +164,18 @@ export class PvpService {
       }
     }
 
+    let usedClosestFallback = false;
     if (candidatePool.length === 0) {
-      candidatePool = others
-        .filter((entry) => entry.powerScore < me.powerScore)
-        .sort((a, b) => b.powerScore - a.powerScore);
+      candidatePool = this.pickClosestTargets(others, me.powerScore);
+      usedClosestFallback = true;
     }
 
-    const revengeTargetId = revengeLog?.attackerId ?? null;
+    const revengeTargetId = await this.resolveRevengeTargetId(
+      userId,
+      revengeLog,
+    );
+    const lastAttackerId = revengeLog?.attackerId ?? null;
+    const excludeAttackerId = revengeTargetId ?? lastAttackerId;
     const revengeTarget = revengeTargetId
       ? snapshots.find((entry) => entry.userId === revengeTargetId)
       : undefined;
@@ -181,12 +186,13 @@ export class PvpService {
     );
 
     const regularCandidates = candidatePool.filter(
-      (entry) => entry.userId !== revengeTargetId,
+      (entry) => entry.userId !== excludeAttackerId,
     );
 
     if (regularCandidates.length < regularTargetCount) {
-      const fallbackCandidates = others.filter(
-        (entry) => entry.userId !== revengeTargetId,
+      const fallbackCandidates = this.pickClosestTargets(
+        others.filter((entry) => entry.userId !== excludeAttackerId),
+        me.powerScore,
       );
       const existingIds = new Set(
         regularCandidates.map((entry) => entry.userId),
@@ -199,10 +205,11 @@ export class PvpService {
       }
     }
 
-    const pickedRegular = this.shuffleArray(regularCandidates).slice(
-      0,
-      regularTargetCount,
-    );
+    const regularSource = usedClosestFallback
+      ? regularCandidates
+      : this.shuffleArray(regularCandidates);
+
+    const pickedRegular = regularSource.slice(0, regularTargetCount);
 
     const selected = revengeTarget
       ? [revengeTarget, ...pickedRegular]
@@ -797,6 +804,38 @@ export class PvpService {
         hasShield,
         defenseScore,
       };
+    });
+  }
+
+  private async resolveRevengeTargetId(
+    userId: string,
+    revengeLog?: PvpActionLog | null,
+  ): Promise<string | null> {
+    if (!revengeLog?.attackerId) {
+      return null;
+    }
+
+    const revengeUsed = await this.pvpActionLogRepo
+      .createQueryBuilder('log')
+      .where('log.attackerId = :userId', { userId })
+      .andWhere('log.defenderId = :defenderId', {
+        defenderId: revengeLog.attackerId,
+      })
+      .andWhere('log.createdAt > :after', { after: revengeLog.createdAt })
+      .limit(1)
+      .getOne();
+
+    return revengeUsed ? null : revengeLog.attackerId;
+  }
+
+  private pickClosestTargets(
+    candidates: UserPowerSnapshot[],
+    referenceScore: number,
+  ): UserPowerSnapshot[] {
+    return [...candidates].sort((a, b) => {
+      const diffA = Math.abs(a.powerScore - referenceScore);
+      const diffB = Math.abs(b.powerScore - referenceScore);
+      return diffA - diffB;
     });
   }
 
