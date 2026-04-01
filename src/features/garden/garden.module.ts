@@ -10,6 +10,7 @@ import { UserResource } from '../../database/entities/user-resource.entity';
 import { Resource } from '../../database/entities/resource.entity';
 import { WifiSession } from '../../database/entities/wifi-session.entity';
 import { EconomyLog } from '../../database/entities/economy-log.entity';
+import { WifiSessionsModule } from '../wifi-sessions/wifi-sessions.module';
 
 @Module({
   controllers: [GardenController],
@@ -25,6 +26,7 @@ import { EconomyLog } from '../../database/entities/economy-log.entity';
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
     }),
+    WifiSessionsModule,
   ],
   providers: [GardenGateway, GardenService],
   exports: [GardenService, GardenGateway],

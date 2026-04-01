@@ -9,9 +9,11 @@ import { EconomyLog } from '../../database/entities/economy-log.entity';
 import { User } from '../../database/entities/user.entity';
 import { Resource } from '../../database/entities/resource.entity';
 import { Tree } from '../../database/entities/tree.entity';
+import { WifiSessionsModule } from '../wifi-sessions/wifi-sessions.module';
 
 @Module({
   imports: [
+    WifiSessionsModule,
     TypeOrmModule.forFeature([
       UserResource,
       UserTree,

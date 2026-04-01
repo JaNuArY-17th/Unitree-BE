@@ -17,6 +17,7 @@ import { WifiSession } from '../../../database/entities/wifi-session.entity';
 import { EconomyUtil } from '../../../shared/utils/economy.util';
 import { WifiSessionStatus } from '../../../shared/constants/enums.constant';
 import { GardenGateway } from '../../garden/gateways/garden.gateway';
+import { WifiSessionsService } from '../../wifi-sessions/services/wifi-sessions.service';
 
 @Injectable()
 export class TreesService {
@@ -44,7 +45,9 @@ export class TreesService {
         status: WifiSessionStatus.ACTIVE,
       },
     });
-    const hasWifiBoost = !!activeWifiSession;
+    const hasWifiBoost =
+      !!activeWifiSession &&
+      (await this.wifiSessionsService.isThoNhuongActive(userId));
 
     const oxygenEarned = EconomyUtil.calculateOxygenHarvest({
       baseYield: tree.oxyBase || 10,
@@ -187,7 +190,9 @@ export class TreesService {
       lastHeartbeat: activeWifiSession?.lastHeartbeat || null,
       now,
       isDamaged: true,
-      hasWifiBoost: !!activeWifiSession,
+      hasWifiBoost:
+        !!activeWifiSession &&
+        (await this.wifiSessionsService.isThoNhuongActive(userId)),
     });
 
     const oxygenResource = await this.findOxygenResource();
@@ -316,6 +321,7 @@ export class TreesService {
     private readonly wifiSessionRepository: Repository<WifiSession>,
     private readonly dataSource: DataSource,
     private readonly gardenGateway: GardenGateway,
+    private readonly wifiSessionsService: WifiSessionsService,
   ) {}
 
   async getUserTrees(userId: string): Promise<UserTree[]> {

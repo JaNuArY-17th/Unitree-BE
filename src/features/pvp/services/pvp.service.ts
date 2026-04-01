@@ -17,9 +17,13 @@ import { RaidDto } from '../dto/raid.dto';
 import { AttackDto } from '../dto/attack.dto';
 import { ResourceCode } from '../../../shared/constants/resource-code.constant';
 import { TreeCode } from '../../../shared/constants/tree-code.constant';
+import { WifiSessionsService } from '../../wifi-sessions/services/wifi-sessions.service';
 
 type PvpActionType = 'RAID' | 'ATTACK';
-type DefenseSource = 'OT_GRININI_PASSIVE' | 'MAN_CHUP_TRANH_MUOI';
+type DefenseSource =
+  | 'THO_NHUONG'
+  | 'OT_GRININI_PASSIVE'
+  | 'MAN_CHUP_TRANH_MUOI';
 
 type DefenseResult = {
   wasBlocked: boolean;
@@ -73,6 +77,7 @@ export class PvpService {
     private readonly treeRepo: Repository<Tree>,
     private readonly configService: ConfigService,
     private readonly dataSource: DataSource,
+    private readonly wifiSessionsService: WifiSessionsService,
   ) {}
 
   async getAttackTargets(userId: string): Promise<{
@@ -583,6 +588,26 @@ export class PvpService {
     defenderId: string,
     actionType: PvpActionType,
   ): Promise<DefenseResult> {
+    const thoNhuongBonusChance = this.getPvpNumberConfig(
+      'pvp.thoNhuongDefenseBonusChance',
+      0.05,
+    );
+
+    const hasThoNhuongEffect =
+      thoNhuongBonusChance > 0 &&
+      (await this.wifiSessionsService.isThoNhuongActive(defenderId));
+
+    if (hasThoNhuongEffect && Math.random() < thoNhuongBonusChance) {
+      return {
+        wasBlocked: true,
+        source: 'THO_NHUONG',
+        message:
+          actionType === 'RAID'
+            ? '[Tho nhuong] chan don cuop.'
+            : '[Tho nhuong] chan don pha hoai.',
+      };
+    }
+
     const passiveChance = await this.getPassiveBlockChance(manager, defenderId);
     const passiveCap = this.getPvpNumberConfig(
       'pvp.passiveBlockMaxChance',

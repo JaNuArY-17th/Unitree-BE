@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 /**
@@ -25,4 +25,16 @@ export class StartSessionDto {
   @IsString()
   @IsOptional()
   ipAddress?: string;
+
+  @ApiProperty({
+    description: 'Current connected WiFi BSSID used for Tho nhuong effect',
+    example: '00:13:10:85:FE:01',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  @Matches(/^([0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}$/, {
+    message: 'bssid must be a valid MAC-like format',
+  })
+  bssid?: string;
 }

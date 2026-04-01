@@ -59,4 +59,8 @@ export default registerAs('pvp', () => ({
     process.env.PVP_PASSIVE_BLOCK_MAX_CHANCE,
     0.2,
   ),
+  thoNhuongDefenseBonusChance: parsePositiveFloat(
+    process.env.PVP_THO_NHUONG_DEFENSE_BONUS_CHANCE,
+    0.05,
+  ),
 }));

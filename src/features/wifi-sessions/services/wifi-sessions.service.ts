@@ -12,6 +12,7 @@ import { StartSessionDto } from '../dto/start-session.dto';
 import { HeartbeatDto } from '../dto/heartbeat.dto';
 import { EndSessionDto } from '../dto/end-session.dto';
 import { WifiSessionStatus } from '../../../shared/constants/enums.constant';
+import { THO_NHUONG_BSSID_ALLOWLIST } from '../../../shared/constants/tho-nhuong-bssid.constant';
 import { CacheService } from '../../../services/cache.service';
 import { PointsService } from '../../points/services/points.service';
 
@@ -28,6 +29,7 @@ import { PointsService } from '../../points/services/points.service';
 @Injectable()
 export class WifiSessionsService {
   private readonly logger = new Logger(WifiSessionsService.name);
+  private readonly thoNhuongCacheTtlSeconds = 20 * 60;
 
   constructor(
     @InjectRepository(WifiSession)
@@ -60,6 +62,12 @@ export class WifiSessionsService {
 
     const savedSession = await this.wifiSessionRepository.save(session);
 
+    await this.updateThoNhuongState(
+      userId,
+      dto.bssid,
+      THO_NHUONG_BSSID_ALLOWLIST,
+    );
+
     // Cache active session
     await this.cacheActiveSession(userId, savedSession.id);
 
@@ -78,6 +86,7 @@ export class WifiSessionsService {
     currentDuration: number;
     pointsEarned: number;
     sessionStatus: string;
+    hasThoNhuongEffect: boolean;
   }> {
     const session = await this.wifiSessionRepository.findOne({
       where: { id: dto.sessionId, userId },
@@ -95,6 +104,14 @@ export class WifiSessionsService {
     session.lastHeartbeat = new Date();
     await this.wifiSessionRepository.save(session);
 
+    const hasThoNhuongEffect = dto.bssid
+      ? await this.updateThoNhuongState(
+          userId,
+          dto.bssid,
+          THO_NHUONG_BSSID_ALLOWLIST,
+        )
+      : await this.isThoNhuongActive(userId);
+
     // Calculate current stats
     const durationMinutes = Math.floor(
       (new Date().getTime() - session.startTime.getTime()) / 60000,
@@ -108,6 +125,7 @@ export class WifiSessionsService {
       currentDuration: durationMinutes,
       pointsEarned,
       sessionStatus: session.status,
+      hasThoNhuongEffect,
     };
   }
 
@@ -164,6 +182,7 @@ export class WifiSessionsService {
 
       // Clear cache
       await this.clearActiveSessionCache(userId);
+      await this.clearThoNhuongState(userId);
 
       this.logger.log(
         `WiFi session ended: ${sessionId}, awarded ${pointsEarned} points`,
@@ -231,6 +250,7 @@ export class WifiSessionsService {
 
       // Clear cache
       await this.clearActiveSessionCache(session.userId);
+      await this.clearThoNhuongState(session.userId);
 
       this.logger.log(
         `Completed timeout session: ${session.id}, awarded ${pointsEarned} points`,
@@ -258,6 +278,85 @@ export class WifiSessionsService {
 
   private async clearActiveSessionCache(userId: string): Promise<void> {
     await this.cacheService.del(`wifi:active:${userId}`);
+  }
+
+  private getThoNhuongCacheKey(userId: string): string {
+    return `wifi:tho-nhuong:${userId}`;
+  }
+
+  private async updateThoNhuongState(
+    userId: string,
+    rawBssid?: string,
+    bssidAllowlist: string[] = THO_NHUONG_BSSID_ALLOWLIST,
+  ): Promise<boolean> {
+    const normalizedBssid = this.normalizeBssid(rawBssid);
+    const hasThoNhuongEffect = this.isBssidAllowed(
+      rawBssid,
+      bssidAllowlist,
+    );
+
+    await this.cacheService.set(
+      this.getThoNhuongCacheKey(userId),
+      hasThoNhuongEffect,
+      this.thoNhuongCacheTtlSeconds,
+    );
+
+    this.logger.debug(
+      `Tho nhuong state updated for user ${userId}: ${hasThoNhuongEffect} (bssid=${normalizedBssid ?? 'N/A'})`,
+    );
+
+    return hasThoNhuongEffect;
+  }
+
+  private async clearThoNhuongState(userId: string): Promise<void> {
+    await this.cacheService.del(this.getThoNhuongCacheKey(userId));
+  }
+
+  async isThoNhuongActive(userId: string): Promise<boolean> {
+    const hasActiveSession = await this.getActiveSession(userId);
+    if (!hasActiveSession) {
+      await this.clearThoNhuongState(userId);
+      return false;
+    }
+
+    const cached = await this.cacheService.get<boolean>(
+      this.getThoNhuongCacheKey(userId),
+    );
+
+    return cached === true;
+  }
+
+  private normalizeBssidWhitelist(allowlist: string[]): Set<string> {
+    if (!allowlist || allowlist.length === 0) {
+      return new Set<string>();
+    }
+
+    const normalizedEntries = allowlist
+      .map((entry) => this.normalizeBssid(entry))
+      .filter((entry): entry is string => entry != null);
+
+    return new Set(normalizedEntries);
+  }
+
+  private isBssidAllowed(rawBssid: string | undefined, allowlist: string[]): boolean {
+    const normalizedBssid = this.normalizeBssid(rawBssid);
+    if (!normalizedBssid) {
+      return false;
+    }
+
+    const normalizedAllowlist = this.normalizeBssidWhitelist(allowlist);
+    return normalizedAllowlist.has(normalizedBssid);
+  }
+
+  private normalizeBssid(rawValue?: string): string | null {
+    if (!rawValue) {
+      return null;
+    }
+
+    const normalized = rawValue.trim().toUpperCase().replace(/-/g, ':');
+    const bssidPattern = /^([0-9A-F]{2}:){5}[0-9A-F]{2}$/;
+
+    return bssidPattern.test(normalized) ? normalized : null;
   }
 
   // ===== QUERY METHODS =====

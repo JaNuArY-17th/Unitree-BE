@@ -12,6 +12,7 @@ import { WifiSession } from '../../../database/entities/wifi-session.entity';
 import { EconomyLog } from '../../../database/entities/economy-log.entity';
 import { EconomyUtil } from '../../../shared/utils/economy.util';
 import { WifiSessionStatus } from '../../../shared/constants/enums.constant';
+import { WifiSessionsService } from '../../wifi-sessions/services/wifi-sessions.service';
 
 @Injectable()
 export class GardenService {
@@ -31,6 +32,7 @@ export class GardenService {
     @InjectRepository(WifiSession)
     private readonly wifiSessionRepository: Repository<WifiSession>,
     private readonly dataSource: DataSource,
+    private readonly wifiSessionsService: WifiSessionsService,
   ) {}
 
   async syncAllOxygen(userId: string) {
@@ -48,7 +50,9 @@ export class GardenService {
       },
     });
 
-    const hasWifiBoost = !!activeWifiSession;
+    const hasWifiBoost =
+      !!activeWifiSession &&
+      (await this.wifiSessionsService.isThoNhuongActive(userId));
     const lastHeartbeat = activeWifiSession?.lastHeartbeat || null;
 
     let earnedWholeOxygen = 0;
