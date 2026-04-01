@@ -30,6 +30,7 @@ import { PointsService } from '../../points/services/points.service';
 export class WifiSessionsService {
   private readonly logger = new Logger(WifiSessionsService.name);
   private readonly thoNhuongCacheTtlSeconds = 20 * 60;
+  private readonly bssidPrefixSegments = 5;
 
   constructor(
     @InjectRepository(WifiSession)
@@ -290,10 +291,7 @@ export class WifiSessionsService {
     bssidAllowlist: string[] = THO_NHUONG_BSSID_ALLOWLIST,
   ): Promise<boolean> {
     const normalizedBssid = this.normalizeBssid(rawBssid);
-    const hasThoNhuongEffect = this.isBssidAllowed(
-      rawBssid,
-      bssidAllowlist,
-    );
+    const hasThoNhuongEffect = this.isBssidAllowed(rawBssid, bssidAllowlist);
 
     await this.cacheService.set(
       this.getThoNhuongCacheKey(userId),
@@ -338,8 +336,11 @@ export class WifiSessionsService {
     return new Set(normalizedEntries);
   }
 
-  private isBssidAllowed(rawBssid: string | undefined, allowlist: string[]): boolean {
-    const normalizedBssid = this.normalizeBssid(rawBssid);
+  private isBssidAllowed(
+    rawBssid: string | undefined,
+    allowlist: string[],
+  ): boolean {
+    const normalizedBssid = this.normalizeBssidPrefix(rawBssid);
     if (!normalizedBssid) {
       return false;
     }
@@ -348,15 +349,36 @@ export class WifiSessionsService {
     return normalizedAllowlist.has(normalizedBssid);
   }
 
-  private normalizeBssid(rawValue?: string): string | null {
+  private normalizeBssidPrefix(rawValue?: string): string | null {
     if (!rawValue) {
       return null;
     }
 
     const normalized = rawValue.trim().toUpperCase().replace(/-/g, ':');
-    const bssidPattern = /^([0-9A-F]{2}:){5}[0-9A-F]{2}$/;
+    const segments = normalized.split(':').filter((segment) => segment !== '');
 
-    return bssidPattern.test(normalized) ? normalized : null;
+    const acceptedSegmentCount = [
+      this.bssidPrefixSegments,
+      this.bssidPrefixSegments + 1,
+    ];
+
+    if (!acceptedSegmentCount.includes(segments.length)) {
+      return null;
+    }
+
+    const isValidHexPair = segments.every((segment) =>
+      /^[0-9A-F]{2}$/.test(segment),
+    );
+
+    if (!isValidHexPair) {
+      return null;
+    }
+
+    return segments.slice(0, this.bssidPrefixSegments).join(':');
+  }
+
+  private normalizeBssid(rawValue?: string): string | null {
+    return this.normalizeBssidPrefix(rawValue);
   }
 
   // ===== QUERY METHODS =====
