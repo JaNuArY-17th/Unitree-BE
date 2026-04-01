@@ -1,29 +1,47 @@
 version: '3.8'
 
 services:
-  db:
-    image: postgres:15-alpine
-    container_name: unitree-db
-    restart: always
+  unitree-app:
+    build: .
+    container_name: unitree-be
+    ports:
+      - "5000:3000" # Host 5000 trỏ vào Container 3000 (Node.js)
+    env_file: .env
+    depends_on:
+      unitree-db:
+        condition: service_healthy
+      unitree-redis:
+        condition: service_started
+    networks:
+      - unitree-network
+
+  unitree-db:
+    image: postgres:16-alpine
+    container_name: unitree-postgres
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_DATABASE}
-    ports:
-      - '${DB_PORT}:5432'
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - unitree_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - unitree-network
 
-  redis:
-    image: redis:7-alpine
+  unitree-redis:
+    image: redis:alpine
     container_name: unitree-redis
-    restart: always
-    ports:
-      - '${REDIS_PORT:-6379}:6379'
-    # command: redis-server --requirepass ${REDIS_PASSWORD}
-    volumes:
-      - redisdata:/data
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    networks:
+      - unitree-network
+
+networks:
+  unitree-network:
+    driver: bridge
 
 volumes:
-  pgdata:
-  redisdata:
+  unitree_db_data:
