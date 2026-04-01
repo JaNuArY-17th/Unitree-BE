@@ -6,6 +6,9 @@ import { UserResource } from '../../database/entities/user-resource.entity';
 import { UserTree } from '../../database/entities/user-tree.entity';
 import { PvpActionLog } from '../../database/entities/pvp-action-log.entity';
 import { EconomyLog } from '../../database/entities/economy-log.entity';
+import { User } from '../../database/entities/user.entity';
+import { Resource } from '../../database/entities/resource.entity';
+import { Tree } from '../../database/entities/tree.entity';
 
 @Module({
   imports: [
@@ -14,6 +17,9 @@ import { EconomyLog } from '../../database/entities/economy-log.entity';
       UserTree,
       PvpActionLog,
       EconomyLog,
+      User,
+      Resource,
+      Tree,
     ]),
   ],
   controllers: [PvpController],

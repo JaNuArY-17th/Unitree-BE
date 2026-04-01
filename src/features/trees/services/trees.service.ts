@@ -16,6 +16,7 @@ import { EconomyLog } from '../../../database/entities/economy-log.entity';
 import { WifiSession } from '../../../database/entities/wifi-session.entity';
 import { EconomyUtil } from '../../../shared/utils/economy.util';
 import { WifiSessionStatus } from '../../../shared/constants/enums.constant';
+import { GardenGateway } from '../../garden/gateways/garden.gateway';
 
 @Injectable()
 export class TreesService {
@@ -141,10 +142,20 @@ export class TreesService {
       }
     });
 
-    return this.userTreeRepository.findOneOrFail({
+    const upgradedTree = await this.userTreeRepository.findOneOrFail({
       where: { id: dto.userTreeId, userId },
       relations: ['tree'],
     });
+
+    this.gardenGateway.emitToUser(userId, 'tree_updated', {
+      userTreeId: upgradedTree.id,
+      level: upgradedTree.level,
+      isDamaged: upgradedTree.isDamaged,
+      assetPath: upgradedTree.assetPath,
+      source: 'upgrade',
+    });
+
+    return upgradedTree;
   }
 
   async repairTree(userId: string, dto: RepairTreeDto): Promise<UserTree> {
@@ -181,7 +192,7 @@ export class TreesService {
 
     const oxygenResource = await this.findOxygenResource();
 
-    return await this.dataSource.transaction(async (manager) => {
+    await this.dataSource.transaction(async (manager) => {
       const userResourceRepo = manager.getRepository(UserResource);
       const userTreeRepo = manager.getRepository(UserTree);
       const economyLogRepo = manager.getRepository(EconomyLog);
@@ -219,6 +230,21 @@ export class TreesService {
 
       return userTree;
     });
+
+    const repairedTree = await this.userTreeRepository.findOneOrFail({
+      where: { id: dto.userTreeId, userId },
+      relations: ['tree'],
+    });
+
+    this.gardenGateway.emitToUser(userId, 'tree_updated', {
+      userTreeId: repairedTree.id,
+      level: repairedTree.level,
+      isDamaged: repairedTree.isDamaged,
+      assetPath: repairedTree.assetPath,
+      source: 'repair',
+    });
+
+    return repairedTree;
   }
 
   async getTreeUpgradeStatus(
@@ -289,6 +315,7 @@ export class TreesService {
     @InjectRepository(WifiSession)
     private readonly wifiSessionRepository: Repository<WifiSession>,
     private readonly dataSource: DataSource,
+    private readonly gardenGateway: GardenGateway,
   ) {}
 
   async getUserTrees(userId: string): Promise<UserTree[]> {
