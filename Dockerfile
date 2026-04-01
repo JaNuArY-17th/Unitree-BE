@@ -26,4 +26,4 @@ COPY --from=builder /app/prisma ./prisma
 EXPOSE 3000
 
 # Lệnh này giúp kiểm tra xem file có tồn tại không trước khi chạy
-CMD ["node", "dist/main"]
+CMD ["node", "dist/src/main"]
