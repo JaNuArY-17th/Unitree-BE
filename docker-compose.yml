@@ -37,6 +37,8 @@ services:
   unitree-redis:
     image: redis:alpine
     container_name: unitree-redis
+    ports:
+      - "6378:6379"
     command: redis-server --requirepass ${REDIS_PASSWORD}
     networks:
       - unitree-network
