@@ -3,7 +3,6 @@ import {
   UnauthorizedException,
   BadRequestException,
   NotFoundException,
-  InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -23,6 +22,7 @@ import { FirebaseService } from '../../../services/firebase.service';
 import { UserRole } from '../../../shared/constants/roles.constant';
 import { UsersService } from '../../users/services/users.service';
 import { UserInfoDto } from '../../users/dto/user-info.dto';
+import { GoogleLoginDto } from '../dto/google-login.dto';
 import { plainToInstance } from 'class-transformer';
 import * as admin from 'firebase-admin';
 
@@ -217,39 +217,40 @@ export class AuthService {
     };
   }
 
-  async googleLogin(idToken: string) {
-    if (!this.firebaseService.isInitialized()) {
-      this.logger.warn(
-        'Google login attempted while Firebase Admin SDK is not initialized',
-      );
-      throw new InternalServerErrorException(
-        'Firebase authentication is not configured on server',
-      );
-    }
+  async googleLogin(googleLoginDto: GoogleLoginDto) {
+    let resolvedEmail = googleLoginDto.email?.trim();
+    let resolvedPicture = googleLoginDto.picture?.trim();
 
-    let decodedToken: admin.auth.DecodedIdToken;
-    try {
-      decodedToken = await this.firebaseService.verifyIdToken(idToken);
-    } catch (error: any) {
-      this.logger.warn(
-        `Google token verification failed: ${error?.message || 'unknown error'}`,
-      );
-
-      if (error?.message?.includes('Firebase is not initialized')) {
-        throw new InternalServerErrorException(
-          'Firebase authentication is not configured on server',
+    if (googleLoginDto.idToken) {
+      if (!this.firebaseService.isInitialized()) {
+        this.logger.warn(
+          'Firebase Admin SDK is not initialized. Skip idToken verification and use FE OAuth profile payload.',
         );
+      } else {
+        let decodedToken: admin.auth.DecodedIdToken;
+        try {
+          decodedToken = await this.firebaseService.verifyIdToken(
+            googleLoginDto.idToken,
+          );
+        } catch (error: unknown) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'unknown error';
+          this.logger.warn(`Google token verification failed: ${errorMessage}`);
+          throw new UnauthorizedException('Invalid Google ID token');
+        }
+
+        resolvedEmail = decodedToken.email?.trim() || resolvedEmail;
+        resolvedPicture = decodedToken.picture || resolvedPicture;
       }
-
-      throw new UnauthorizedException('Invalid Google ID token');
     }
 
-    const { email, picture } = decodedToken;
-    if (!email) {
-      throw new UnauthorizedException('Google account does not have an email');
+    if (!resolvedEmail) {
+      throw new BadRequestException(
+        'Google profile email is required from frontend OAuth payload',
+      );
     }
 
-    const normalizedEmail = this.normalizeEmail(email);
+    const normalizedEmail = this.normalizeEmail(resolvedEmail);
 
     let user = await this.findUserByEmail(normalizedEmail);
 
@@ -261,8 +262,9 @@ export class AuthService {
         })
         .getOne();
 
-      const defaultAvatar = picture || undefined;
-      const defaultUsername = String(normalizedEmail.split('@')[0]);
+      const defaultAvatar = resolvedPicture || undefined;
+      const defaultUsername =
+        googleLoginDto.name?.trim() || String(normalizedEmail.split('@')[0]);
 
       user = this.userRepository.create({
         username: defaultUsername,
