@@ -44,7 +44,7 @@ jobs:
           envs: ENV_FILE
           script: |
             cd ~/apps/unitree
-            printf '%s' "$ENV_FILE" > .env
+            printf '%s' "$ENV_FILE" | sed 's/\\n/\n/g' > .env
             docker compose down
             docker compose up -d --build
             docker image prune -f
