@@ -1,28 +1,32 @@
 import { registerAs } from '@nestjs/config';
 
 function getFirebasePrivateKey(): string | undefined {
-  const base64Key = process.env.FIREBASE_PRIVATE_KEY?.trim();
-  if (base64Key) {
-    try {
-      return Buffer.from(base64Key, 'base64').toString('utf-8');
-    } catch (error) {
-      throw new Error('FIREBASE_PRIVATE_KEY_BASE64 is not valid base64');
-    }
+  const key = process.env.FIREBASE_PRIVATE_KEY?.trim();
+  if (!key) return undefined;
+
+  let result: string;
+  if (!key.startsWith('-----')) {
+    result = Buffer.from(key, 'base64').toString('utf-8');
+  } else {
+    result = key.replace(/\\n/g, '\n');
   }
 
-  const rawKey = process.env.FIREBASE_PRIVATE_KEY?.trim();
-  if (rawKey) {
-    return rawKey.replace(/\\n/g, '\n');
-  }
+  // Log để debug
+  console.log('=== FIREBASE KEY DEBUG ===');
+  console.log('First 50 chars:', result.substring(0, 50));
+  console.log('Last 50 chars:', result.substring(result.length - 50));
+  console.log('Contains literal \\n:', result.includes('\\n'));
+  console.log('Contains real newline:', result.includes('\n'));
+  console.log('==========================');
 
-  return undefined;
+  return result;
 }
 
 export default registerAs('firebase', () => {
   const privateKey = getFirebasePrivateKey();
   if (!privateKey) {
     throw new Error(
-      'Firebase private key is required: set FIREBASE_PRIVATE_KEY_BASE64 (preferred) or FIREBASE_PRIVATE_KEY',
+      'Firebase private key is required: set FIREBASE_PRIVATE_KEY',
     );
   }
 
