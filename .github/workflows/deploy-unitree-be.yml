@@ -41,20 +41,29 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
-          envs: ENV_FILE,FIREBASE_PRIVATE_KEY
+          envs: ENV_FILE
           script: |
             cd ~/apps/unitree
-
-            # Ghi toàn bộ ENV_FILE vào .env (trừ FIREBASE_PRIVATE_KEY)
-            printf '%s' "$ENV_FILE" | grep -v "FIREBASE_PRIVATE_KEY" > .env
-
-            # Giữ \n literal — Docker Compose không đọc được multiline
-            # Firebase SDK tự xử lý \n literal thành newline khi đọc
-            printf 'FIREBASE_PRIVATE_KEY="%s"\n' "$FIREBASE_PRIVATE_KEY" >> .env
-
+            printf '%s' "$ENV_FILE" > .env.raw
+            python3 << 'PYEOF'
+            import re
+            with open('.env.raw') as f:
+                content = f.read()
+            def fix_key(m):
+                val = m.group(1).strip('"').strip("'")
+                return 'FIREBASE_PRIVATE_KEY=' + val
+            content = re.sub(
+                r'FIREBASE_PRIVATE_KEY=["\']?(.*?)["\']?(?=\n[A-Z]|\Z)',
+                fix_key,
+                content,
+                flags=re.DOTALL
+            )
+            with open('.env', 'w') as f:
+                f.write(content)
+            PYEOF
+            rm .env.raw
             docker compose down
             docker compose up -d --build
             docker image prune -f
         env:
           ENV_FILE: ${{ secrets.ENV_FILE }}
-          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
