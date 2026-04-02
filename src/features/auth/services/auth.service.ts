@@ -218,6 +218,15 @@ export class AuthService {
   }
 
   async googleLogin(idToken: string) {
+    if (!this.firebaseService.isInitialized()) {
+      this.logger.warn(
+        'Google login attempted while Firebase Admin SDK is not initialized',
+      );
+      throw new InternalServerErrorException(
+        'Firebase authentication is not configured on server',
+      );
+    }
+
     let decodedToken: admin.auth.DecodedIdToken;
     try {
       decodedToken = await this.firebaseService.verifyIdToken(idToken);
