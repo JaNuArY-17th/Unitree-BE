@@ -96,7 +96,7 @@ export class MinigamesService {
         manager,
       );
       const { spinResource, spinItem } = spinSnapshot;
-      let spinCount = spinSnapshot.spinBalance;
+      const spinCount = spinSnapshot.spinBalance;
 
       if (spinCount <= 0) {
         throw new BadRequestException('Bạn đã hết Lượt Quay!');

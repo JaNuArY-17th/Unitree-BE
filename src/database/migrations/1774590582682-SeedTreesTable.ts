@@ -13,7 +13,12 @@ export class SeedTreesTable1774590582682 implements MigrationInterface {
                     WHERE table_name = 'trees' AND column_name = 'code'
                 ) THEN
                     ALTER TABLE "trees" ADD "code" character varying;
-                    UPDATE "trees" SET "code" = LOWER(REPLACE("name", ' ', '_'));
+                    UPDATE "trees" SET "code" = LOWER(REPLACE("name", ' ', '_'))
+                    WHERE "name" IS NOT NULL AND "name" <> '';
+
+                    UPDATE "trees" SET "code" = 'tree_' || REPLACE("id"::text, '-', '_')
+                    WHERE "code" IS NULL OR "code" = '';
+
                     ALTER TABLE "trees" ALTER COLUMN "code" SET NOT NULL;
                 END IF;
             END $$;

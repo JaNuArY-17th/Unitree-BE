@@ -7,7 +7,10 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserDevice } from '../../../database/entities/user-device.entity';
-import { OtpRedisService, OtpType } from '../../auth/services/otp-redis.service';
+import {
+  OtpRedisService,
+  OtpType,
+} from '../../auth/services/otp-redis.service';
 import { TokensService } from '../../tokens/services/tokens.service';
 import { EmailService } from '../../../services/email.service';
 
