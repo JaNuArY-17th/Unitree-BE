@@ -41,18 +41,20 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
-          envs: ENV_FILE
+          envs: ENV_FILE,FIREBASE_PRIVATE_KEY
           script: |
             cd ~/apps/unitree
-            printf '%s' "$ENV_FILE" > .env.raw
-            python3 -c "
-            content = open('.env.raw').read()
-            content = content.replace('\\\\n', '\n')
-            open('.env', 'w').write(content)
-            "
-            rm .env.raw
+
+            # Ghi toàn bộ ENV_FILE vào .env (trừ FIREBASE_PRIVATE_KEY)
+            printf '%s' "$ENV_FILE" | grep -v "FIREBASE_PRIVATE_KEY" > .env
+
+            # Xử lý FIREBASE_PRIVATE_KEY: convert \n literal → newline thật
+            REAL_KEY=$(printf '%s' "$FIREBASE_PRIVATE_KEY" | sed 's/\\n/\n/g')
+            printf 'FIREBASE_PRIVATE_KEY="%s"\n' "$REAL_KEY" >> .env
+
             docker compose down
             docker compose up -d --build
             docker image prune -f
         env:
           ENV_FILE: ${{ secrets.ENV_FILE }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
