@@ -44,7 +44,13 @@ jobs:
           envs: ENV_FILE
           script: |
             cd ~/apps/unitree
-            printf '%s' "$ENV_FILE" | sed 's/\\n/\n/g' > .env
+            printf '%s' "$ENV_FILE" > .env.raw
+            python3 -c "
+            content = open('.env.raw').read()
+            content = content.replace('\\\\n', '\n')
+            open('.env', 'w').write(content)
+            "
+            rm .env.raw
             docker compose down
             docker compose up -d --build
             docker image prune -f
