@@ -246,7 +246,7 @@ export class AuthService {
 
     if (!resolvedEmail) {
       throw new BadRequestException(
-        'Google profile email is required from frontend OAuth payload',
+        'Google profile email is required. Send email from FE OAuth payload (or provide valid idToken with Firebase configured).',
       );
     }
 
