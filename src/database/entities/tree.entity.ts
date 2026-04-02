@@ -12,22 +12,22 @@ import { UserTree } from './user-tree.entity';
 @Entity('trees')
 export class Tree extends BaseEntity {
   @Column({ type: 'varchar', unique: true })
-  code: string;
+  code!: string;
 
   @Column({ type: 'varchar', unique: true })
-  name: string;
+  name!: string;
 
   @Column({ name: 'tree_type', type: 'varchar' })
-  treeType: string;
+  treeType!: string;
 
   @Column({ name: 'max_level', type: 'smallint' })
-  maxLevel: number;
+  maxLevel!: number;
 
   @Column({ name: 'cost_base' })
-  costBase: number;
+  costBase!: number;
 
   @Column({ name: 'cost_rate', type: 'decimal' })
-  costRate: number;
+  costRate!: number;
 
   @Column({ name: 'oxy_base', nullable: true })
   oxyBase?: number;
@@ -42,18 +42,18 @@ export class Tree extends BaseEntity {
   perkStep?: number;
 
   @Column({ name: 'slot_index', type: 'smallint' })
-  slotIndex: number;
+  slotIndex!: number;
 
   @Column({ type: 'text' })
-  description: string;
+  description!: string;
 
   @Column({ name: 'assets_path', type: 'varchar' })
-  assetsPath: string;
+  assetsPath!: string;
 
   @Column({ name: 'unlock_condition', type: 'text', nullable: true })
   unlockCondition?: string;
 
   // Relations
   @OneToMany('UserTree', 'tree')
-  userTrees: UserTree[];
+  userTrees!: UserTree[];
 }

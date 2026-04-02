@@ -11,14 +11,14 @@ import { Resource } from './resource.entity';
 @Entity('airdrop_codes')
 export class AirdropCode extends BaseEntity {
   @Column({ type: 'varchar', unique: true })
-  code: string;
+  code!: string;
 
   @Column({ name: 'resource_id', type: 'uuid' })
   @Index()
-  resourceId: string;
+  resourceId!: string;
 
   @Column()
-  amount: number;
+  amount!: number;
 
   @Column({ name: 'expiration_date', type: 'timestamp', nullable: true })
   expirationDate?: Date;
@@ -26,5 +26,5 @@ export class AirdropCode extends BaseEntity {
   // Relations
   @ManyToOne('Resource', 'airdropCodes', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'resource_id' })
-  resource: Resource;
+  resource!: Resource;
 }

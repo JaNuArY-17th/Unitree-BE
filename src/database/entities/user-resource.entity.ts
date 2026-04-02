@@ -14,21 +14,21 @@ import { Resource } from './resource.entity';
 export class UserResource extends BaseEntity {
   @Column({ name: 'user_id', type: 'uuid' })
   @Index()
-  userId: string;
+  userId!: string;
 
   @Column({ name: 'resource_id', type: 'uuid' })
   @Index()
-  resourceId: string;
+  resourceId!: string;
 
   @Column({ type: 'bigint', default: 0 })
-  balance: string; // bigint được TypeORM trả về dạng string
+  balance!: string; // bigint được TypeORM trả về dạng string
 
   // Relations
   @ManyToOne('User', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user!: User;
 
   @ManyToOne('Resource', 'userResources', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'resource_id' })
-  resource: Resource;
+  resource!: Resource;
 }

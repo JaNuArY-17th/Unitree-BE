@@ -11,21 +11,21 @@ import { UserTask } from './user-task.entity';
 @Entity('tasks')
 export class Task extends BaseEntity {
   @Column({ type: 'varchar' })
-  title: string;
+  title!: string;
 
   @Column({ type: 'text', nullable: true })
   description?: string;
 
   @Column({ name: 'reward_type', type: 'varchar' })
-  rewardType: string;
+  rewardType!: string;
 
   @Column({ name: 'reward_amount' })
-  rewardAmount: number;
+  rewardAmount!: number;
 
   @Column({ name: 'is_daily', default: true })
-  isDaily: boolean;
+  isDaily!: boolean;
 
   // Relations
   @OneToMany('UserTask', 'task')
-  userTasks: UserTask[];
+  userTasks!: UserTask[];
 }

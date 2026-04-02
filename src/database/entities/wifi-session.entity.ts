@@ -19,26 +19,26 @@ import { WifiSessionStatus } from '../../shared/constants/enums.constant';
 export class WifiSession extends BaseEntity {
   @Column({ name: 'user_id' })
   @Index()
-  userId: string;
+  userId!: string;
 
   @Column({ name: 'start_time' })
-  startTime: Date;
+  startTime!: Date;
 
   @Column({ name: 'end_time', nullable: true })
   endTime?: Date;
 
   @Column({ name: 'duration_minutes', default: 0 })
-  durationMinutes: number;
+  durationMinutes!: number;
 
   @Column({ name: 'points_earned', default: 0 })
-  pointsEarned: number;
+  pointsEarned!: number;
 
   @Column({
     type: 'enum',
     enum: WifiSessionStatus,
     default: WifiSessionStatus.ACTIVE,
   })
-  status: WifiSessionStatus;
+  status!: WifiSessionStatus;
 
   @Column({ name: 'last_heartbeat', type: 'timestamp', nullable: true })
   lastHeartbeat?: Date;
@@ -53,5 +53,5 @@ export class WifiSession extends BaseEntity {
   // Relations
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user!: User;
 }

@@ -16,7 +16,7 @@ import { User } from './user.entity';
 @Entity('user_game_states')
 export class UserGameState extends BaseEntity {
   @Column({ name: 'user_id', type: 'uuid', unique: true })
-  userId: string;
+  userId!: string;
 
   /**
    * Thời điểm lần cuối spin được hồi.
@@ -28,5 +28,5 @@ export class UserGameState extends BaseEntity {
   // Relations
   @OneToOne(() => User)
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user!: User;
 }

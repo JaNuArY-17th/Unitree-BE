@@ -11,22 +11,22 @@ import { BaseEntity } from './base.entity';
 export class UserTask extends BaseEntity {
   @Column({ name: 'user_id', type: 'uuid' })
   @Index()
-  userId: string;
+  userId!: string;
 
   @Column({ name: 'task_id', type: 'uuid' })
   @Index()
-  taskId: string;
+  taskId!: string;
 
   /**
    * Trạng thái task: PENDING | COMPLETED | CLAIMED
    */
   @Column({ type: 'varchar', default: 'PENDING' })
-  status: string;
+  status!: string;
 
   // Relations
   @ManyToOne('User', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
-  user: any;
+  user!: any;
 
   @ManyToOne('Task', 'userTasks', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'task_id' })

@@ -8,21 +8,21 @@ import { MessageType } from '../../shared/constants/enums.constant';
 export class Message extends BaseEntity {
   @Column({ name: 'conversation_id' })
   @Index()
-  conversationId: string;
+  conversationId!: string;
 
   @Column({ name: 'sender_id' })
   @Index()
-  senderId: string;
+  senderId!: string;
 
   @Column({
     type: 'enum',
     enum: MessageType,
     default: MessageType.TEXT,
   })
-  type: MessageType;
+  type!: MessageType;
 
   @Column({ type: 'text' })
-  content: string;
+  content!: string;
 
   @Column({ type: 'jsonb', nullable: true })
   metadata?: Record<string, unknown>;
@@ -31,13 +31,13 @@ export class Message extends BaseEntity {
   replyToId?: string;
 
   @Column({ name: 'is_edited', default: false })
-  isEdited: boolean;
+  isEdited!: boolean;
 
   @Column({ name: 'edited_at', nullable: true })
   editedAt?: Date;
 
   @Column({ name: 'is_deleted', default: false })
-  isDeleted: boolean;
+  isDeleted!: boolean;
 
   // Relations
   @ManyToOne(
@@ -45,9 +45,9 @@ export class Message extends BaseEntity {
     (conversation: Conversation) => conversation.messages,
   )
   @JoinColumn({ name: 'conversation_id' })
-  conversation: Conversation;
+  conversation!: Conversation;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'sender_id' })
-  sender: User;
+  sender!: User;
 }

@@ -14,7 +14,7 @@ import { UserRole } from '../../shared/constants/roles.constant';
 export class User extends BaseEntity {
   @Index()
   @Column({ type: 'varchar' })
-  username: string;
+  username!: string;
 
   @Index()
   @Column({ type: 'varchar', unique: true, nullable: true })
@@ -28,7 +28,7 @@ export class User extends BaseEntity {
     enum: UserRole,
     default: UserRole.USER,
   })
-  role: UserRole;
+  role!: UserRole;
 
   // Referral code: unique, nullable, chỉ tạo sau khi user đã có record
   @Column({

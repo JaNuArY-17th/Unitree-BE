@@ -13,13 +13,13 @@ export enum OtpType {
 export class Otp extends BaseEntity {
   @Column({ name: 'user_id' })
   @Index()
-  userId: string;
+  userId!: string;
 
   @Column({ name: 'otp_code' })
-  otpCode: string; // Hashed OTP
+  otpCode!: string; // Hashed OTP
 
   @Column({ type: 'enum', enum: OtpType })
-  type: OtpType;
+  type!: OtpType;
 
   @Column({ nullable: true })
   email?: string;
@@ -33,19 +33,19 @@ export class Otp extends BaseEntity {
 
   @Column({ name: 'expires_at' })
   @Index()
-  expiresAt: Date;
+  expiresAt!: Date;
 
   @Column({ name: 'verified_at', nullable: true })
   verifiedAt?: Date;
 
   @Column({ name: 'attempts', default: 0 })
-  attempts: number;
+  attempts!: number;
 
   @Column({ name: 'max_attempts', default: 5 })
-  maxAttempts: number;
+  maxAttempts!: number;
 
   @Column({ name: 'is_used', default: false })
-  isUsed: boolean;
+  isUsed!: boolean;
 
   @Column({ type: 'jsonb', nullable: true })
   metadata?: Record<string, unknown>; // Additional data (IP, user agent, etc.)

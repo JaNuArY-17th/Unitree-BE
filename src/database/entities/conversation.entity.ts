@@ -11,7 +11,7 @@ export class Conversation extends BaseEntity {
     enum: ConversationType,
     default: ConversationType.DIRECT,
   })
-  type: ConversationType;
+  type!: ConversationType;
 
   @Column({ nullable: true })
   name?: string;
@@ -21,21 +21,21 @@ export class Conversation extends BaseEntity {
 
   @Column({ name: 'created_by' })
   @Index()
-  createdBy: string;
+  createdBy!: string;
 
   @Column({ name: 'last_message_at', nullable: true })
   lastMessageAt?: Date;
 
   @Column({ name: 'is_active', default: true })
-  isActive: boolean;
+  isActive!: boolean;
 
   // Relations
   @OneToMany(
     () => ConversationParticipant,
     (participant) => participant.conversation,
   )
-  participants: ConversationParticipant[];
+  participants!: ConversationParticipant[];
 
   @OneToMany(() => Message, (message) => message.conversation)
-  messages: Message[];
+  messages!: Message[];
 }

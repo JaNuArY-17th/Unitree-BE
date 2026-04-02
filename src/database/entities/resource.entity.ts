@@ -12,10 +12,10 @@ import { UserResource } from './user-resource.entity';
 @Entity('resources')
 export class Resource extends BaseEntity {
   @Column({ type: 'varchar', unique: true })
-  code: string;
+  code!: string;
 
   @Column({ type: 'varchar', unique: false })
-  name: string;
+  name!: string;
 
   @Column({ type: 'text', nullable: true })
   description?: string;
@@ -28,8 +28,8 @@ export class Resource extends BaseEntity {
 
   // Relations
   @OneToMany('AirdropCode', 'resource')
-  airdropCodes: AirdropCode[];
+  airdropCodes!: AirdropCode[];
 
   @OneToMany('UserResource', 'resource')
-  userResources: UserResource[];
+  userResources!: UserResource[];
 }

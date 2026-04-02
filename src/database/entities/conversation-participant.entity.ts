@@ -8,23 +8,23 @@ import { Conversation } from './conversation.entity';
 export class ConversationParticipant extends BaseEntity {
   @Column({ name: 'conversation_id' })
   @Index()
-  conversationId: string;
+  conversationId!: string;
 
   @Column({ name: 'user_id' })
   @Index()
-  userId: string;
+  userId!: string;
 
   @Column({ name: 'joined_at' })
-  joinedAt: Date;
+  joinedAt!: Date;
 
   @Column({ name: 'last_read_at', nullable: true })
   lastReadAt?: Date;
 
   @Column({ name: 'is_admin', default: false })
-  isAdmin: boolean;
+  isAdmin!: boolean;
 
   @Column({ name: 'is_muted', default: false })
-  isMuted: boolean;
+  isMuted!: boolean;
 
   @Column({ name: 'left_at', nullable: true })
   leftAt?: Date;
@@ -35,9 +35,9 @@ export class ConversationParticipant extends BaseEntity {
     (conversation: Conversation) => conversation.participants,
   )
   @JoinColumn({ name: 'conversation_id' })
-  conversation: Conversation;
+  conversation!: Conversation;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user!: User;
 }

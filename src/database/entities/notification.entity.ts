@@ -21,26 +21,26 @@ export class Notification {
     primary: true,
     generated: 'uuid',
   })
-  id: string;
+  id!: string;
 
   @Column({ name: 'user_id', type: 'uuid' })
   @Index()
-  userId: string;
+  userId!: string;
 
   @Column({ type: 'varchar' })
-  type: string;
+  type!: string;
 
   @Column({ type: 'text' })
-  message: string;
+  message!: string;
 
   @Column({ name: 'is_read', default: false })
-  isRead: boolean;
+  isRead!: boolean;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
-  createdAt: Date;
+  createdAt!: Date;
 
   // Relations
   @ManyToOne('User', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user!: User;
 }

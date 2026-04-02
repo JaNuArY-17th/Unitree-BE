@@ -11,16 +11,16 @@ import { User } from './user.entity';
 @Entity('students')
 export class Student extends BaseEntity {
   @Column({ name: 'student_id', type: 'varchar', unique: true })
-  studentId: string;
+  studentId!: string;
 
   @Index()
   @Column({ name: 'full_name', type: 'varchar' })
-  fullName: string;
+  fullName!: string;
 
   @Column({ type: 'varchar', unique: true })
-  email: string;
+  email!: string;
 
   // Relations
   @OneToOne('User', 'student')
-  user: User;
+  user!: User;
 }

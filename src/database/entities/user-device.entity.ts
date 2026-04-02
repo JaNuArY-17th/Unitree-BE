@@ -7,17 +7,17 @@ import { User } from './user.entity';
 export class UserDevice extends BaseEntity {
   @Column({ name: 'user_id' })
   @Index()
-  userId: string;
+  userId!: string;
 
   @Column({ name: 'device_id' })
   @Index()
-  deviceId: string; // Unique device identifier (UUID from client)
+  deviceId!: string; // Unique device identifier (UUID from client)
 
   @Column({ name: 'device_name', nullable: true })
   deviceName?: string; // e.g., "iPhone 13 Pro"
 
   @Column({ name: 'device_type' })
-  deviceType: string; // 'ios' | 'android' | 'web'
+  deviceType!: string; // 'ios' | 'android' | 'web'
 
   @Column({ name: 'device_os', nullable: true })
   deviceOs?: string; // e.g., "iOS 17.1"
@@ -35,10 +35,10 @@ export class UserDevice extends BaseEntity {
   fcmToken?: string;
 
   @Column({ name: 'is_active', default: true })
-  isActive: boolean;
+  isActive!: boolean;
 
   @Column({ name: 'last_active' })
-  lastActive: Date;
+  lastActive!: Date;
 
   @Column({ name: 'logged_out_at', type: 'timestamp', nullable: true })
   loggedOutAt?: Date | null;
@@ -46,5 +46,5 @@ export class UserDevice extends BaseEntity {
   // Relations
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user!: User;
 }

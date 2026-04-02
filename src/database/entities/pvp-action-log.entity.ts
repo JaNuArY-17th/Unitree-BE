@@ -23,18 +23,18 @@ export class PvpActionLog {
     primary: true,
     generated: 'uuid',
   })
-  id: string;
+  id!: string;
 
   @Column({ name: 'attacker_id', type: 'uuid' })
   @Index()
-  attackerId: string;
+  attackerId!: string;
 
   @Column({ name: 'defender_id', type: 'uuid' })
   @Index()
-  defenderId: string;
+  defenderId!: string;
 
   @Column({ name: 'action_type', type: 'varchar' })
-  actionType: string;
+  actionType!: string;
 
   @Column({ name: 'stolen_amount', nullable: true })
   stolenAmount?: number;
@@ -44,24 +44,24 @@ export class PvpActionLog {
   targetTreeId?: string;
 
   @Column({ name: 'was_blocked', default: false })
-  wasBlocked: boolean;
+  wasBlocked!: boolean;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
-  createdAt: Date;
+  createdAt!: Date;
 
   // Relations
   @ManyToOne('User', { onDelete: 'NO ACTION' })
   @JoinColumn({ name: 'attacker_id' })
-  attacker: User;
+  attacker!: User;
 
   @ManyToOne('User', { onDelete: 'NO ACTION' })
   @JoinColumn({ name: 'defender_id' })
-  defender: User;
+  defender!: User;
 
   @ManyToOne('UserTree', 'pvpActionLogs', {
     onDelete: 'NO ACTION',
     nullable: true,
   })
   @JoinColumn({ name: 'target_tree_id' })
-  targetTree: UserTree;
+  targetTree!: UserTree;
 }

@@ -22,35 +22,35 @@ export class EconomyLog {
     primary: true,
     generated: 'uuid',
   })
-  id: string;
+  id!: string;
 
   @Column({ name: 'user_id', type: 'uuid' })
   @Index()
-  userId: string;
+  userId!: string;
 
   /**
    * Loại tài nguyên (tên resource, vd: 'oxygen', 'coin')
    */
   @Column({ name: 'resource_type', type: 'varchar' })
-  resourceType: string;
+  resourceType!: string;
 
   /**
    * Số lượng thay đổi (dương = nhận, âm = chi)
    */
   @Column()
-  amount: number;
+  amount!: number;
 
   /**
    * Nguồn gốc giao dịch (vd: 'harvest', 'airdrop', 'pvp_steal')
    */
   @Column({ type: 'varchar' })
-  source: string;
+  source!: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
-  createdAt: Date;
+  createdAt!: Date;
 
   // Relations
   @ManyToOne('User', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user!: User;
 }

@@ -9,18 +9,18 @@ import { Entity, Column, PrimaryColumn } from 'typeorm';
 @Entity('spin_rewards')
 export class SpinReward {
   @PrimaryColumn({ type: 'int' })
-  id: number;
+  id!: number;
 
   @Column({ name: 'reward_type', type: 'varchar' })
-  rewardType: string;
+  rewardType!: string;
 
   @Column({ name: 'reward_amount' })
-  rewardAmount: number;
+  rewardAmount!: number;
 
   /**
    * Trọng số xác suất rơi của phần thưởng này.
    * Giá trị càng cao, xác suất rơi càng lớn.
    */
   @Column({ name: 'drop_weight', type: 'decimal' })
-  dropWeight: number;
+  dropWeight!: number;
 }
