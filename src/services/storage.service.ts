@@ -1,8 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { v2 as cloudinary } from 'cloudinary';
-import type { Express } from 'express';
 import { Logger } from '../shared/utils/logger.util';
+
+export type UploadedFile = {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  size: number;
+  buffer: Buffer;
+  destination?: string;
+  filename?: string;
+  path?: string;
+};
 
 @Injectable()
 export class StorageService {
@@ -16,10 +27,7 @@ export class StorageService {
     });
   }
 
-  async uploadImage(
-    file: Express.Multer.File,
-    folder?: string,
-  ): Promise<string> {
+  async uploadImage(file: UploadedFile, folder?: string): Promise<string> {
     try {
       const cloudinaryFolder =
         folder || this.configService.get('cloudinary.folder');
@@ -44,14 +52,15 @@ export class StorageService {
         uploadStream.end(file.buffer);
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.stack : JSON.stringify(error);
+      const errorMessage =
+        error instanceof Error ? error.stack : JSON.stringify(error);
       Logger.error('Failed to upload image', errorMessage, 'StorageService');
       throw error;
     }
   }
 
   async uploadImages(
-    files: Multer.File[],
+    files: UploadedFile[],
     folder?: string,
   ): Promise<string[]> {
     const uploadPromises = files.map((file) => this.uploadImage(file, folder));
@@ -64,7 +73,8 @@ export class StorageService {
       await cloudinary.uploader.destroy(publicId);
       Logger.log(`Deleted image: ${publicId}`, 'StorageService');
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.stack : JSON.stringify(error);
+      const errorMessage =
+        error instanceof Error ? error.stack : JSON.stringify(error);
       Logger.error('Failed to delete image', errorMessage, 'StorageService');
       throw error;
     }

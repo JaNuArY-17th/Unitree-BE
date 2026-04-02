@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsString, IsOptional, MaxLength, IsEmail } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsOptional,
+  MaxLength,
+  IsEmail,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class GoogleLoginDto {
@@ -8,7 +14,8 @@ export class GoogleLoginDto {
       'Firebase ID token received from Google Sign-In on client side',
   })
   @IsString()
-  idToken?: string;
+  @IsNotEmpty()
+  idToken!: string;
 
   @ApiProperty({
     example: 'user@gmail.com',

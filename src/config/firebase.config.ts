@@ -1,15 +1,30 @@
 import { registerAs } from '@nestjs/config';
 
-export default registerAs('firebase', () => {
-  const rawPrivateKey = process.env.FIREBASE_PRIVATE_KEY;
+function getFirebasePrivateKey(): string | undefined {
+  const base64Key = process.env.FIREBASE_PRIVATE_KEY?.trim();
+  if (base64Key) {
+    try {
+      return Buffer.from(base64Key, 'base64').toString('utf-8');
+    } catch (error) {
+      throw new Error('FIREBASE_PRIVATE_KEY_BASE64 is not valid base64');
+    }
+  }
 
-  const privateKey = rawPrivateKey
-    ? rawPrivateKey
-        .replace(/\\n/g, '\n')
-        .trim()
-        .replace(/^"(.*)"$/, '$1')
-        .replace(/^\'(.*)\'$/, '$1')
-    : undefined;
+  const rawKey = process.env.FIREBASE_PRIVATE_KEY?.trim();
+  if (rawKey) {
+    return rawKey.replace(/\\n/g, '\n');
+  }
+
+  return undefined;
+}
+
+export default registerAs('firebase', () => {
+  const privateKey = getFirebasePrivateKey();
+  if (!privateKey) {
+    throw new Error(
+      'Firebase private key is required: set FIREBASE_PRIVATE_KEY_BASE64 (preferred) or FIREBASE_PRIVATE_KEY',
+    );
+  }
 
   return {
     projectId: process.env.FIREBASE_PROJECT_ID,
