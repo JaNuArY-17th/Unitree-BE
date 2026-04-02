@@ -48,9 +48,9 @@ jobs:
             # Ghi toàn bộ ENV_FILE vào .env (trừ FIREBASE_PRIVATE_KEY)
             printf '%s' "$ENV_FILE" | grep -v "FIREBASE_PRIVATE_KEY" > .env
 
-            # Xử lý FIREBASE_PRIVATE_KEY: convert \n literal → newline thật
-            REAL_KEY=$(printf '%s' "$FIREBASE_PRIVATE_KEY" | sed 's/\\n/\n/g')
-            printf 'FIREBASE_PRIVATE_KEY="%s"\n' "$REAL_KEY" >> .env
+            # Giữ \n literal — Docker Compose không đọc được multiline
+            # Firebase SDK tự xử lý \n literal thành newline khi đọc
+            printf 'FIREBASE_PRIVATE_KEY="%s"\n' "$FIREBASE_PRIVATE_KEY" >> .env
 
             docker compose down
             docker compose up -d --build
