@@ -54,10 +54,7 @@ export class AuthController {
   @Public()
   @Post('google/login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary:
-      'Đăng nhập bằng Google OAuth (frontend xử lý OAuth, backend nhận profile để đăng nhập/đăng ký)',
-  })
+  @ApiOperation({ summary: 'Đăng nhập bằng Google (Firebase ID Token)' })
   @ApiBody({ type: GoogleLoginDto })
   @ApiResponse({
     status: 200,
@@ -65,10 +62,10 @@ export class AuthController {
   })
   @ApiResponse({
     status: 401,
-    description: 'Google token không hợp lệ',
+    description: 'ID Token không hợp lệ',
   })
   async googleLogin(@Body() googleLoginDto: GoogleLoginDto) {
-    const result = await this.authService.googleLogin(googleLoginDto);
+    const result = await this.authService.googleLogin(googleLoginDto.idToken);
     return ResponseUtil.success(result, 'Google login successful');
   }
 
