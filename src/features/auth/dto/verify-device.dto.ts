@@ -8,7 +8,7 @@ export class VerifyDeviceDto {
   })
   @IsUUID('4')
   @IsNotEmpty()
-  userId: string;
+  userId!: string;
 
   @ApiProperty({
     example: 'device-uuid-abc123',
@@ -16,7 +16,7 @@ export class VerifyDeviceDto {
   })
   @IsString()
   @IsNotEmpty()
-  deviceId: string;
+  deviceId!: string;
 
   @ApiProperty({
     example: '123456',
@@ -25,5 +25,5 @@ export class VerifyDeviceDto {
   @IsString()
   @IsNotEmpty()
   @Length(6, 6, { message: 'OTP must be 6 digits' })
-  otpCode: string;
+  otpCode!: string;
 }

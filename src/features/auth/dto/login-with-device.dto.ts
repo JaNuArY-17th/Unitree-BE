@@ -5,12 +5,12 @@ export class LoginWithDeviceDto {
   @ApiProperty({ example: 'user@example.com', description: 'Email đăng nhập' })
   @IsEmail()
   @IsNotEmpty()
-  email: string;
+  email!: string;
 
   @ApiProperty({ example: 'strongPassword123', description: 'Mật khẩu' })
   @IsString()
   @IsNotEmpty()
-  password: string;
+  password!: string;
 
   @ApiProperty({
     example: 'device-uuid-abc123',
@@ -18,7 +18,7 @@ export class LoginWithDeviceDto {
   })
   @IsString()
   @IsNotEmpty()
-  deviceId: string;
+  deviceId!: string;
 
   @ApiProperty({
     example: 'Samsung Galaxy S24',
@@ -35,7 +35,7 @@ export class LoginWithDeviceDto {
   })
   @IsString()
   @IsNotEmpty()
-  deviceType: string;
+  deviceType!: string;
 
   @ApiProperty({
     example: 'Android 14',

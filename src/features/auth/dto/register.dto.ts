@@ -10,14 +10,14 @@ import {
 export class RegisterDto {
   @IsEmail()
   @IsNotEmpty()
-  email: string;
+  email!: string;
 
   @IsString()
   @IsNotEmpty()
   @Matches(/^(\+84|0)[3|5|7|8|9][0-9]{8}$/, {
     message: 'Phone number must be a valid Vietnamese phone number',
   })
-  phoneNumber: string;
+  phoneNumber!: string;
 
   @IsString()
   @IsNotEmpty()
@@ -25,11 +25,11 @@ export class RegisterDto {
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
     message: 'Password must contain uppercase, lowercase and number',
   })
-  password: string;
+  password!: string;
 
   @IsString()
   @IsNotEmpty()
-  fullName: string;
+  fullName!: string;
 
   @IsString()
   @IsOptional()

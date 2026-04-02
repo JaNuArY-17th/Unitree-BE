@@ -41,7 +41,7 @@ export class EmailService {
     } catch (error) {
       Logger.error(
         `Failed to send email to ${to}`,
-        error.stack,
+        error instanceof Error ? error.stack : String(error),
         'EmailService',
       );
       throw error;

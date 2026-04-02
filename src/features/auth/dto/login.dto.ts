@@ -5,10 +5,10 @@ export class LoginDto {
   @ApiProperty({ example: 'user@example.com', description: 'Email đăng nhập' })
   @IsEmail()
   @IsNotEmpty()
-  email: string;
+  email!: string;
 
   @ApiProperty({ example: 'strongPassword123', description: 'Mật khẩu' })
   @IsString()
   @IsNotEmpty()
-  password: string;
+  password!: string;
 }

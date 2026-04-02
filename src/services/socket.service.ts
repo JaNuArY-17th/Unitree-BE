@@ -4,7 +4,7 @@ import { Logger } from '../shared/utils/logger.util';
 
 @Injectable()
 export class SocketService {
-  private server: Server;
+  private server!: Server;
   private readonly userSockets: Map<string, Set<string>> = new Map();
 
   setServer(server: Server): void {
