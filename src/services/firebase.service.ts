@@ -37,6 +37,10 @@ export class FirebaseService {
     }
   }
 
+  isInitialized(): boolean {
+    return this.firebaseApp !== null;
+  }
+
   async sendNotification(
     fcmToken: string,
     title: string,
