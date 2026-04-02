@@ -52,6 +52,7 @@ import { PvpModule } from './features/pvp/pvp.module';
     // Configuration
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: ['.env.local', '.env'],
       load: [
         databaseConfig,
         redisConfig,
