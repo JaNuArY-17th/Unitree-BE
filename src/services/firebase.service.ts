@@ -11,11 +11,19 @@ export class FirebaseService {
     const firebaseConfig = this.configService.get('firebase');
 
     console.log('=== FIREBASE KEY DEBUG ===');
-  console.log('privateKey first 50:', firebaseConfig.privateKey?.substring(0, 50));
-  console.log('privateKey last 50:', firebaseConfig.privateKey?.substring(firebaseConfig.privateKey.length - 50));
-  console.log('has literal \\n:', firebaseConfig.privateKey?.includes('\\n'));
-  console.log('has real newline:', firebaseConfig.privateKey?.includes('\n'));
-  console.log('==========================');
+    console.log(
+      'privateKey first 50:',
+      firebaseConfig.privateKey?.substring(0, 50),
+    );
+    console.log(
+      'privateKey last 50:',
+      firebaseConfig.privateKey?.substring(
+        firebaseConfig.privateKey.length - 50,
+      ),
+    );
+    console.log('has literal \\n:', firebaseConfig.privateKey?.includes('\\n'));
+    console.log('has real newline:', firebaseConfig.privateKey?.includes('\n'));
+    console.log('==========================');
 
     if (!firebaseConfig.projectId) {
       this.logger.warn(

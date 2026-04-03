@@ -1,0 +1,9 @@
+export declare const formatPhoneNumber: (phoneNumber: string) => string;
+export declare const formatCurrency: (amount: number) => string;
+export declare const formatNumber: (num: number) => string;
+export declare const truncate: (str: string, maxLength: number) => string;
+export declare const capitalize: (str: string) => string;
+export declare const slugify: (str: string) => string;
+export declare const maskEmail: (email: string) => string;
+export declare const maskPhoneNumber: (phone: string) => string;
+export declare const randomString: (length: number, chars?: string) => string;

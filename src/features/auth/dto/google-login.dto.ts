@@ -17,13 +17,14 @@ export class GoogleLoginDto {
   @IsNotEmpty()
   idToken!: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'user@gmail.com',
     description:
-      'Google account email resolved by frontend OAuth flow. Used as identity source when idToken is not provided.',
+      'Google account email resolved by frontend OAuth flow. Optional when idToken is present.',
   })
+  @IsOptional()
   @IsEmail()
-  email!: string;
+  email?: string;
 
   @ApiPropertyOptional({
     example: 'https://lh3.googleusercontent.com/a/photo.jpg',

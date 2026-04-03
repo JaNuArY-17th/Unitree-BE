@@ -21,7 +21,7 @@ import { GardenService } from '../services/garden.service';
 })
 export class GardenGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   private userSockets: Map<string, string> = new Map();
 
@@ -94,7 +94,7 @@ export class GardenGateway implements OnGatewayConnection, OnGatewayDisconnect {
       };
     } catch (error) {
       client.emit('attack_error', {
-        message: error.message || 'Attack failed',
+        message: error instanceof Error ? error.message : 'Attack failed',
       });
     }
   }

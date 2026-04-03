@@ -1,0 +1,12 @@
+export declare const formatDate: (date: Date, format?: string) => string;
+export declare const addDays: (date: Date, days: number) => Date;
+export declare const addHours: (date: Date, hours: number) => Date;
+export declare const addMinutes: (date: Date, minutes: number) => Date;
+export declare const getDaysDifference: (date1: Date, date2: Date) => number;
+export declare const getHoursDifference: (date1: Date, date2: Date) => number;
+export declare const getMinutesDifference: (date1: Date, date2: Date) => number;
+export declare const isToday: (date: Date) => boolean;
+export declare const isPast: (date: Date) => boolean;
+export declare const isFuture: (date: Date) => boolean;
+export declare const startOfDay: (date: Date) => Date;
+export declare const endOfDay: (date: Date) => Date;

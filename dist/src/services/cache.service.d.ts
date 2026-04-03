@@ -1,0 +1,31 @@
+import { ConfigService } from '@nestjs/config';
+export declare class CacheService {
+    private configService;
+    private readonly redis;
+    private readonly defaultTtl;
+    constructor(configService: ConfigService);
+    get<T>(key: string): Promise<T | null>;
+    set(key: string, value: any, ttl?: number): Promise<void>;
+    del(key: string): Promise<void>;
+    delPattern(pattern: string): Promise<void>;
+    exists(key: string): Promise<boolean>;
+    ttl(key: string): Promise<number>;
+    incr(key: string): Promise<number>;
+    decr(key: string): Promise<number>;
+    expire(key: string, seconds: number): Promise<void>;
+    sadd(key: string, member: string): Promise<number>;
+    sismember(key: string, member: string): Promise<number>;
+    srem(key: string, member: string): Promise<number>;
+    smembers(key: string): Promise<string[]>;
+    scard(key: string): Promise<number>;
+    hset(key: string, field: string, value: string): Promise<number>;
+    hget(key: string, field: string): Promise<string | null>;
+    hgetall(key: string): Promise<Record<string, string>>;
+    hdel(key: string, field: string): Promise<number>;
+    hsetWithExpiry(key: string, field: string, value: string, ttlSeconds: number): Promise<void>;
+    delUserHash(userId: string): Promise<void>;
+    zadd(key: string, score: number, member: string): Promise<number>;
+    zrevrange(key: string, start: number, stop: number, withScores?: boolean): Promise<string[]>;
+    zrevrank(key: string, member: string): Promise<number | null>;
+    zscore(key: string, member: string): Promise<string | null>;
+}
