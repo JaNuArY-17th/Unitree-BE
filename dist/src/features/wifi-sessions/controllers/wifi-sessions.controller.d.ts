@@ -1,3 +1,4 @@
+import type { Request } from 'express';
 import { WifiSessionsService } from '../services/wifi-sessions.service';
 import { StartSessionDto } from '../dto/start-session.dto';
 import { HeartbeatDto } from '../dto/heartbeat.dto';
@@ -6,14 +7,15 @@ import { PaginationDto } from '../../../shared/dto/pagination.dto';
 export declare class WifiSessionsController {
     private readonly wifiSessionsService;
     constructor(wifiSessionsService: WifiSessionsService);
-    startSession(userId: string, dto: StartSessionDto): Promise<import("../../../shared/utils/response.util").ApiResponse<import("../../../database/entities/wifi-session.entity").WifiSession>>;
-    heartbeat(userId: string, dto: HeartbeatDto): Promise<import("../../../shared/utils/response.util").ApiResponse<{
+    startSession(userId: string, req: Request, dto: StartSessionDto): Promise<import("../../../shared/utils/response.util").ApiResponse<import("../../../database/entities/wifi-session.entity").WifiSession>>;
+    heartbeat(userId: string, req: Request, dto: HeartbeatDto): Promise<import("../../../shared/utils/response.util").ApiResponse<{
         acknowledged: boolean;
         currentDuration: number;
-        pointsEarned: number;
-        sessionStatus: string;
+        accumulatedMinutes: number;
+        cheatFlag: boolean;
+        sessionStatus: import("../../../shared/constants/enums.constant").WifiSessionStatus;
     }>>;
-    endSession(userId: string, sessionId: string, dto: EndSessionDto): Promise<import("../../../shared/utils/response.util").ApiResponse<{
+    endSession(userId: string, sessionId: string, req: Request, dto: EndSessionDto): Promise<import("../../../shared/utils/response.util").ApiResponse<{
         session: import("../../../database/entities/wifi-session.entity").WifiSession;
         pointsEarned: number;
         previousBalance: number;

@@ -14,6 +14,7 @@ const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 class StartSessionDto {
     deviceId;
+    ssid;
     ipAddress;
 }
 exports.StartSessionDto = StartSessionDto;
@@ -27,6 +28,16 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], StartSessionDto.prototype, "deviceId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'SSID of the connected WiFi network',
+        example: 'Gre_Student',
+        required: false,
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], StartSessionDto.prototype, "ssid", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'User IP address for optional validation',

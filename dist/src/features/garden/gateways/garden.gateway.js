@@ -72,7 +72,7 @@ let GardenGateway = class GardenGateway {
         }
         catch (error) {
             client.emit('attack_error', {
-                message: error.message || 'Attack failed',
+                message: error instanceof Error ? error.message : 'Attack failed',
             });
         }
     }

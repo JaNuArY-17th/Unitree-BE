@@ -1,13 +1,13 @@
 declare const _default: (() => {
-    projectId: string | undefined;
-    privateKey: string;
-    clientEmail: string | undefined;
+    projectId: any;
+    privateKey: any;
+    clientEmail: any;
     storageBucket: string | undefined;
     databaseURL: string | undefined;
 }) & import("@nestjs/config").ConfigFactoryKeyHost<{
-    projectId: string | undefined;
-    privateKey: string;
-    clientEmail: string | undefined;
+    projectId: any;
+    privateKey: any;
+    clientEmail: any;
     storageBucket: string | undefined;
     databaseURL: string | undefined;
 }>;

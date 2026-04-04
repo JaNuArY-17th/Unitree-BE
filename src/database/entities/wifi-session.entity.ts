@@ -40,8 +40,20 @@ export class WifiSession extends BaseEntity {
   })
   status!: WifiSessionStatus;
 
+  @Column({ name: 'wifi_config_id', nullable: true })
+  wifiConfigId?: string;
+
+  @Column({ name: 'start_ip', nullable: true })
+  startIp?: string;
+
   @Column({ name: 'last_heartbeat', type: 'timestamp', nullable: true })
   lastHeartbeat?: Date;
+
+  @Column({ name: 'cheat_flag', default: false })
+  cheatFlag!: boolean;
+
+  @Column({ name: 'cheat_reason', type: 'varchar', nullable: true })
+  cheatReason?: string;
 
   // Optional metadata for debugging/analytics
   @Column({ name: 'device_id', nullable: true })

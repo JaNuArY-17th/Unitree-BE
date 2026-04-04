@@ -2,6 +2,7 @@ services:
   unitree-app:
     build: .
     container_name: unitree-be
+    restart: unless-stopped
     ports:
       - "5000:3000" # Host 5000 trỏ vào Container 3000 (Node.js)
     env_file: .env
@@ -16,6 +17,7 @@ services:
   unitree-db:
     image: postgres:16-alpine
     container_name: unitree-postgres
+    restart: unless-stopped
     ports:
       - "5433:5432"
     environment:
@@ -35,6 +37,7 @@ services:
   unitree-redis:
     image: redis:alpine
     container_name: unitree-redis
+    restart: unless-stopped
     ports:
       - "6378:6379"
     command: redis-server --requirepass ${REDIS_PASSWORD}

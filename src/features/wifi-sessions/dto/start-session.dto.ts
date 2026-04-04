@@ -18,6 +18,15 @@ export class StartSessionDto {
   deviceId?: string;
 
   @ApiProperty({
+    description: 'SSID of the connected WiFi network',
+    example: 'Gre_Student',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  ssid?: string;
+
+  @ApiProperty({
     description: 'User IP address for optional validation',
     example: '10.0.0.123',
     required: false,

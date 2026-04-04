@@ -29,10 +29,11 @@ __decorate([
     __metadata("design:type", String)
 ], GoogleLoginDto.prototype, "idToken", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
+    (0, swagger_1.ApiPropertyOptional)({
         example: 'user@gmail.com',
-        description: 'Google account email resolved by frontend OAuth flow. Used as identity source when idToken is not provided.',
+        description: 'Google account email resolved by frontend OAuth flow. Optional when idToken is present.',
     }),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
 ], GoogleLoginDto.prototype, "email", void 0);

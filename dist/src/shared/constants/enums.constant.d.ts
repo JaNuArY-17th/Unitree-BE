@@ -10,6 +10,8 @@ export declare enum UserRole {
 export declare enum WifiSessionStatus {
     ACTIVE = "active",
     COMPLETED = "completed",
+    TIMEOUT = "timeout",
+    CHEAT_FLAGGED = "cheat_flagged",
     CANCELLED = "cancelled"
 }
 export declare enum PointTransactionType {

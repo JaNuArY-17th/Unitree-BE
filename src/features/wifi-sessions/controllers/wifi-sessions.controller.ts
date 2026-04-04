@@ -7,7 +7,9 @@ import {
   UseGuards,
   Query,
   ParseUUIDPipe,
+  Req,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -53,9 +55,14 @@ export class WifiSessionsController {
   @ApiResponse({ status: 401, description: 'Chưa xác thực' })
   async startSession(
     @CurrentUser('id') userId: string,
+    @Req() req: Request,
     @Body() dto: StartSessionDto,
   ) {
-    const session = await this.wifiSessionsService.startSession(userId, dto);
+    const session = await this.wifiSessionsService.startSession(
+      userId,
+      dto,
+      req.ip ?? '',
+    );
     return ResponseUtil.success(session, 'WiFi session started successfully');
   }
 
@@ -71,9 +78,14 @@ export class WifiSessionsController {
   @ApiResponse({ status: 404, description: 'Phiên không tồn tại' })
   async heartbeat(
     @CurrentUser('id') userId: string,
+    @Req() req: Request,
     @Body() dto: HeartbeatDto,
   ) {
-    const result = await this.wifiSessionsService.heartbeat(userId, dto);
+    const result = await this.wifiSessionsService.heartbeat(
+      userId,
+      dto,
+      req.ip ?? '',
+    );
     return ResponseUtil.success(result, 'Heartbeat recorded');
   }
 
@@ -98,12 +110,14 @@ export class WifiSessionsController {
   async endSession(
     @CurrentUser('id') userId: string,
     @Param('id', new ParseUUIDPipe()) sessionId: string,
+    @Req() req: Request,
     @Body() dto: EndSessionDto,
   ) {
     const result = await this.wifiSessionsService.endSession(
       sessionId,
       userId,
       dto,
+      req.ip ?? '',
     );
     return ResponseUtil.success(
       result,

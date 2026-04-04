@@ -28,16 +28,16 @@ let WifiSessionsController = class WifiSessionsController {
     constructor(wifiSessionsService) {
         this.wifiSessionsService = wifiSessionsService;
     }
-    async startSession(userId, dto) {
-        const session = await this.wifiSessionsService.startSession(userId, dto);
+    async startSession(userId, req, dto) {
+        const session = await this.wifiSessionsService.startSession(userId, dto, req.ip ?? '');
         return response_util_1.ResponseUtil.success(session, 'WiFi session started successfully');
     }
-    async heartbeat(userId, dto) {
-        const result = await this.wifiSessionsService.heartbeat(userId, dto);
+    async heartbeat(userId, req, dto) {
+        const result = await this.wifiSessionsService.heartbeat(userId, dto, req.ip ?? '');
         return response_util_1.ResponseUtil.success(result, 'Heartbeat recorded');
     }
-    async endSession(userId, sessionId, dto) {
-        const result = await this.wifiSessionsService.endSession(sessionId, userId, dto);
+    async endSession(userId, sessionId, req, dto) {
+        const result = await this.wifiSessionsService.endSession(sessionId, userId, dto, req.ip ?? '');
         return response_util_1.ResponseUtil.success(result, `WiFi session ended. You earned ${result.pointsEarned} points!`);
     }
     async getActiveSession(userId) {
@@ -65,9 +65,10 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Đã có phiên đang hoạt động' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Chưa xác thực' }),
     __param(0, (0, current_user_decorator_1.CurrentUser)('id')),
-    __param(1, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, start_session_dto_1.StartSessionDto]),
+    __metadata("design:paramtypes", [String, Object, start_session_dto_1.StartSessionDto]),
     __metadata("design:returntype", Promise)
 ], WifiSessionsController.prototype, "startSession", null);
 __decorate([
@@ -81,9 +82,10 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Chưa xác thực' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Phiên không tồn tại' }),
     __param(0, (0, current_user_decorator_1.CurrentUser)('id')),
-    __param(1, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, heartbeat_dto_1.HeartbeatDto]),
+    __metadata("design:paramtypes", [String, Object, heartbeat_dto_1.HeartbeatDto]),
     __metadata("design:returntype", Promise)
 ], WifiSessionsController.prototype, "heartbeat", null);
 __decorate([
@@ -106,9 +108,10 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Phiên không tồn tại' }),
     __param(0, (0, current_user_decorator_1.CurrentUser)('id')),
     __param(1, (0, common_1.Param)('id', new common_1.ParseUUIDPipe())),
-    __param(2, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
+    __param(3, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, end_session_dto_1.EndSessionDto]),
+    __metadata("design:paramtypes", [String, String, Object, end_session_dto_1.EndSessionDto]),
     __metadata("design:returntype", Promise)
 ], WifiSessionsController.prototype, "endSession", null);
 __decorate([

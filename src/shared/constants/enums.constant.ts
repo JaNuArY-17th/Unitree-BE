@@ -23,6 +23,8 @@ export enum UserRole {
 export enum WifiSessionStatus {
   ACTIVE = 'active',
   COMPLETED = 'completed',
+  TIMEOUT = 'timeout',
+  CHEAT_FLAGGED = 'cheat_flagged',
   CANCELLED = 'cancelled',
 }
 

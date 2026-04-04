@@ -54,6 +54,12 @@ let FirebaseService = FirebaseService_1 = class FirebaseService {
     constructor(configService) {
         this.configService = configService;
         const firebaseConfig = this.configService.get('firebase');
+        console.log('=== FIREBASE KEY DEBUG ===');
+        console.log('privateKey first 50:', firebaseConfig.privateKey?.substring(0, 50));
+        console.log('privateKey last 50:', firebaseConfig.privateKey?.substring(firebaseConfig.privateKey.length - 50));
+        console.log('has literal \\n:', firebaseConfig.privateKey?.includes('\\n'));
+        console.log('has real newline:', firebaseConfig.privateKey?.includes('\n'));
+        console.log('==========================');
         if (!firebaseConfig.projectId) {
             this.logger.warn('Firebase configuration is missing (projectId is empty). Firebase features will be disabled.');
             return;

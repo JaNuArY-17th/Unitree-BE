@@ -8,7 +8,11 @@ export declare class WifiSession extends BaseEntity {
     durationMinutes: number;
     pointsEarned: number;
     status: WifiSessionStatus;
+    wifiConfigId?: string;
+    startIp?: string;
     lastHeartbeat?: Date;
+    cheatFlag: boolean;
+    cheatReason?: string;
     deviceId?: string;
     ipAddress?: string;
     user: User;

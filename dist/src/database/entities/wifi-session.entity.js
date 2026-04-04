@@ -21,7 +21,11 @@ let WifiSession = class WifiSession extends base_entity_1.BaseEntity {
     durationMinutes;
     pointsEarned;
     status;
+    wifiConfigId;
+    startIp;
     lastHeartbeat;
+    cheatFlag;
+    cheatReason;
     deviceId;
     ipAddress;
     user;
@@ -57,9 +61,25 @@ __decorate([
     __metadata("design:type", String)
 ], WifiSession.prototype, "status", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ name: 'wifi_config_id', nullable: true }),
+    __metadata("design:type", String)
+], WifiSession.prototype, "wifiConfigId", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'start_ip', nullable: true }),
+    __metadata("design:type", String)
+], WifiSession.prototype, "startIp", void 0);
+__decorate([
     (0, typeorm_1.Column)({ name: 'last_heartbeat', type: 'timestamp', nullable: true }),
     __metadata("design:type", Date)
 ], WifiSession.prototype, "lastHeartbeat", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'cheat_flag', default: false }),
+    __metadata("design:type", Boolean)
+], WifiSession.prototype, "cheatFlag", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'cheat_reason', type: 'varchar', nullable: true }),
+    __metadata("design:type", String)
+], WifiSession.prototype, "cheatReason", void 0);
 __decorate([
     (0, typeorm_1.Column)({ name: 'device_id', nullable: true }),
     __metadata("design:type", String)

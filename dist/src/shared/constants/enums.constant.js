@@ -16,6 +16,8 @@ var WifiSessionStatus;
 (function (WifiSessionStatus) {
     WifiSessionStatus["ACTIVE"] = "active";
     WifiSessionStatus["COMPLETED"] = "completed";
+    WifiSessionStatus["TIMEOUT"] = "timeout";
+    WifiSessionStatus["CHEAT_FLAGGED"] = "cheat_flagged";
     WifiSessionStatus["CANCELLED"] = "cancelled";
 })(WifiSessionStatus || (exports.WifiSessionStatus = WifiSessionStatus = {}));
 var PointTransactionType;
