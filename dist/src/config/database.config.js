@@ -11,7 +11,7 @@ exports.default = (0, config_1.registerAs)('database', () => {
         database: process.env.DB_DATABASE || 'unitree',
         entities: [__dirname + '/../database/entities/**/*.entity{.ts,.js}'],
         migrations: [__dirname + '/../database/migrations/**/*{.ts,.js}'],
-        synchronize: process.env.NODE_ENV === 'development',
+        synchronize: process.env.TYPEORM_SYNC === 'true' && process.env.NODE_ENV === 'development',
         logging: false,
         ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
         extra: {
