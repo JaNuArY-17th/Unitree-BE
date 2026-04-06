@@ -17,6 +17,7 @@ import { WifiSession } from '../../../database/entities/wifi-session.entity';
 import { EconomyUtil } from '../../../shared/utils/economy.util';
 import { WifiSessionStatus } from '../../../shared/constants/enums.constant';
 import { GardenGateway } from '../../garden/gateways/garden.gateway';
+import { LeaderboardService } from '../../leaderboard/services/leaderboard.service';
 
 @Injectable()
 export class TreesService {
@@ -111,6 +112,7 @@ export class TreesService {
         oxygenBalance + BigInt(Math.floor(oxygenEarned))
       ).toString();
       await userResourceRepo.save(userOxygen);
+      await this.leaderboardService.syncOxyScore(userId, userOxygen.balance);
 
       userTree.level = nextLevel;
       userTree.lastHarvestTime = now;
@@ -212,6 +214,7 @@ export class TreesService {
         oxygenBalance + BigInt(Math.floor(oxygenEarned))
       ).toString();
       await userResourceRepo.save(userOxygen);
+      await this.leaderboardService.syncOxyScore(userId, userOxygen.balance);
 
       userTree.isDamaged = false;
       userTree.lastHarvestTime = now;
@@ -316,6 +319,7 @@ export class TreesService {
     private readonly wifiSessionRepository: Repository<WifiSession>,
     private readonly dataSource: DataSource,
     private readonly gardenGateway: GardenGateway,
+    private readonly leaderboardService: LeaderboardService,
   ) {}
 
   async getUserTrees(userId: string): Promise<UserTree[]> {

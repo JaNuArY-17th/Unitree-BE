@@ -16,6 +16,7 @@ import emailConfig from './config/email.config';
 import onboardingConfig from './config/onboarding.config';
 import minigameConfig from './config/minigame.config';
 import pvpConfig from './config/pvp.config';
+import leaderboardConfig from './config/leaderboard.config';
 
 // Guards
 import { JwtAuthGuard } from './shared/guards/jwt-auth.guard';
@@ -46,6 +47,7 @@ import { ChatModule } from './features/chat/chat.module';
 import { GardenModule } from './features/garden/garden.module';
 import { MinigamesModule } from './features/minigames/minigames.module';
 import { PvpModule } from './features/pvp/pvp.module';
+import { LeaderboardModule } from './features/leaderboard/leaderboard.module';
 
 @Module({
   imports: [
@@ -64,6 +66,7 @@ import { PvpModule } from './features/pvp/pvp.module';
         onboardingConfig,
         minigameConfig,
         pvpConfig,
+        leaderboardConfig,
       ],
     }),
 
@@ -109,6 +112,7 @@ import { PvpModule } from './features/pvp/pvp.module';
     GardenModule,
     MinigamesModule,
     PvpModule,
+    LeaderboardModule,
   ],
   providers: [
     // Global Guards

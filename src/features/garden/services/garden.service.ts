@@ -12,6 +12,7 @@ import { WifiSession } from '../../../database/entities/wifi-session.entity';
 import { EconomyLog } from '../../../database/entities/economy-log.entity';
 import { EconomyUtil } from '../../../shared/utils/economy.util';
 import { WifiSessionStatus } from '../../../shared/constants/enums.constant';
+import { LeaderboardService } from '../../leaderboard/services/leaderboard.service';
 
 @Injectable()
 export class GardenService {
@@ -31,6 +32,7 @@ export class GardenService {
     @InjectRepository(WifiSession)
     private readonly wifiSessionRepository: Repository<WifiSession>,
     private readonly dataSource: DataSource,
+    private readonly leaderboardService: LeaderboardService,
   ) {}
 
   async syncAllOxygen(userId: string) {
@@ -103,6 +105,7 @@ export class GardenService {
           currentBalance + BigInt(earnedWholeOxygen)
         ).toString();
         await userResourceRepo.save(userOxygen);
+        await this.leaderboardService.syncOxyScore(userId, userOxygen.balance);
 
         if (treesToUpdate.length > 0) {
           await userTreeRepo.save(treesToUpdate);
@@ -204,6 +207,10 @@ export class GardenService {
           currentBalance + BigInt(Math.floor(oxygenEarned))
         ).toString();
         await userResourceRepo.save(attackerOxygen);
+        await this.leaderboardService.syncOxyScore(
+          attackerId,
+          attackerOxygen.balance,
+        );
 
         await economyLogRepo.save(
           economyLogRepo.create({
