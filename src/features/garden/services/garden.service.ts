@@ -41,6 +41,8 @@ export class GardenService {
       relations: ['tree'],
     });
 
+    Logger.log(`syncAllOxygen: user ${userId} has ${userTrees.length} trees`, 'GardenService');
+
     const now = new Date();
 
     const activeWifiSession = await this.wifiSessionRepository.findOne({

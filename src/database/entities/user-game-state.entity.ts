@@ -25,8 +25,8 @@ export class UserGameState extends BaseEntity {
   @Column({ name: 'last_spin_regen', type: 'timestamp', nullable: true })
   lastSpinRegen?: Date;
 
-  // Relations
-  @OneToOne(() => User)
+// Relations
+  @OneToOne(() => User, { onDelete: 'CASCADE' }) 
   @JoinColumn({ name: 'user_id' })
   user!: User;
 }
