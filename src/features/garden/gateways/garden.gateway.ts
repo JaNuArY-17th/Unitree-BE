@@ -71,6 +71,7 @@ export class GardenGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const userId = String(client.data.userId || '');
 
     if (!userId) {
+      Logger.warn('Garden sync_oxy rejected: missing userId', 'GardenGateway');
       client.emit('sync_error', {
         message: 'Unauthorized',
       });
@@ -78,7 +79,15 @@ export class GardenGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     try {
+      Logger.log(
+        `Garden sync_oxy requested by user ${userId}`,
+        'GardenGateway',
+      );
       const result = await this.gardenService.syncAllOxygen(userId);
+      Logger.log(
+        `Garden sync_oxy success for user ${userId}: +${String(result.oxygenEarned)} OXY`,
+        'GardenGateway',
+      );
       client.emit('sync_result', result);
 
       return {
