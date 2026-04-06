@@ -201,22 +201,6 @@ export class AuthService {
     return email;
   }
 
-  async login(loginDto: { email: string; password?: string }) {
-    const normalizedEmail = this.normalizeEmail(loginDto.email);
-    const user = await this.findUserByEmail(normalizedEmail);
-
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    const tokens = await this.tokensService.generateTokens(user);
-
-    return {
-      user: plainToInstance(UserInfoDto, user),
-      ...tokens,
-    };
-  }
-
   async googleLogin(idToken: string) {
     if (!this.firebaseService.isInitialized()) {
       this.logger.warn(

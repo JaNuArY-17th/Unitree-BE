@@ -19,7 +19,6 @@ import {
 } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { AuthService } from '../services/auth.service';
-import { LoginDto } from '../dto/login.dto';
 import { GoogleLoginDto } from '../dto/google-login.dto';
 import { LoginWithDeviceDto } from '../dto/login-with-device.dto';
 import { VerifyDeviceDto } from '../dto/verify-device.dto';
@@ -32,24 +31,6 @@ import { ResponseUtil } from '../../../shared/utils/response.util';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-
-  @Public()
-  @Post('login')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Đăng nhập bằng email và mật khẩu' })
-  @ApiBody({ type: LoginDto })
-  @ApiResponse({
-    status: 200,
-    description: 'Đăng nhập thành công, trả về access token và refresh token',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Email hoặc mật khẩu không chính xác',
-  })
-  async login(@Body() loginDto: LoginDto) {
-    const result = await this.authService.login(loginDto);
-    return ResponseUtil.success(result, 'Login successful');
-  }
 
   @Public()
   @Post('google/login')

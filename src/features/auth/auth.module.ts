@@ -4,7 +4,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthController } from './controllers/auth.controller';
 import { AuthService } from './services/auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { LocalStrategy } from './strategies/local.strategy';
 import { OtpRedisService } from './services/otp-redis.service';
 import { User } from '../../database/entities/user.entity';
 import { Student } from '../../database/entities/student.entity';
@@ -49,7 +48,6 @@ import { UsersModule } from '../users/users.module';
     AuthService,
     OtpRedisService,
     JwtStrategy,
-    LocalStrategy,
     CacheService,
     EmailService,
     FirebaseService,
