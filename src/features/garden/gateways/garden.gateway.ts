@@ -46,7 +46,13 @@ export class GardenGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
 
       const payload = await this.jwtService.verifyAsync(token);
-      const userId = payload.sub;
+      const userId = String(payload.sub || '');
+
+      if (!userId) {
+        client.emit('error', { message: 'Invalid token payload' });
+        client.disconnect();
+        return;
+      }
 
       this.userSockets.set(userId, client.id);
       client.data.userId = userId;
@@ -63,7 +69,13 @@ export class GardenGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleDisconnect(client: Socket) {
     if (client.data.userId) {
-      this.userSockets.delete(client.data.userId);
+      const userId = String(client.data.userId);
+      const mappedSocketId = this.userSockets.get(userId);
+
+      if (mappedSocketId === client.id) {
+        this.userSockets.delete(userId);
+      }
+
       Logger.log(`Garden: Client disconnected ${client.id}`, 'GardenGateway');
     }
   }
@@ -134,20 +146,7 @@ export class GardenGateway implements OnGatewayConnection, OnGatewayDisconnect {
         message: 'Cây của bạn đang bị sâu bướm tấn công!',
       });
 
-      try {
-        const leaderboard =
-          await this.leaderboardService.getOxyLeaderboard(userId);
-        this.emitToUser(userId, 'leaderboard_oxy_update', leaderboard);
-      } catch (leaderboardError) {
-        const leaderboardMessage =
-          leaderboardError instanceof Error
-            ? leaderboardError.message
-            : 'unknown leaderboard error';
-        Logger.warn(
-          `Garden throw_bug leaderboard emit failed for user ${userId}: ${leaderboardMessage}`,
-          'GardenGateway',
-        );
-      }
+      await this.broadcastLeaderboardUpdates();
 
       return {
         event: 'attack_result',
