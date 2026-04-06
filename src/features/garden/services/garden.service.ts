@@ -13,6 +13,7 @@ import { EconomyLog } from '../../../database/entities/economy-log.entity';
 import { EconomyUtil } from '../../../shared/utils/economy.util';
 import { WifiSessionStatus } from '../../../shared/constants/enums.constant';
 import { LeaderboardService } from '../../leaderboard/services/leaderboard.service';
+import { Logger } from '../../../shared/utils/logger.util';
 
 @Injectable()
 export class GardenService {
@@ -41,7 +42,10 @@ export class GardenService {
       relations: ['tree'],
     });
 
-    Logger.log(`syncAllOxygen: user ${userId} has ${userTrees.length} trees`, 'GardenService');
+    Logger.log(
+      `syncAllOxygen: user ${userId} has ${userTrees.length} trees`,
+      'GardenService',
+    );
 
     const now = new Date();
 

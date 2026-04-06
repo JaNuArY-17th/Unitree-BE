@@ -12,6 +12,7 @@ import { Logger } from '../../../shared/utils/logger.util';
 import { JwtService } from '@nestjs/jwt';
 import { Inject, forwardRef } from '@nestjs/common';
 import { GardenService } from '../services/garden.service';
+import { LeaderboardService } from '../../leaderboard/services/leaderboard.service';
 
 @WebSocketGateway({
   namespace: '/garden',
@@ -28,6 +29,7 @@ export class GardenGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     @Inject(forwardRef(() => GardenService))
     private readonly gardenService: GardenService,
+    private readonly leaderboardService: LeaderboardService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -84,6 +86,9 @@ export class GardenGateway implements OnGatewayConnection, OnGatewayDisconnect {
         'GardenGateway',
       );
       const result = await this.gardenService.syncAllOxygen(userId);
+
+      await this.broadcastLeaderboardUpdates();
+
       Logger.log(
         `Garden sync_oxy success for user ${userId}: +${String(result.oxygenEarned)} OXY`,
         'GardenGateway',
@@ -129,6 +134,21 @@ export class GardenGateway implements OnGatewayConnection, OnGatewayDisconnect {
         message: 'Cây của bạn đang bị sâu bướm tấn công!',
       });
 
+      try {
+        const leaderboard =
+          await this.leaderboardService.getOxyLeaderboard(userId);
+        this.emitToUser(userId, 'leaderboard_oxy_update', leaderboard);
+      } catch (leaderboardError) {
+        const leaderboardMessage =
+          leaderboardError instanceof Error
+            ? leaderboardError.message
+            : 'unknown leaderboard error';
+        Logger.warn(
+          `Garden throw_bug leaderboard emit failed for user ${userId}: ${leaderboardMessage}`,
+          'GardenGateway',
+        );
+      }
+
       return {
         event: 'attack_result',
         data: result,
@@ -151,5 +171,30 @@ export class GardenGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     this.server.to(socketId).emit(event, data);
+  }
+
+  private async broadcastLeaderboardUpdates(): Promise<void> {
+    const onlineUserIds = Array.from(this.userSockets.keys());
+
+    if (onlineUserIds.length === 0) {
+      return;
+    }
+
+    await Promise.allSettled(
+      onlineUserIds.map(async (onlineUserId) => {
+        try {
+          const leaderboard =
+            await this.leaderboardService.getOxyLeaderboard(onlineUserId);
+          this.emitToUser(onlineUserId, 'leaderboard_oxy_update', leaderboard);
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : 'unknown error';
+          Logger.warn(
+            `Garden leaderboard broadcast failed for user ${onlineUserId}: ${message}`,
+            'GardenGateway',
+          );
+        }
+      }),
+    );
   }
 }
