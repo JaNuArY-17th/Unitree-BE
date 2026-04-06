@@ -66,6 +66,38 @@ export class GardenGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  @SubscribeMessage('sync_oxy')
+  async handleSyncOxy(@ConnectedSocket() client: Socket) {
+    const userId = String(client.data.userId || '');
+
+    if (!userId) {
+      client.emit('sync_error', {
+        message: 'Unauthorized',
+      });
+      return;
+    }
+
+    try {
+      const result = await this.gardenService.syncAllOxygen(userId);
+      client.emit('sync_result', result);
+
+      return {
+        event: 'sync_result',
+        data: result,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Sync failed';
+      Logger.warn(
+        `Garden sync_oxy failed for user ${userId}: ${message}`,
+        'GardenGateway',
+      );
+
+      client.emit('sync_error', {
+        message,
+      });
+    }
+  }
+
   @SubscribeMessage('throw_bug')
   async handleThrowBug(
     @MessageBody() data: { targetUserId: string; userTreeId: string },
